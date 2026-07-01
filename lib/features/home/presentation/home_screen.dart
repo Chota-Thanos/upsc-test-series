@@ -14,6 +14,7 @@ import '../../study_plans/presentation/study_plan_detail_screen.dart';
 import '../../mentors/data/mentor_service.dart';
 import '../../mentors/models/mentor_models.dart';
 import '../../mentors/presentation/mentor_detail_screen.dart';
+import 'onboarding_tour_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int, {int subIndex, int subSubIndex}) onTabSelected;
@@ -37,6 +38,22 @@ class _HomeScreenState extends State<HomeScreen> {
   List<StudyPlanSummary> _plans = [];
   List<MentorProfile> _mentors = [];
   List<StudentAttemptSummary> _activeAttempts = [];
+
+  // Onboarding Guided Tour Keys & States
+  final GlobalKey _keyBanner = GlobalKey();
+  final GlobalKey _keyRadar = GlobalKey();
+  final GlobalKey _keyPractice = GlobalKey();
+  final GlobalKey _keyStudyPlans = GlobalKey();
+  final GlobalKey _keyMentors = GlobalKey();
+
+  bool _showTour = false;
+  bool _dismissedTourBanner = false;
+
+  void _startTour() {
+    setState(() {
+      _showTour = true;
+    });
+  }
 
   @override
   void initState() {
@@ -138,13 +155,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.paper,
-      body: RefreshIndicator(
-        onRefresh: _loadAllData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _loadAllData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // Premium Welcome Banner with Image Background
               Stack(
                 children: [
@@ -233,6 +252,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
                _buildSubscriptionBanner(apiClient),
               const SizedBox(height: 16),
+              if (!_dismissedTourBanner) ...[
+                _buildTourBanner(),
+                const SizedBox(height: 16),
+              ],
 
               if (_activeAttempts.isNotEmpty) ...[
                 Padding(
@@ -362,6 +385,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     GestureDetector(
                       onTap: () => widget.onTabSelected(1), // Switch to Dashboard Tab
                       child: Container(
+                        key: _keyRadar,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -502,6 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
+                  key: _keyPractice,
                   children: [
                     Row(
                       children: [
@@ -587,7 +612,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              SizedBox(
+              Container(
+                key: _keyStudyPlans,
                 height: 205,
                 child: _loadingPlans
                     ? const Center(
@@ -636,7 +662,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              SizedBox(
+              Container(
+                key: _keyMentors,
                 height: 175,
                 child: _loadingMentors
                     ? const Center(
@@ -659,8 +686,47 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
+      if (_showTour)
+        OnboardingTourWidget(
+          steps: [
+            TourStep(
+              targetKey: _keyBanner,
+              badge: "Step 1 of 5: Member Center",
+              title: "Premium Subscription Status",
+              body: "Track your active subscription tier, validity dates, and evaluation token counts right at the top of your dashboard.",
+            ),
+            TourStep(
+              targetKey: _keyRadar,
+              badge: "Step 2 of 5: Analytics Radar",
+              title: "Your Subject Performance",
+              body: "View your GS Prelims, CSAT math drill, and Mains answer-writing accuracy breakdown dynamically.",
+            ),
+            TourStep(
+              targetKey: _keyPractice,
+              badge: "Step 3 of 5: Mock Test Builder",
+              title: "Custom GK, CSAT & Mains Quizzes",
+              body: "Tap any tile to launch targeted Prelims GS tests, math CSAT drills, or subjective Mains writing assignments.",
+            ),
+            TourStep(
+              targetKey: _keyStudyPlans,
+              badge: "Step 4 of 5: Study Plans",
+              title: "Structured Preparation roadmaps",
+              body: "Sprint toward mock exams with guided 90-Day Prelims pathways and Mains writing modules.",
+            ),
+            TourStep(
+              targetKey: _keyMentors,
+              badge: "Step 5 of 5: Mentors Hub",
+              title: "Connect with Verified Toppers",
+              body: "Browse and book 1-on-1 calls or mains evaluation reviews directly with verified UPSC experts.",
+            ),
+          ],
+          onClose: () => setState(() => _showTour = false),
+          themeColor: AppColors.civic,
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildPerformanceRadarColumn({
     required String title,
@@ -1062,6 +1128,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
     return Container(
+      key: _keyBanner,
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -1155,6 +1222,81 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTourBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFC7D2FE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.auto_awesome_rounded, color: AppColors.civic, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Interactive Product Tour",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: const Color(0xFF1E1B4B),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Let us show you how mock tests and mentors work.",
+                  style: GoogleFonts.inter(
+                    fontSize: 10.5,
+                    color: const Color(0xFF4338CA),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.civic,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: _startTour,
+            child: Text(
+              "Start",
+              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            constraints: const BoxConstraints(),
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.close_rounded, color: Color(0xFF4338CA), size: 18),
+            onPressed: () => setState(() => _dismissedTourBanner = true),
+          ),
         ],
       ),
     );
