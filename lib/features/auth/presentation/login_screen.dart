@@ -121,18 +121,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   // App Branding Header
                   Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.civic.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.civic.withOpacity(0.15)),
-                      ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        size: 44,
-                        color: AppColors.civic,
-                      ),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      height: 75,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: 24),
