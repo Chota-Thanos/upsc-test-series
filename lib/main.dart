@@ -35,8 +35,8 @@ class UpscApp extends StatelessWidget {
             );
           }
 
-          // If token exists and authenticated, redirect to bottom navigation screens, else show login panel
-          if (apiClient.isAuthenticated) {
+          // If token exists and authenticated or in guest mode, redirect to bottom navigation screens, else show login panel
+          if (apiClient.isAuthenticated || apiClient.isGuestMode) {
             return const NavigationHome();
           } else {
             return const LoginScreen();

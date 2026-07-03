@@ -15,6 +15,7 @@ import '../../mentors/data/mentor_service.dart';
 import '../../mentors/models/mentor_models.dart';
 import '../../mentors/presentation/mentor_detail_screen.dart';
 import 'onboarding_tour_widget.dart';
+import '../../../../core/utils/auth_interception_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int, {int subIndex, int subSubIndex}) onTabSelected;
@@ -48,11 +49,66 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _showTour = false;
   bool _dismissedTourBanner = false;
+  List<TourStep> _tourSteps = [];
 
   void _startTour() {
     setState(() {
       _showTour = true;
     });
+  }
+
+  GlobalKey? _getGlobalKeyBySelector(String selector) {
+    final clean = selector.replaceAll('#', '').trim().toLowerCase();
+    switch (clean) {
+      case 'banner':
+      case 'tour-banner':
+        return _keyBanner;
+      case 'radar':
+      case 'tour-radar':
+        return _keyRadar;
+      case 'practice':
+      case 'tour-practice':
+        return _keyPractice;
+      case 'study_plans':
+      case 'tour-study-plans':
+        return _keyStudyPlans;
+      case 'mentors':
+      case 'tour-mentors':
+        return _keyMentors;
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _fetchTourSteps() async {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    try {
+      final res = await apiClient.get('/api/v1/onboarding/tours?key=mobile_home_tour');
+      if (res != null && res['steps'] is List) {
+        final List<TourStep> fetched = [];
+        for (var step in res['steps']) {
+          final selector = step['selector'] as String? ?? '';
+          final key = _getGlobalKeyBySelector(selector);
+          if (key != null) {
+            fetched.add(
+              TourStep(
+                targetKey: key,
+                title: step['title'] ?? '',
+                body: step['body'] ?? '',
+                badge: step['badge'] ?? '',
+              ),
+            );
+          }
+        }
+        if (mounted && fetched.isNotEmpty) {
+          setState(() {
+            _tourSteps = fetched;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch dynamic tour steps: $e");
+    }
   }
 
   @override
@@ -67,6 +123,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadAllData() async {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    _fetchTourSteps();
+
+    if (apiClient.isGuestMode) {
+      setState(() {
+        _loadingStats = false;
+        _loadingActiveAttempts = false;
+        _stats = null;
+        _activeAttempts = [];
+      });
+      _loadStudyPlans();
+      _loadMentors();
+      return;
+    }
+
     _loadDashboardStats();
     _loadStudyPlans();
     _loadMentors();
@@ -422,14 +493,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            _loadingStats || _stats == null
-                                ? const Center(
-                                    child: SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.civic),
-                                    ),
-                                  )
+                            apiClient.isGuestMode
+                                ? _buildGuestStatsPlaceholder(context, apiClient)
+                                : _loadingStats || _stats == null
+                                    ? const Center(
+                                        child: SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.civic),
+                                        ),
+                                      )
                                 : Builder(
                                     builder: (context) {
                                       final gk = _stats!.gk;
@@ -688,38 +761,40 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       if (_showTour)
         OnboardingTourWidget(
-          steps: [
-            TourStep(
-              targetKey: _keyBanner,
-              badge: "Step 1 of 5: Member Center",
-              title: "Premium Subscription Status",
-              body: "Track your active subscription tier, validity dates, and evaluation token counts right at the top of your dashboard.",
-            ),
-            TourStep(
-              targetKey: _keyRadar,
-              badge: "Step 2 of 5: Analytics Radar",
-              title: "Your Subject Performance",
-              body: "View your GS Prelims, CSAT math drill, and Mains answer-writing accuracy breakdown dynamically.",
-            ),
-            TourStep(
-              targetKey: _keyPractice,
-              badge: "Step 3 of 5: Mock Test Builder",
-              title: "Custom GK, CSAT & Mains Quizzes",
-              body: "Tap any tile to launch targeted Prelims GS tests, math CSAT drills, or subjective Mains writing assignments.",
-            ),
-            TourStep(
-              targetKey: _keyStudyPlans,
-              badge: "Step 4 of 5: Study Plans",
-              title: "Structured Preparation roadmaps",
-              body: "Sprint toward mock exams with guided 90-Day Prelims pathways and Mains writing modules.",
-            ),
-            TourStep(
-              targetKey: _keyMentors,
-              badge: "Step 5 of 5: Mentors Hub",
-              title: "Connect with Verified Toppers",
-              body: "Browse and book 1-on-1 calls or mains evaluation reviews directly with verified UPSC experts.",
-            ),
-          ],
+          steps: _tourSteps.isNotEmpty
+              ? _tourSteps
+              : [
+                  TourStep(
+                    targetKey: _keyBanner,
+                    badge: "Step 1 of 5: Member Center",
+                    title: "Premium Subscription Status",
+                    body: "Track your active subscription tier, validity dates, and evaluation token counts right at the top of your dashboard.",
+                  ),
+                  TourStep(
+                    targetKey: _keyRadar,
+                    badge: "Step 2 of 5: Analytics Radar",
+                    title: "Your Subject Performance",
+                    body: "View your GS Prelims, CSAT math drill, and Mains answer-writing accuracy breakdown dynamically.",
+                  ),
+                  TourStep(
+                    targetKey: _keyPractice,
+                    badge: "Step 3 of 5: Mock Test Builder",
+                    title: "Custom GK, CSAT & Mains Quizzes",
+                    body: "Tap any tile to launch targeted Prelims GS tests, math CSAT drills, or subjective Mains writing assignments.",
+                  ),
+                  TourStep(
+                    targetKey: _keyStudyPlans,
+                    badge: "Step 4 of 5: Study Plans",
+                    title: "Structured Preparation roadmaps",
+                    body: "Sprint toward mock exams with guided 90-Day Prelims pathways and Mains writing modules.",
+                  ),
+                  TourStep(
+                    targetKey: _keyMentors,
+                    badge: "Step 5 of 5: Mentors Hub",
+                    title: "Connect with Verified Toppers",
+                    body: "Browse and book 1-on-1 calls or mains evaluation reviews directly with verified UPSC experts.",
+                  ),
+                ],
           onClose: () => setState(() => _showTour = false),
           themeColor: AppColors.civic,
         ),
@@ -1296,6 +1371,57 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.close_rounded, color: Color(0xFF4338CA), size: 18),
             onPressed: () => setState(() => _dismissedTourBanner = true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuestStatsPlaceholder(BuildContext context, ApiClient apiClient) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.civic.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.civic.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.analytics_outlined, color: AppColors.civic, size: 36),
+          const SizedBox(height: 12),
+          Text(
+            "Unlock Performance Analytics",
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: AppColors.ink,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "Take mock tests and practice quizzes as a guest to build your dashboard. Sign in to save progress forever.",
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.muted,
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.civic,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              apiClient.setGuestMode(false);
+            },
+            child: const Text("Sign In / Register", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

@@ -10,6 +10,9 @@ import '../data/assessment_service.dart';
 import '../models/assessment_models.dart';
 import 'attempt_engine_screen.dart';
 import 'custom_tests_list_screen.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/utils/auth_interception_helper.dart';
 
 class _TreeNode {
   final int id;
@@ -101,12 +104,57 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
       if (exams.isNotEmpty) {
         _selectedExamId = exams.first.id;
         await _fetchCategories();
+        await _restoreGuestSavedCustomTest();
       }
     } catch (e) {
       setState(() {
         _error = "Failed to fetch exam profiles: $e";
         _loadingExams = false;
       });
+    }
+  }
+
+  Future<void> _restoreGuestSavedCustomTest() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('guest_saved_custom_test');
+      if (raw == null) return;
+
+      final config = jsonDecode(raw) as Map<String, dynamic>;
+      final savedTitle = config['title'] as String? ?? '';
+      final savedExamId = config['selectedExamId'] as int?;
+      final savedContentType = config['contentType'] as String? ?? 'gk';
+      final savedCategories = config['addedCategories'] as List? ?? [];
+
+      if (mounted) {
+        setState(() {
+          _titleController.text = savedTitle;
+          if (savedExamId != null) _selectedExamId = savedExamId;
+          _contentType = savedContentType;
+
+          _addedCategories.clear();
+          for (var cat in savedCategories) {
+            final node = _TreeNode(
+              id: cat['id'] as int,
+              name: cat['name'] as String? ?? '',
+              slug: cat['slug'] as String? ?? '',
+              nodeType: cat['nodeType'] as String? ?? '',
+              parentId: cat['parentId'] as int?,
+              contentType: cat['contentType'] as String?,
+            );
+            final count = cat['count'] as int;
+            _addedCategories.add({
+              'node': node,
+              'count': count,
+            });
+            _selectedQuantities[node.id] = count;
+          }
+        });
+      }
+
+      await prefs.remove('guest_saved_custom_test');
+    } catch (e) {
+      debugPrint("Failed to restore guest saved custom test: $e");
     }
   }
 
@@ -291,6 +339,33 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
     final totalQs = _getTotalAddedQuestions();
     final apiClient = Provider.of<ApiClient>(context, listen: false);
+
+    if (apiClient.isGuestMode) {
+      final prefs = await SharedPreferences.getInstance();
+      final config = {
+        'title': _titleController.text.trim(),
+        'selectedExamId': _selectedExamId,
+        'contentType': _contentType,
+        'addedCategories': _addedCategories.map((item) {
+          final node = item['node'] as _TreeNode;
+          return {
+            'id': node.id,
+            'name': node.name,
+            'slug': node.slug,
+            'nodeType': node.nodeType,
+            'parentId': node.parentId,
+            'contentType': node.contentType,
+            'count': item['count'],
+          };
+        }).toList(),
+      };
+      await prefs.setString('guest_saved_custom_test', jsonEncode(config));
+      if (mounted) {
+        AuthInterceptionHelper.checkAuthAndPrompt(context, apiClient);
+      }
+      return;
+    }
+
     if (totalQs > 10 && !apiClient.hasEntitlement('assessment.premium_tests')) {
       _showPremiumLimitDialog();
       return;

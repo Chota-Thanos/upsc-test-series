@@ -11,13 +11,21 @@ class ApiClient extends ChangeNotifier {
   bool _isInitialized = false;
   Map<String, int?> _entitlements = {};
   bool _isEntitlementsLoaded = false;
+  bool _isGuestMode = false;
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
   bool get isInitialized => _isInitialized;
   bool get isAuthenticated => _token != null;
+  bool get isGuestMode => _isGuestMode && _token == null;
   Map<String, int?> get entitlements => _entitlements;
   bool get hasEntitlementsLoaded => _isEntitlementsLoaded;
+
+  void setGuestMode(bool value) {
+    _isGuestMode = value;
+    notifyListeners();
+  }
+
 
   bool hasEntitlement(String key) {
     return _entitlements.containsKey(key);
@@ -253,6 +261,7 @@ class ApiClient extends ChangeNotifier {
       await prefs.setString('coaching_hub_token', _token!);
       await prefs.setString('coaching_hub_user', jsonEncode(_user));
       
+      _isGuestMode = false;
       notifyListeners();
       await syncEntitlements();
     } else {
@@ -279,6 +288,7 @@ class ApiClient extends ChangeNotifier {
       await prefs.setString('coaching_hub_token', _token!);
       await prefs.setString('coaching_hub_user', jsonEncode(_user));
       
+      _isGuestMode = false;
       notifyListeners();
       await syncEntitlements();
     } else {
@@ -302,6 +312,7 @@ class ApiClient extends ChangeNotifier {
       await prefs.setString('coaching_hub_token', _token!);
       await prefs.setString('coaching_hub_user', jsonEncode(_user));
       
+      _isGuestMode = false;
       notifyListeners();
       await syncEntitlements();
     } else {
@@ -315,6 +326,7 @@ class ApiClient extends ChangeNotifier {
     _user = null;
     _entitlements = {};
     _isEntitlementsLoaded = false;
+    _isGuestMode = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('coaching_hub_token');
     await prefs.remove('coaching_hub_user');
