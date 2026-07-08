@@ -87,10 +87,13 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   bool _compiledIncludeAttempted = false;
   bool _isCartExpanded = false;
   final _customTestNameController = TextEditingController(text: "My Custom Practice Test");
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
 
   @override
   void dispose() {
     _customTestNameController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -1221,6 +1224,40 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     };
   }
 
+  List<_TreeNode> _filterTree(List<_TreeNode> nodes, String query) {
+    if (query.isEmpty) return nodes;
+
+    final lowercaseQuery = query.toLowerCase();
+    final List<_TreeNode> filtered = [];
+
+    for (var node in nodes) {
+      final bool matchesNode = node.name.toLowerCase().contains(lowercaseQuery);
+      final List<_TreeNode> filteredChildren = _filterTree(node.children, query);
+
+      if (matchesNode || filteredChildren.isNotEmpty) {
+        final clonedNode = _TreeNode(
+          id: node.id,
+          name: node.name,
+          slug: node.slug,
+          description: node.description,
+          imageUrl: node.imageUrl,
+          nodeType: node.nodeType,
+          parentId: node.parentId,
+          contentType: node.contentType,
+          displayOrder: node.displayOrder,
+        );
+        clonedNode.children.addAll(filteredChildren);
+
+        // Auto-expand nodes containing match results
+        _expandedNodes.add(node.id);
+
+        filtered.add(clonedNode);
+      }
+    }
+
+    return filtered;
+  }
+
   void _startDirectTest(_TreeNode node) {
     _showDirectTestBottomSheet(node);
   }
@@ -2346,49 +2383,46 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Material(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: InkWell(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(color: AppColors.line),
                                         borderRadius: BorderRadius.circular(12),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => CustomTestCreateScreen(
-                                                contentType: widget.contentType == 'aptitude' ? 'aptitude' : (widget.contentType ?? 'gk'),
-                                              ),
-                                            ),
-                                          );
+                                      ),
+                                      child: TextField(
+                                        controller: _searchController,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _searchQuery = val.trim();
+                                          });
                                         },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
+                                        decoration: InputDecoration(
+                                          hintText: "Search categories or topics...",
+                                          hintStyle: GoogleFonts.inter(
+                                            color: AppColors.muted,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          prefixIcon: const Icon(
+                                            Icons.search_rounded,
+                                            color: AppColors.muted,
+                                            size: 18,
+                                          ),
+                                          suffixIcon: _searchQuery.isNotEmpty
+                                              ? IconButton(
+                                                  icon: const Icon(Icons.clear_rounded, size: 18, color: AppColors.muted),
+                                                  onPressed: () {
+                                                    _searchController.clear();
+                                                    setState(() {
+                                                      _searchQuery = '';
+                                                    });
+                                                  },
+                                                )
+                                              : null,
+                                          border: InputBorder.none,
+                                          contentPadding: const EdgeInsets.symmetric(
                                             horizontal: 14,
                                             vertical: 11,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(color: AppColors.line),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.search_rounded,
-                                                color: AppColors.muted,
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: Text(
-                                                  "Search or build custom test...",
-                                                  style: GoogleFonts.inter(
-                                                    color: AppColors.muted,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
                                           ),
                                         ),
                                       ),
@@ -2499,7 +2533,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                               ),
                                             ),
                                             const SizedBox(height: 16),
-                                            _buildTreeNodes(_activeTree, 0),
+                                            _buildTreeNodes(_filterTree(_activeTree, _searchQuery), 0),
                                             const SizedBox(height: 80),
                                           ],
                                         ),
