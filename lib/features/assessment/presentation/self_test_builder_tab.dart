@@ -290,9 +290,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         }
         setState(() {
           _activeTree = rootNode.children;
-          // Auto-expand the first level of subcategories
+          // Auto-expand the first 2 levels of subcategories
           for (var child in _activeTree) {
             _expandedNodes.add(child.id);
+            for (var subChild in child.children) {
+              _expandedNodes.add(subChild.id);
+            }
           }
         });
         return;
@@ -301,9 +304,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
     setState(() {
       _activeTree = roots;
-      // Auto-expand the first level of root categories
+      // Auto-expand the first 2 levels of root categories and subcategories
       for (var root in _activeTree) {
         _expandedNodes.add(root.id);
+        for (var child in root.children) {
+          _expandedNodes.add(child.id);
+        }
       }
     });
   }
@@ -1922,26 +1928,37 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         final int available = _getAvailableCount(node.id);
         final bool isRoot = depth == 0 || node.nodeType == 'subject' || node.nodeType == 'paper';
 
-        return Column(
-          children: [
-            isRoot
-                ? _buildRootCategoryCard(
-                    node: node,
-                    hasChildren: hasChildren,
-                    isExpanded: isExpanded,
-                    available: available,
-                  )
-                : _buildPracticeCategoryRow(
-                    node: node,
-                    depth: depth,
-                    hasChildren: hasChildren,
-                    isExpanded: isExpanded,
-                    available: available,
-                  ),
-            if (isExpanded && hasChildren)
-              _buildTreeNodes(node.children, depth + 1),
-          ],
-        );
+        Widget? childrenWidget;
+        if (isExpanded && hasChildren) {
+          childrenWidget = Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: _buildTreeNodes(node.children, depth + 1),
+          );
+        }
+
+        if (isRoot) {
+          return _buildRootCategoryCard(
+            node: node,
+            hasChildren: hasChildren,
+            isExpanded: isExpanded,
+            available: available,
+            childrenWidget: childrenWidget,
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPracticeCategoryRow(
+                node: node,
+                depth: depth,
+                hasChildren: hasChildren,
+                isExpanded: isExpanded,
+                available: available,
+              ),
+              if (childrenWidget != null) childrenWidget,
+            ],
+          );
+        }
       }).toList(),
     );
   }
@@ -1951,48 +1968,44 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     required bool hasChildren,
     required bool isExpanded,
     required int available,
+    Widget? childrenWidget,
   }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CategoryDetailScreen(
-              nodeId: node.id,
-              nodeName: node.name,
-              contentType: _activeTab,
-            ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.line.withOpacity(0.8)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x060F172A),
+            offset: Offset(0, 4),
+            blurRadius: 12,
           ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.civic.withOpacity(0.18)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x080F172A),
-              offset: Offset(0, 6),
-              blurRadius: 16,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          InkWell(
+            onTap: hasChildren ? () => _toggleExpanded(node.id) : null,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: childrenWidget == null && available == 0 ? const Radius.circular(16) : Radius.zero,
+              bottomRight: childrenWidget == null && available == 0 ? const Radius.circular(16) : Radius.zero,
             ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  ClipOval(
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
                     child: SizedBox(
-                      height: 80,
-                      width: 80,
-                      child: _buildCategoryImage(node, iconSize: 28),
+                      height: 52,
+                      width: 52,
+                      child: _buildCategoryImage(node, iconSize: 22),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -2002,219 +2015,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       children: [
                         Text(
                           node.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: AppColors.ink,
-                            letterSpacing: -0.3,
+                            letterSpacing: -0.2,
                           ),
                         ),
                         if (node.description?.trim().isNotEmpty == true) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            node.description!.trim(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              height: 1.4,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.muted,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  _buildQuestionCountBadge(available),
-                ],
-              ),
-              if (available > 0) ...[
-                const SizedBox(height: 12),
-                const Divider(color: AppColors.line, height: 1),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Select questions:",
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        _buildQuantitySelector(node, available),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          onPressed: () => _addQuantityToTest(node),
-                          icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
-                          label: Text(
-                            "Add",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.civic,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      "${node.children.length} child categor${node.children.length == 1 ? 'y' : 'ies'}",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: hasChildren
-                        ? () => _toggleExpanded(node.id)
-                        : null,
-                    icon: Icon(
-                      isExpanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
-                      size: 18,
-                    ),
-                    label: Text(isExpanded ? "Hide Levels" : "View Levels"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.ink,
-                      side: const BorderSide(color: AppColors.line),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      textStyle: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPracticeCategoryRow({
-    required _TreeNode node,
-    required int depth,
-    required bool hasChildren,
-    required bool isExpanded,
-    required int available,
-  }) {
-    return Stack(
-      children: [
-        // Indentation guidelines
-        for (int i = 0; i < depth; i++)
-          Positioned(
-            left: i * 20.0 + 10.0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 1,
-              color: AppColors.line.withOpacity(0.5),
-            ),
-          ),
-        GestureDetector(
-          onTap: hasChildren ? () => _toggleExpanded(node.id) : null,
-          child: Container(
-            margin: EdgeInsets.only(left: depth * 20.0, bottom: 8.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.line),
-            ),
-            child: Row(
-              children: [
-                if (hasChildren)
-                  IconButton(
-                    icon: Icon(
-                      isExpanded ? Icons.expand_more : Icons.chevron_right,
-                      color: AppColors.muted,
-                    ),
-                    onPressed: () => _toggleExpanded(node.id),
-                  )
-                else
-                  const SizedBox(width: 48),
-                if (depth <= 2 && node.imageUrl?.trim().isNotEmpty == true) ...[
-                  ClipOval(
-                    child: SizedBox(
-                      width: 42,
-                      height: 42,
-                      child: _buildCategoryImage(node, iconSize: 18),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                node.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: AppColors.ink,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.civic.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                "Level ${depth + 1}",
-                                style: GoogleFonts.inter(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.civic,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (node.description?.trim().isNotEmpty == true) ...[
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Text(
                             node.description!.trim(),
                             maxLines: 1,
@@ -2226,84 +2035,307 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             ),
                           ),
                         ],
-                        const SizedBox(height: 3),
-                        if (available > 0) ...[
-                          Text(
-                            "$available questions",
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.civic,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              _buildQuantitySelector(node, available),
-                              const SizedBox(width: 8),
-                              ElevatedButton.icon(
-                                onPressed: () => _addQuantityToTest(node),
-                                icon: const Icon(Icons.add, size: 14),
-                                label: Text(
-                                  "Add",
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.civic,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  elevation: 0,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              ElevatedButton.icon(
-                                onPressed: () => _startDirectTest(node),
-                                icon: const Icon(Icons.play_arrow_rounded, size: 14),
-                                label: Text(
-                                  "Start",
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.ink,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  elevation: 0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ] else ...[
-                          Text(
-                            "No questions",
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.muted,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  if (hasChildren)
+                    Icon(
+                      isExpanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.muted,
+                      size: 22,
+                    ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Selection Bar (only if available > 0)
+          if (available > 0) ...[
+            const Divider(color: AppColors.line, height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "$available questions available",
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.civic,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _buildQuantitySelector(node, available),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () => _addQuantityToTest(node),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.civic,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          "Add",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Footer Details Link
+          const Divider(color: AppColors.line, height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CategoryDetailScreen(
+                          nodeId: node.id,
+                          nodeName: node.name,
+                          contentType: _activeTab,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.analytics_outlined, size: 14, color: AppColors.civic),
+                  label: Text(
+                    "View Topic Details & Stats",
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.civic,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
-                const SizedBox(width: 8),
+                if (hasChildren)
+                  Text(
+                    "${node.children.length} subtopics",
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.muted,
+                    ),
+                  ),
               ],
             ),
           ),
-        ),
-      ],
+
+          // Children list nested inside the card!
+          if (childrenWidget != null) ...[
+            const Divider(color: AppColors.line, height: 1),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.paper.withOpacity(0.3),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+              ),
+              padding: const EdgeInsets.only(left: 14, right: 14, bottom: 14),
+              child: childrenWidget,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPracticeCategoryRow({
+    required _TreeNode node,
+    required int depth,
+    required bool hasChildren,
+    required bool isExpanded,
+    required int available,
+  }) {
+    final double leftPadding = (depth - 1) * 16.0;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: EdgeInsets.only(left: leftPadding),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (depth > 1) ...[
+            Container(
+              width: 1.5,
+              height: 38,
+              margin: const EdgeInsets.only(right: 12, left: 4),
+              color: AppColors.line,
+            ),
+          ] else ...[
+            Container(
+              margin: const EdgeInsets.only(top: 2, right: 10),
+              child: Icon(
+                hasChildren ? Icons.folder_open_rounded : Icons.radio_button_checked_rounded,
+                size: 14,
+                color: AppColors.civic.withOpacity(0.7),
+              ),
+            ),
+          ],
+          
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: hasChildren ? () => _toggleExpanded(node.id) : null,
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                node.name,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                            if (hasChildren) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                size: 16,
+                                color: AppColors.muted,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.civic.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        "L${depth + 1}",
+                        style: GoogleFonts.inter(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.civic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (node.description?.trim().isNotEmpty == true) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    node.description!.trim(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 4),
+                if (available > 0) ...[
+                  Row(
+                    children: [
+                      Text(
+                        "$available Qs",
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w750,
+                          color: AppColors.civic,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildQuantitySelector(node, available),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => _addQuantityToTest(node),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.civic,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          "Add",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      ElevatedButton(
+                        onPressed: () => _startDirectTest(node),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.ink,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          "Start",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  Text(
+                    "No questions available",
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.muted.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
