@@ -219,41 +219,59 @@ class _NavigationHomeState extends State<NavigationHome> {
             ],
             child: Padding(
               padding: const EdgeInsets.only(right: 12.0),
-              child: Chip(
-                backgroundColor: AppColors.paper,
-                side: BorderSide.none,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.paper,
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                avatar: CircleAvatar(
-                  backgroundColor: hasPremium ? const Color(0xFFF59E0B).withOpacity(0.2) : AppColors.civic.withOpacity(0.2),
-                  child: hasPremium
-                      ? const Icon(Icons.workspace_premium_rounded, color: Color(0xFFF59E0B), size: 12)
-                      : Text(
-                          username.isNotEmpty ? username[0].toUpperCase() : 'S',
-                          style: const TextStyle(color: AppColors.civic, fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                ),
-                label: Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
-                      child: Text(
-                        username,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink,
-                        ),
-                      ),
+                    CircleAvatar(
+                      radius: 12,
+                      backgroundColor: hasPremium ? const Color(0xFFF59E0B).withOpacity(0.2) : AppColors.civic.withOpacity(0.2),
+                      child: hasPremium
+                          ? const Icon(Icons.workspace_premium_rounded, color: Color(0xFFF59E0B), size: 12)
+                          : Text(
+                              username.isNotEmpty ? username[0].toUpperCase() : 'S',
+                              style: const TextStyle(color: AppColors.civic, fontWeight: FontWeight.bold, fontSize: 10),
+                            ),
                     ),
-                    if (hasPremium) ...[
-                      const SizedBox(width: 4),
-                      const Icon(Icons.star_rounded, size: 12, color: Color(0xFFF59E0B)),
-                    ],
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_drop_down, size: 16, color: AppColors.muted),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              username,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                            if (hasPremium) ...[
+                              const SizedBox(width: 3),
+                              const Icon(Icons.star_rounded, size: 10, color: Color(0xFFF59E0B)),
+                            ],
+                            const SizedBox(width: 2),
+                            const Icon(Icons.arrow_drop_down, size: 14, color: AppColors.muted),
+                          ],
+                        ),
+                        Text(
+                          hasPremium ? "Premium" : "Free",
+                          style: GoogleFonts.inter(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: hasPremium ? const Color(0xFF10B981) : AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -295,7 +313,7 @@ class _NavigationHomeState extends State<NavigationHome> {
             NavigationDestination(
               icon: Icon(Icons.bar_chart_outlined, color: _currentIndex == 1 ? AppColors.civic : AppColors.muted),
               selectedIcon: const Icon(Icons.bar_chart_rounded, color: AppColors.civic),
-              label: "Dashboard",
+              label: "Performance",
             ),
             NavigationDestination(
               icon: Icon(Icons.quiz_outlined, color: _currentIndex == 2 ? AppColors.civic : AppColors.muted),

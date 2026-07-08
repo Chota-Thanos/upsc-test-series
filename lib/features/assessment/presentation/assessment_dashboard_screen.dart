@@ -13,6 +13,7 @@ import 'custom_test_create_screen.dart';
 import 'ai_based_parsing_screen.dart';
 import 'category_detail_screen.dart';
 import 'attempt_engine_screen.dart';
+import 'my_tests_tab.dart';
 
 class AssessmentDashboardScreen extends StatefulWidget {
   const AssessmentDashboardScreen({super.key});
@@ -158,7 +159,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           backgroundColor: AppColors.paper,
           elevation: 0,
           title: Text(
-            "Assessments",
+            "Performance",
             style: GoogleFonts.plusJakartaSans(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -179,11 +180,46 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         ),
         body: TabBarView(
           children: [
-            _buildDashboardTab(res.gk, _gkAttempts, 'gk'),
-            _buildDashboardTab(res.aptitude, _aptitudeAttempts, 'aptitude'),
-            _buildMainsDashboardTab(res.mains),
+            _buildNestedTabWrapper('gk', _buildDashboardTab(res.gk, _gkAttempts, 'gk')),
+            _buildNestedTabWrapper('aptitude', _buildDashboardTab(res.aptitude, _aptitudeAttempts, 'aptitude')),
+            _buildNestedTabWrapper('mains', _buildMainsDashboardTab(res.mains)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNestedTabWrapper(String contentType, Widget dashboardWidget) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: TabBar(
+              labelColor: AppColors.civic,
+              unselectedLabelColor: AppColors.muted,
+              indicatorColor: AppColors.civic,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13),
+              unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13),
+              tabs: const [
+                Tab(text: "Summary"),
+                Tab(text: "My Results"),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                dashboardWidget,
+                MyTestsTab(contentType: contentType),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -445,9 +481,6 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                   "$attemptedNodes of $totalNodes nodes have attempt data. Expand any level to inspect subjects, topics, and subtopics.",
             ),
             _buildPerformanceTreeView(contentType, roots: roots),
-            const SizedBox(height: 24),
-            _buildSectionHeader("Recent Test Attempts"),
-            _buildRecentAttemptsList(attempts),
             const SizedBox(height: 16),
           ],
         ),
@@ -741,10 +774,6 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                   );
                 },
               ),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader("Recent Test Attempts"),
-            _buildRecentAttemptsList(_mainsAttempts),
             const SizedBox(height: 16),
           ],
         ),

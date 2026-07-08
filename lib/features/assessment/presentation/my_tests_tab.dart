@@ -36,9 +36,14 @@ class _MyTestsTabState extends State<MyTestsTab> {
       _error = null;
     });
     try {
-      final attempts = await _service.getMyAssessmentAttempts(contentType: widget.contentType);
+      final isMains = widget.contentType == 'mains';
+      final attempts = await _service.getMyAssessmentAttempts(
+        contentType: isMains ? null : widget.contentType,
+      );
       setState(() {
-        _attempts = attempts;
+        _attempts = isMains
+            ? attempts.where((a) => a.testTemplate.testType == 'mains_test').toList()
+            : attempts;
         _loading = false;
       });
     } catch (e) {
@@ -169,7 +174,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: attempt.status == 'completed'
+                              color: (attempt.status == 'completed' || attempt.status == 'submitted')
                                   ? AppColors.emerald.withOpacity(0.1)
                                   : AppColors.saffron.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -179,7 +184,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: attempt.status == 'completed' ? AppColors.emerald : AppColors.saffron,
+                                color: (attempt.status == 'completed' || attempt.status == 'submitted') ? AppColors.emerald : AppColors.saffron,
                               ),
                             ),
                           ),
@@ -212,7 +217,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           onPressed: () {
-                            if (attempt.status == 'completed') {
+                            if (attempt.status == 'completed' || attempt.status == 'submitted') {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => ResultReviewScreen(resultId: result!.id)),
@@ -225,7 +230,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                             }
                           },
                           child: Text(
-                            attempt.status == 'completed' ? "View Detailed Report" : "Resume Test",
+                            (attempt.status == 'completed' || attempt.status == 'submitted') ? "View Detailed Report" : "Resume Test",
                             style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.civic),
                           ),
                         ),

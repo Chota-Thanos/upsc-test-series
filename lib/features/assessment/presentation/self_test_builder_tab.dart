@@ -72,6 +72,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   List<_TreeNode> _activeTree = [];
   Set<int> _expandedNodes = {};
   final Map<int, int> _selectedQuantities = {};
+  Map<String, List<int>> _exclusionsMap = {'objective': [], 'mains': []};
 
   // Cart for compiled test
   List<Map<String, dynamic>> _compiledItems = [];
@@ -129,6 +130,14 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       _objNodesRaw = objNodes;
       _mainsNodesRaw = mainsNodes;
 
+      // Load user syllabus exclusions
+      try {
+        final exclusions = await _service.getExcludedTaxonomyNodes();
+        _exclusionsMap = exclusions;
+      } catch (e) {
+        debugPrint("Error loading exclusions in app: $e");
+      }
+
       await _loadCounts();
       _buildActiveTree();
 
@@ -137,7 +146,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       }
 
       setState(() {
-        _expandedNodes.clear();
         _compiledItems.clear();
         _selectedQuantities.clear();
         _loading = false;
@@ -184,6 +192,32 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           .toList();
     } else {
       sourceNodes = _mainsNodesRaw; // or filtered
+    }
+
+    // Apply user exclusions recursively
+    final exclusions = _activeTab == 'mains'
+        ? (_exclusionsMap['mains'] ?? [])
+        : (_exclusionsMap['objective'] ?? []);
+
+    if (exclusions.isNotEmpty) {
+      final excludedSet = Set<int>.from(exclusions);
+      bool changed = true;
+      while (changed) {
+        changed = false;
+        for (var n in sourceNodes) {
+          final id = int.tryParse(n['id']?.toString() ?? '') ?? 0;
+          final parentId = n['parent_id'] != null
+              ? int.tryParse(n['parent_id'].toString())
+              : null;
+          if (parentId != null && excludedSet.contains(parentId) && !excludedSet.contains(id)) {
+            excludedSet.add(id);
+            changed = true;
+          }
+        }
+      }
+      sourceNodes = sourceNodes
+          .where((n) => !excludedSet.contains(int.tryParse(n['id']?.toString() ?? '') ?? 0))
+          .toList();
     }
 
     final Map<int, _TreeNode> nodeMap = {};
@@ -241,6 +275,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       sortChildren(root);
     }
 
+    _expandedNodes.clear(); // Clear old expansion state when tree rebuilds
+
     if (widget.rootNodeId != null) {
       final rootNode = nodeMap[widget.rootNodeId];
       if (rootNode != null) {
@@ -254,6 +290,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         }
         setState(() {
           _activeTree = rootNode.children;
+          // Auto-expand the first level of subcategories
+          for (var child in _activeTree) {
+            _expandedNodes.add(child.id);
+          }
         });
         return;
       }
@@ -261,6 +301,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
     setState(() {
       _activeTree = roots;
+      // Auto-expand the first level of root categories
+      for (var root in _activeTree) {
+        _expandedNodes.add(root.id);
+      }
     });
   }
 
@@ -1162,6 +1206,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     required _TreeNode node,
     required Map<String, dynamic> category,
     required String family,
+    required String title,
   }) async {
     String? selectedFormat;
     int questionCount = 20;
@@ -1268,6 +1313,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             },
           ],
           includeAttempted: includeAttempted,
+          title: title,
         );
 
         if (mounted) {
@@ -1286,6 +1332,61 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     }
   }
 
+  Future<String?> _showTestNameDialog(String defaultName) async {
+    final controller = TextEditingController(text: defaultName);
+    final formKey = GlobalKey<FormState>();
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            "Enter Test Name",
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: "Test Name",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return "Test name is compulsory";
+                }
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.civic,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(context, controller.text.trim());
+                }
+              },
+              child: Text("Start", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _startDirectTest(_TreeNode node) async {
     final apiClient = Provider.of<ApiClient>(context, listen: false);
     if (!apiClient.hasEntitlement('assessment.premium_tests')) {
@@ -1298,6 +1399,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     if (_selectedExamId == null) return;
 
     final isMains = _activeTab == 'mains';
+    
+    // Prompt for Test Name first
+    final defaultTitle = "${node.name} Quick Test";
+    final testName = await _showTestNameDialog(defaultTitle);
+    if (testName == null || testName.isEmpty) return; // Cancelled
+
     final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
     final category = _resolveCategory(node, nodesList);
     final family = isMains ? 'mains_subjective' : 'objective';
@@ -1311,6 +1418,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         node: node,
         category: category,
         family: family,
+        title: testName,
       );
     } else {
       setState(() => _compiling = true);
@@ -1325,6 +1433,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
               'question_family': family,
             },
           ],
+          title: testName,
         );
 
         if (mounted) {
@@ -1343,6 +1452,232 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         if (mounted) setState(() => _compiling = false);
       }
     }
+  }
+
+  Future<void> _showCustomizeSyllabusModal() async {
+    final List<Map<String, dynamic>> activeRawNodes = _activeTab == 'mains'
+        ? _mainsNodesRaw
+        : _objNodesRaw.where((n) => n['content_type'] == _activeTab).toList();
+
+    if (activeRawNodes.isEmpty) return;
+
+    final Map<int, List<Map<String, dynamic>>> parentToChildren = {};
+    final List<Map<String, dynamic>> roots = [];
+
+    for (var n in activeRawNodes) {
+      final id = int.tryParse(n['id']?.toString() ?? '') ?? 0;
+      final parentId = n['parent_id'] != null ? int.tryParse(n['parent_id'].toString()) : null;
+      if (parentId != null) {
+        parentToChildren.putIfAbsent(parentId, () => []).add(n);
+      } else {
+        roots.add(n);
+      }
+    }
+
+    roots.sort((a, b) => (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? ''));
+    parentToChildren.forEach((key, list) {
+      list.sort((a, b) => (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? ''));
+    });
+
+    final currentExclusions = _activeTab == 'mains'
+        ? (_exclusionsMap['mains'] ?? [])
+        : (_exclusionsMap['objective'] ?? []);
+
+    final Set<int> tempExcluded = Set<int>.from(currentExclusions);
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            void toggleNode(int nodeId, bool isChecked) {
+              setDialogState(() {
+                List<int> getDescendants(int id) {
+                  final List<int> list = [];
+                  final children = parentToChildren[id] ?? [];
+                  for (var c in children) {
+                    final childId = int.tryParse(c['id']?.toString() ?? '') ?? 0;
+                    list.add(childId);
+                    list.addAll(getDescendants(childId));
+                  }
+                  return list;
+                }
+
+                final descendants = getDescendants(nodeId);
+
+                if (isChecked) {
+                  tempExcluded.remove(nodeId);
+                  for (var d in descendants) {
+                    tempExcluded.remove(d);
+                  }
+                } else {
+                  tempExcluded.add(nodeId);
+                  for (var d in descendants) {
+                    tempExcluded.add(d);
+                  }
+                }
+              });
+            }
+
+            Widget buildFilterNode(Map<String, dynamic> n, int depth) {
+              final id = int.tryParse(n['id']?.toString() ?? '') ?? 0;
+              final name = n['name'] as String? ?? '';
+              final type = n['node_type'] as String? ?? '';
+              final isChecked = !tempExcluded.contains(id);
+              final children = parentToChildren[id] ?? [];
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: depth * 16.0),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: isChecked,
+                          activeColor: AppColors.civic,
+                          onChanged: (val) {
+                            if (val != null) {
+                              toggleNode(id, val);
+                            }
+                          },
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: type == 'subject' || type == 'paper'
+                                ? Colors.grey[200]
+                                : type == 'source_bucket' || type == 'subject_area'
+                                    ? Colors.amber[50]
+                                    : Colors.indigo[50],
+                            borderRadius: BorderRadius.circular(4),
+                            border: type == 'source_bucket' || type == 'subject_area'
+                                ? Border.all(color: Colors.amber[200]!)
+                                : null,
+                          ),
+                          child: Text(
+                            type.replaceAll('_', ' ').toUpperCase(),
+                            style: GoogleFonts.inter(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              color: type == 'subject' || type == 'paper'
+                                  ? Colors.grey[700]
+                                  : type == 'source_bucket' || type == 'subject_area'
+                                      ? Colors.amber[800]
+                                      : Colors.indigo[800],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isChecked ? AppColors.ink : AppColors.muted,
+                              decoration: isChecked ? null : TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (children.isNotEmpty)
+                    ...children.map((c) => buildFilterNode(c, depth + 1)),
+                ],
+              );
+            }
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                "Customize Syllabus",
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Uncheck categories or sources to hide them from the test builder.",
+                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    Expanded(
+                      child: ListView(
+                        children: roots.map((r) => buildFilterNode(r, 0)).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    setState(() => _loading = true);
+                    try {
+                      await _service.updateExcludedTaxonomyNodes(
+                        taxonomyType: _activeTab == 'mains' ? 'mains' : 'objective',
+                        excludedNodeIds: [],
+                      );
+                      _exclusionsMap[_activeTab == 'mains' ? 'mains' : 'objective'] = [];
+                      _buildActiveTree();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Failed to reset customization: $e")),
+                      );
+                    } finally {
+                      setState(() => _loading = false);
+                    }
+                  },
+                  child: Text(
+                    "Reset View",
+                    style: GoogleFonts.inter(color: Colors.red[600], fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.civic,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    setState(() => _loading = true);
+                    try {
+                      final list = tempExcluded.toList();
+                      await _service.updateExcludedTaxonomyNodes(
+                        taxonomyType: _activeTab == 'mains' ? 'mains' : 'objective',
+                        excludedNodeIds: list,
+                      );
+                      _exclusionsMap[_activeTab == 'mains' ? 'mains' : 'objective'] = list;
+                      _buildActiveTree();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Failed to save customization: $e")),
+                      );
+                    } finally {
+                      setState(() => _loading = false);
+                    }
+                  },
+                  child: Text("Save", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _compileAndStart() async {
@@ -2050,7 +2385,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
   @override
   Widget build(BuildContext context) {
-    final apiClient = Provider.of<ApiClient>(context);
     if (_loading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.civic),
@@ -2091,10 +2425,29 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSubscriptionBanner(apiClient),
-                        const SizedBox(height: 16),
+                        if (widget.rootNodeId == null) ...[
+                          Text(
+                            "EXAM",
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 10,
+                              color: AppColors.muted,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "UPSC CSE",
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: AppColors.civic,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         Text(
-                          "Assessment Syllabus",
+                          "Test Topics",
                           style: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w900,
                             fontSize: 22,
@@ -2199,50 +2552,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Select Exam".toUpperCase(),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 10,
-                            color: AppColors.muted,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        // Exam Dropdown
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.line),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              isExpanded: true,
-                              value: _selectedExamId,
-                              items: _exams
-                                  .map(
-                                    (e) => DropdownMenuItem(
-                                      value: e.id,
-                                      child: Text(
-                                        e.name,
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                          color: AppColors.ink,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (v) {
-                                setState(() => _selectedExamId = v);
-                                _loadSyllabus();
-                              },
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -2287,6 +2596,59 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         : ListView(
                             padding: const EdgeInsets.all(16),
                             children: [
+                              Card(
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: AppColors.civic.withOpacity(0.2)),
+                                ),
+                                color: AppColors.civic.withOpacity(0.05),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: _showCustomizeSyllabusModal,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.tune_rounded,
+                                          color: AppColors.civic,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Customize Syllabus View",
+                                                style: GoogleFonts.plusJakartaSans(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                  color: AppColors.ink,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                "Hide/show books, sources or specific topics.",
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 11,
+                                                  color: AppColors.muted,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: AppColors.muted,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
                               _buildTreeNodes(_activeTree, 0),
                               const SizedBox(height: 80),
                             ],
@@ -2468,107 +2830,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
-  Widget _buildSubscriptionBanner(ApiClient apiClient) {
-    final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: hasPremium 
-              ? [const Color(0xFF0F172A), const Color(0xFF1E293B)] 
-              : [const Color(0xFFFFF7ED), const Color(0xFFFFEDD5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: hasPremium ? const Color(0xFF334155) : const Color(0xFFFFD8A8),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: hasPremium ? const Color(0xFF10B981).withOpacity(0.15) : const Color(0xFFF97316).withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              hasPremium ? Icons.verified_user_rounded : Icons.info_outline_rounded,
-              color: hasPremium ? const Color(0xFF10B981) : const Color(0xFFF97316),
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hasPremium ? "Premium Account Active" : "Free Tier Account",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12.5,
-                    color: hasPremium ? Colors.white : const Color(0xFF7C2D12),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  hasPremium 
-                      ? "Unlimited Custom Test building & sectional tests unlocked." 
-                      : "Custom tests are limited to 10 questions. Sectional and Mains tests are locked.",
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: hasPremium ? const Color(0xFFCBD5E1) : const Color(0xFF9A3412),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!hasPremium) ...[
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: () async {
-                final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
-                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-                  debugPrint("Could not launch $url");
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEA580C),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                "Upgrade",
-                style: GoogleFonts.inter(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 }
 
 class _SliverTabHeaderDelegate extends SliverPersistentHeaderDelegate {

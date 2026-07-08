@@ -400,6 +400,41 @@ class AssessmentService extends ChangeNotifier {
     }
   }
 
+  // Fetch excluded taxonomy nodes for current student user
+  Future<Map<String, List<int>>> getExcludedTaxonomyNodes() async {
+    try {
+      final Map<String, dynamic> data = await apiClient.get(
+        '/api/v1/assessment/taxonomy/excluded',
+      );
+      return {
+        'objective': List<int>.from(data['objective'] ?? []),
+        'mains': List<int>.from(data['mains'] ?? []),
+      };
+    } catch (e) {
+      debugPrint("Error fetching excluded taxonomy nodes: $e");
+      rethrow;
+    }
+  }
+
+  // Save excluded taxonomy nodes for current student user
+  Future<void> updateExcludedTaxonomyNodes({
+    required String taxonomyType,
+    required List<int> excludedNodeIds,
+  }) async {
+    try {
+      await apiClient.post(
+        '/api/v1/assessment/taxonomy/excluded',
+        {
+          'taxonomy_type': taxonomyType,
+          'excluded_node_ids': excludedNodeIds,
+        },
+      );
+    } catch (e) {
+      debugPrint("Error saving excluded taxonomy nodes: $e");
+      rethrow;
+    }
+  }
+
   // Fetch question natures for wizard
   Future<List<Map<String, dynamic>>> getQuestionNatures(int examId) async {
     try {
@@ -472,6 +507,7 @@ class AssessmentService extends ChangeNotifier {
     required String testType,
     required List<Map<String, dynamic>> categories,
     bool includeAttempted = false,
+    String? title,
   }) async {
     try {
       final payload = {
@@ -479,6 +515,7 @@ class AssessmentService extends ChangeNotifier {
         'test_type': testType,
         'categories': categories,
         'include_attempted': includeAttempted,
+        if (title != null) 'title': title,
       };
       final Map<String, dynamic> data = await apiClient.post(
         '/api/v1/assessment/attempts/compiled',

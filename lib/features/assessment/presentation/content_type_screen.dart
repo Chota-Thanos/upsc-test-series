@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'self_test_builder_tab.dart';
-import 'content_type_performance_view.dart';
+import 'my_tests_tab.dart';
 
 /// A self-contained page for one content type (GK, CSAT, or Mains).
 /// Has 2 tabs: Create Test + Performance
@@ -59,7 +59,7 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
             unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
             tabs: const [
               Tab(text: 'Create Test'),
-              Tab(text: 'Performance'),
+              Tab(text: 'My Results'),
               Tab(text: 'Revision'),
             ],
           ),
@@ -69,7 +69,7 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
             controller: _tabController,
             children: [
               SelfTestBuilderTab(contentType: widget.contentType),
-              ContentTypePerformanceView(contentType: widget.contentType),
+              MyTestsTab(contentType: widget.contentType),
               SelfTestBuilderTab(
                 contentType: widget.contentType,
                 isRevisionMode: true,

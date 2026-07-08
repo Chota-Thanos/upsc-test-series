@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/constants.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../assessment/data/assessment_service.dart';
 import '../../assessment/models/assessment_models.dart';
 import '../../assessment/presentation/attempt_engine_screen.dart';
@@ -14,9 +13,6 @@ import '../../study_plans/presentation/study_plan_detail_screen.dart';
 import '../../mentors/data/mentor_service.dart';
 import '../../mentors/models/mentor_models.dart';
 import '../../mentors/presentation/mentor_detail_screen.dart';
-import 'onboarding_tour_widget.dart';
-import '../../../../core/utils/auth_interception_helper.dart';
-
 class HomeScreen extends StatefulWidget {
   final Function(int, {int subIndex, int subSubIndex}) onTabSelected;
   const HomeScreen({super.key, required this.onTabSelected});
@@ -40,77 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<MentorProfile> _mentors = [];
   List<StudentAttemptSummary> _activeAttempts = [];
 
-  // Onboarding Guided Tour Keys & States
-  final GlobalKey _keyBanner = GlobalKey();
-  final GlobalKey _keyRadar = GlobalKey();
-  final GlobalKey _keyPractice = GlobalKey();
-  final GlobalKey _keyStudyPlans = GlobalKey();
-  final GlobalKey _keyMentors = GlobalKey();
-
-  bool _showTour = false;
-  bool _dismissedTourBanner = false;
-  List<TourStep> _tourSteps = [];
-
-  void _startTour() {
-    setState(() {
-      _showTour = true;
-    });
-  }
-
-  GlobalKey? _getGlobalKeyBySelector(String selector) {
-    final clean = selector.replaceAll('#', '').trim().toLowerCase();
-    switch (clean) {
-      case 'banner':
-      case 'tour-banner':
-        return _keyBanner;
-      case 'radar':
-      case 'tour-radar':
-        return _keyRadar;
-      case 'practice':
-      case 'tour-practice':
-        return _keyPractice;
-      case 'study_plans':
-      case 'tour-study-plans':
-        return _keyStudyPlans;
-      case 'mentors':
-      case 'tour-mentors':
-        return _keyMentors;
-      default:
-        return null;
-    }
-  }
-
-  Future<void> _fetchTourSteps() async {
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    try {
-      final res = await apiClient.get('/api/v1/onboarding/tours?key=mobile_home_tour');
-      if (res != null && res['steps'] is List) {
-        final List<TourStep> fetched = [];
-        for (var step in res['steps']) {
-          final selector = step['selector'] as String? ?? '';
-          final key = _getGlobalKeyBySelector(selector);
-          if (key != null) {
-            fetched.add(
-              TourStep(
-                targetKey: key,
-                title: step['title'] ?? '',
-                body: step['body'] ?? '',
-                badge: step['badge'] ?? '',
-              ),
-            );
-          }
-        }
-        if (mounted && fetched.isNotEmpty) {
-          setState(() {
-            _tourSteps = fetched;
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Failed to fetch dynamic tour steps: $e");
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -124,7 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadAllData() async {
     final apiClient = Provider.of<ApiClient>(context, listen: false);
-    _fetchTourSteps();
 
     if (apiClient.isGuestMode) {
       setState(() {
@@ -223,6 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final apiClient = Provider.of<ApiClient>(context);
     final username = apiClient.user?['username'] ?? 'Student';
+    final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
     return Scaffold(
       backgroundColor: AppColors.paper,
@@ -239,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Stack(
                 children: [
                   Container(
-                    height: 200,
+                    height: 135,
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       image: DecorationImage(
@@ -251,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   Container(
-                    height: 200,
+                    height: 135,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -266,20 +191,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   Positioned(
-                    bottom: 20,
+                    bottom: 12,
                     left: 20,
                     right: 20,
                     child: Row(
                       children: [
                         CircleAvatar(
                           backgroundColor: Colors.white,
-                          radius: 24,
+                          radius: 20,
                           child: Text(
                             username.isNotEmpty ? username[0].toUpperCase() : 'S',
                             style: const TextStyle(
                               color: AppColors.civic,
                               fontWeight: FontWeight.bold,
-                              fontSize: 20,
+                              fontSize: 16,
                             ),
                           ),
                         ),
@@ -288,26 +213,47 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "Namaste, $username! 👋",
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
+                              Row(
+                                children: [
+                                  Text(
+                                    "Namaste, $username! 👋",
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withOpacity(0.3),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: hasPremium ? const Color(0xFF10B981) : Colors.amber.shade700,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      hasPremium ? "PRO" : "FREE",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 "Accelerate your UPSC preparation journey.",
                                 style: GoogleFonts.inter(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white.withOpacity(0.9),
                                 ),
@@ -321,12 +267,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-               _buildSubscriptionBanner(apiClient),
-              const SizedBox(height: 16),
-              if (!_dismissedTourBanner) ...[
-                _buildTourBanner(),
-                const SizedBox(height: 16),
-              ],
 
               if (_activeAttempts.isNotEmpty) ...[
                 Padding(
@@ -337,47 +277,43 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         "In-Progress Attempts",
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppColors.ink,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       ..._activeAttempts.map((attempt) {
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFFF7ED), Color(0xFFFFFBEB)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            border: Border.all(color: const Color(0xFFFED7AA), width: 1.5),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: const [
+                            color: AppColors.surface,
+                            border: Border.all(color: AppColors.line, width: 1),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
                               BoxShadow(
-                                color: Color(0x06000000),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
                               ),
                             ],
                           ),
                           child: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF97316).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: AppColors.civic.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Icon(
                                   Icons.timer_outlined,
-                                  color: Color(0xFFF97316),
-                                  size: 24,
+                                  color: AppColors.civic,
+                                  size: 16,
                                 ),
                               ),
-                              const SizedBox(width: 14),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,16 +321,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Text(
                                       attempt.testTemplate.title,
                                       style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
                                         color: AppColors.ink,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 2),
                                     Text(
                                       "Started on ${attempt.startedAt.split('T').first}. You left this test in between.",
                                       style: GoogleFonts.inter(
-                                        fontSize: 11,
+                                        fontSize: 10,
                                         color: AppColors.muted,
                                       ),
                                     ),
@@ -403,13 +339,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF97316),
+                                  backgroundColor: AppColors.civic,
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 onPressed: () async {
                                   await Navigator.push(
@@ -423,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Text(
                                   "RESUME",
                                   style: GoogleFonts.inter(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -456,7 +394,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     GestureDetector(
                       onTap: () => widget.onTabSelected(1), // Switch to Dashboard Tab
                       child: Container(
-                        key: _keyRadar,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -519,39 +456,110 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                       final mains = _stats!.mains;
 
-                                      return Row(
+                                      return Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          _buildPerformanceRadarColumn(
-                                            title: "GS PRELIMS",
-                                            accentColor: AppColors.civic,
-                                            items: [
-                                              _buildRadarMetricRow("Total Qs", gkTotal.toString(), null),
-                                              _buildRadarMetricRow("Correct", "${gkPctCorrect.toStringAsFixed(0)}%", AppColors.emerald),
-                                              _buildRadarMetricRow("Incorrect", "${gkPctIncorrect.toStringAsFixed(0)}%", AppColors.berry),
-                                              _buildRadarMetricRow("Skipped", "${gkPctUnattempted.toStringAsFixed(0)}%", AppColors.muted),
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              // Column 1: Labels
+                                              Expanded(
+                                                flex: 12,
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    const SizedBox(height: 38), // Space matching header row
+                                                    _buildTableSidebarCell("Correct", AppColors.emerald),
+                                                    _buildTableSidebarCell("Incorrect", AppColors.berry),
+                                                    _buildTableSidebarCell("Unattempted", AppColors.muted),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              // Column 2: GK
+                                              Expanded(
+                                                flex: 10,
+                                                child: Column(
+                                                  children: [
+                                                    _buildTableHeaderCell("GK", AppColors.civic),
+                                                    _buildColumnContent(true, gkTotal, gkPctCorrect, gkPctIncorrect, gkPctUnattempted),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              // Column 3: CSAT
+                                              Expanded(
+                                                flex: 10,
+                                                child: Column(
+                                                  children: [
+                                                    _buildTableHeaderCell("CSAT", AppColors.saffron),
+                                                    _buildColumnContent(false, csatTotal, csatPctCorrect, csatPctIncorrect, csatPctUnattempted),
+                                                  ],
+                                                ),
+                                              ),
                                             ],
                                           ),
-                                          const SizedBox(width: 8),
-                                          _buildPerformanceRadarColumn(
-                                            title: "CSAT DRILL",
-                                            accentColor: AppColors.saffron,
-                                            items: [
-                                              _buildRadarMetricRow("Total Qs", csatTotal.toString(), null),
-                                              _buildRadarMetricRow("Correct", "${csatPctCorrect.toStringAsFixed(0)}%", AppColors.emerald),
-                                              _buildRadarMetricRow("Incorrect", "${csatPctIncorrect.toStringAsFixed(0)}%", AppColors.berry),
-                                              _buildRadarMetricRow("Skipped", "${csatPctUnattempted.toStringAsFixed(0)}%", AppColors.muted),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                                            child: Divider(color: AppColors.line, height: 1),
+                                          ),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.border_color_rounded, color: Colors.purple, size: 16),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                "MAINS WRITING",
+                                                style: GoogleFonts.plusJakartaSans(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Colors.purple,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
                                             ],
                                           ),
-                                          const SizedBox(width: 8),
-                                          _buildPerformanceRadarColumn(
-                                            title: "MAINS WRITING",
-                                            accentColor: Colors.purple,
-                                            items: [
-                                              _buildRadarMetricRow("Attempts", mains.attemptsCount.toString(), null),
-                                              _buildRadarMetricRow("Avg Score", mains.avgScore.toStringAsFixed(1), AppColors.civic),
-                                              _buildRadarMetricRow("Max Score", mains.maxScore.toStringAsFixed(1), AppColors.emerald),
-                                              _buildRadarMetricRow("Evaluated", mains.evaluatedCount.toString(), AppColors.brand),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: _buildMainsMetricCard(
+                                                  "Questions",
+                                                  mains.attemptsCount.toString(),
+                                                  Icons.description_outlined,
+                                                  AppColors.civic,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: _buildMainsMetricCard(
+                                                  "Evaluated",
+                                                  mains.evaluatedCount.toString(),
+                                                  Icons.assignment_turned_in_outlined,
+                                                  AppColors.brand,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: _buildMainsMetricCard(
+                                                  "Total Score",
+                                                  mains.totalMaxScore.toStringAsFixed(0),
+                                                  Icons.military_tech_outlined,
+                                                  AppColors.emerald,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: _buildMainsMetricCard(
+                                                  "Your Score",
+                                                  mains.totalScore.toStringAsFixed(1),
+                                                  Icons.insights_rounded,
+                                                  AppColors.saffron,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ],
@@ -599,7 +607,6 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
-                  key: _keyPractice,
                   children: [
                     Row(
                       children: [
@@ -686,7 +693,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 10),
               Container(
-                key: _keyStudyPlans,
                 height: 205,
                 child: _loadingPlans
                     ? const Center(
@@ -736,7 +742,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 10),
               Container(
-                key: _keyMentors,
                 height: 175,
                 child: _loadingMentors
                     ? const Center(
@@ -759,124 +764,166 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      if (_showTour)
-        OnboardingTourWidget(
-          steps: _tourSteps.isNotEmpty
-              ? _tourSteps
-              : [
-                  TourStep(
-                    targetKey: _keyBanner,
-                    badge: "Step 1 of 5: Member Center",
-                    title: "Premium Subscription Status",
-                    body: "Track your active subscription tier, validity dates, and evaluation token counts right at the top of your dashboard.",
-                  ),
-                  TourStep(
-                    targetKey: _keyRadar,
-                    badge: "Step 2 of 5: Analytics Radar",
-                    title: "Your Subject Performance",
-                    body: "View your GS Prelims, CSAT math drill, and Mains answer-writing accuracy breakdown dynamically.",
-                  ),
-                  TourStep(
-                    targetKey: _keyPractice,
-                    badge: "Step 3 of 5: Mock Test Builder",
-                    title: "Custom GK, CSAT & Mains Quizzes",
-                    body: "Tap any tile to launch targeted Prelims GS tests, math CSAT drills, or subjective Mains writing assignments.",
-                  ),
-                  TourStep(
-                    targetKey: _keyStudyPlans,
-                    badge: "Step 4 of 5: Study Plans",
-                    title: "Structured Preparation roadmaps",
-                    body: "Sprint toward mock exams with guided 90-Day Prelims pathways and Mains writing modules.",
-                  ),
-                  TourStep(
-                    targetKey: _keyMentors,
-                    badge: "Step 5 of 5: Mentors Hub",
-                    title: "Connect with Verified Toppers",
-                    body: "Browse and book 1-on-1 calls or mains evaluation reviews directly with verified UPSC experts.",
-                  ),
-                ],
-          onClose: () => setState(() => _showTour = false),
-          themeColor: AppColors.civic,
-        ),
       ],
     ),
   );
 }
 
-  Widget _buildPerformanceRadarColumn({
-    required String title,
-    required Color accentColor,
-    required List<Widget> items,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.paper.withOpacity(0.35),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.line.withOpacity(0.5)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: accentColor,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ...items,
-          ],
+  Widget _buildTableHeaderCell(String text, Color color) {
+    return Container(
+      height: 30,
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: color,
+          letterSpacing: 0.5,
         ),
       ),
     );
   }
 
-  Widget _buildRadarMetricRow(String label, String value, Color? bulletColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3.5),
+  Widget _buildTableSidebarCell(String text, Color dotColor) {
+    return Container(
+      height: 36,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      alignment: Alignment.centerLeft,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.muted,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableCell(String value) {
+    return Container(
+      height: 36,
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.paper.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        value,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.ink,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColumnContent(bool isGk, int total, double pctCorrect, double pctIncorrect, double pctUnattempted) {
+    if (total == 0) {
+      return Container(
+        height: 132, // Height matching 3 rows of cells (3 * 44)
+        alignment: Alignment.center,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isGk ? AppColors.civic : AppColors.saffron,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed: () => widget.onTabSelected(2, subIndex: isGk ? 0 : 1),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (bulletColor != null)
-                Container(
-                  width: 5,
-                  height: 5,
-                  margin: const EdgeInsets.only(right: 5),
-                  decoration: BoxDecoration(
-                    color: bulletColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
+              const Icon(Icons.play_arrow_rounded, size: 14),
+              const SizedBox(width: 4),
               Text(
-                label,
+                "Start",
                 style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          Text(
-            value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.ink,
+        ),
+      );
+    } else {
+      return Column(
+        children: [
+          _buildTableCell("${pctCorrect.toStringAsFixed(0)}%"),
+          _buildTableCell("${pctIncorrect.toStringAsFixed(0)}%"),
+          _buildTableCell("${pctUnattempted.toStringAsFixed(0)}%"),
+        ],
+      );
+    }
+  }
+
+  Widget _buildMainsMetricCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.12), width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.muted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1199,183 +1246,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSubscriptionBanner(ApiClient apiClient) {
-    final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
-    return Container(
-      key: _keyBanner,
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: hasPremium 
-              ? [const Color(0xFF0F172A), const Color(0xFF1E293B)] 
-              : [const Color(0xFFFFF7ED), const Color(0xFFFFEDD5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: hasPremium ? const Color(0xFF334155) : const Color(0xFFFFD8A8),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: hasPremium ? const Color(0xFF10B981).withOpacity(0.15) : const Color(0xFFF97316).withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              hasPremium ? Icons.verified_user_rounded : Icons.info_outline_rounded,
-              color: hasPremium ? const Color(0xFF10B981) : const Color(0xFFF97316),
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hasPremium ? "Premium Account Active" : "Free Tier Account",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12.5,
-                    color: hasPremium ? Colors.white : const Color(0xFF7C2D12),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  hasPremium 
-                      ? "Unlimited Custom Test building & Mains tab unlocked." 
-                      : "Custom tests are limited to 10 questions. Sectional and Mains tests are locked.",
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: hasPremium ? const Color(0xFFCBD5E1) : const Color(0xFF9A3412),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!hasPremium) ...[
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: () async {
-                final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
-                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-                  debugPrint("Could not launch $url");
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEA580C),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                "Upgrade",
-                style: GoogleFonts.inter(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTourBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFC7D2FE)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.auto_awesome_rounded, color: AppColors.civic, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Interactive Product Tour",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: const Color(0xFF1E1B4B),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "Let us show you how mock tests and mentors work.",
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    color: const Color(0xFF4338CA),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.civic,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: _startTour,
-            child: Text(
-              "Start",
-              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            constraints: const BoxConstraints(),
-            padding: EdgeInsets.zero,
-            icon: const Icon(Icons.close_rounded, color: Color(0xFF4338CA), size: 18),
-            onPressed: () => setState(() => _dismissedTourBanner = true),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildGuestStatsPlaceholder(BuildContext context, ApiClient apiClient) {
     return Container(

@@ -690,6 +690,8 @@ class MainsDashboard {
   final int attemptsCount;
   final double avgScore;
   final double maxScore;
+  final double totalScore;
+  final double totalMaxScore;
   final int evaluatedCount;
   final int pendingCount;
   final List<WeakTopic> weakTopics;
@@ -702,6 +704,8 @@ class MainsDashboard {
     required this.attemptsCount,
     required this.avgScore,
     required this.maxScore,
+    required this.totalScore,
+    required this.totalMaxScore,
     required this.evaluatedCount,
     required this.pendingCount,
     required this.weakTopics,
@@ -733,6 +737,8 @@ class MainsDashboard {
       attemptsCount: int.tryParse(summary['attempts']?.toString() ?? '') ?? 0,
       avgScore: double.tryParse(summary['avg_score']?.toString() ?? '0') ?? 0.0,
       maxScore: double.tryParse(summary['max_score']?.toString() ?? '0') ?? 0.0,
+      totalScore: double.tryParse(summary['total_score']?.toString() ?? '0') ?? 0.0,
+      totalMaxScore: double.tryParse(summary['total_max_score']?.toString() ?? '0') ?? 0.0,
       evaluatedCount:
           int.tryParse(summary['evaluated_count']?.toString() ?? '') ?? 0,
       pendingCount:
