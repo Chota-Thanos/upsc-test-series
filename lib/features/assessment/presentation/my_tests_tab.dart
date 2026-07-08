@@ -10,7 +10,8 @@ import 'attempt_engine_screen.dart';
 
 class MyTestsTab extends StatefulWidget {
   final String? contentType;
-  const MyTestsTab({super.key, this.contentType});
+  final bool onlyInProgress;
+  const MyTestsTab({super.key, this.contentType, this.onlyInProgress = false});
 
   @override
   State<MyTestsTab> createState() => _MyTestsTabState();
@@ -41,9 +42,15 @@ class _MyTestsTabState extends State<MyTestsTab> {
         contentType: isMains ? null : widget.contentType,
       );
       setState(() {
-        _attempts = isMains
+        var filtered = isMains
             ? attempts.where((a) => a.testTemplate.testType == 'mains_test').toList()
             : attempts;
+        if (widget.onlyInProgress) {
+          filtered = filtered
+              .where((a) => a.status != 'completed' && a.status != 'submitted')
+              .toList();
+        }
+        _attempts = filtered;
         _loading = false;
       });
     } catch (e) {

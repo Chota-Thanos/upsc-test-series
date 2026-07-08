@@ -59,7 +59,7 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
             unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
             tabs: const [
               Tab(text: 'Create Test'),
-              Tab(text: 'My Results'),
+              Tab(text: 'My Tests'),
               Tab(text: 'Revision'),
             ],
           ),
@@ -69,7 +69,7 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
             controller: _tabController,
             children: [
               SelfTestBuilderTab(contentType: widget.contentType),
-              MyTestsTab(contentType: widget.contentType),
+              MyTestsTab(contentType: widget.contentType, onlyInProgress: true),
               SelfTestBuilderTab(
                 contentType: widget.contentType,
                 isRevisionMode: true,
