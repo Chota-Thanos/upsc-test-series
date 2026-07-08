@@ -85,6 +85,14 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   bool _compiling = false;
   int? _selectedRevisionNodeId;
   bool _compiledIncludeAttempted = false;
+  bool _isCartExpanded = false;
+  final _customTestNameController = TextEditingController(text: "My Custom Practice Test");
+
+  @override
+  void dispose() {
+    _customTestNameController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -1167,9 +1175,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           'question_family': family,
         });
       }
-      
-      _showCartBottomSheet();
     });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Added $selectedCount questions from ${node.name} to cart"),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
 
@@ -1206,258 +1221,245 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     };
   }
 
-  Future<void> _showFormatSelectionDialog({
-    required int available,
-    required bool isMains,
-    required _TreeNode node,
-    required Map<String, dynamic> category,
-    required String family,
-    required String title,
-  }) async {
-    String? selectedFormat;
-    int questionCount = 20;
+  void _startDirectTest(_TreeNode node) {
+    _showDirectTestBottomSheet(node);
+  }
+
+  void _showDirectTestBottomSheet(_TreeNode node) {
+    final available = _getAvailableCount(node.id);
+    if (available <= 0) return;
+    if (_selectedExamId == null) return;
+
+    final isMains = _activeTab == 'mains';
+    final defaultTitle = "${node.name} Practice Test";
+    
+    final nameController = TextEditingController(text: defaultTitle);
+    final formKey = GlobalKey<FormState>();
+    int selectedCount = min(10, available);
     bool includeAttempted = false;
 
-    final formats = isMains
-        ? [
-            {'label': 'Sectional', 'type': 'quick_test', 'count': 5, 'duration': '30 min'},
-            {'label': 'Half Length', 'type': 'sectional_test', 'count': 15, 'duration': '90 min'},
-            {'label': 'Full Length', 'type': 'full_length_test', 'count': 25, 'duration': '180 min'},
-          ]
-        : [
-            {'label': 'Sectional', 'type': 'quick_test', 'count': 25, 'duration': '20 min'},
-            {'label': 'Half Length', 'type': 'sectional_test', 'count': 50, 'duration': '45 min'},
-            {'label': 'Full Length', 'type': 'full_length_test', 'count': 100, 'duration': '120 min'},
-          ];
-
-    await showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
       builder: (BuildContext context) {
-        bool localIncludeAttempted = false;
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text(
-                "Select Test Format",
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ...formats.map((f) {
-                    final count = f['count'] as int;
-                    final label = f['label'] as String;
-                    final type = f['type'] as String;
-                    final duration = f['duration'] as String;
-
-                    return Card(
-                      elevation: 0,
-                      margin: const EdgeInsets.only(bottom: 8),
-                      shape: RoundedRectangleBorder(
-                        side: const BorderSide(color: AppColors.line),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        title: Text(
-                          "$label Test ($count Qs)",
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: AppColors.line,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        subtitle: Text(
-                          "Duration: $duration",
-                          style: GoogleFonts.inter(fontSize: 12),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                        onTap: () {
-                          selectedFormat = type;
-                          questionCount = min(count, available);
-                          includeAttempted = localIncludeAttempted;
-                          Navigator.pop(context);
-                        },
                       ),
-                    );
-                  }).toList(),
-                  const Divider(height: 24),
-                  CheckboxListTile(
-                    title: Text(
-                      "Include attempted questions",
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Start Practice Test",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
                         color: AppColors.ink,
                       ),
                     ),
-                    value: localIncludeAttempted,
-                    activeColor: AppColors.civic,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (val) {
-                      setDialogState(() {
-                        localIncludeAttempted = val ?? false;
-                      });
-                    },
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      "Category: ${node.name}",
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "TEST NAME *",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                        color: AppColors.muted,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: "e.g., Ancient History Revision",
+                        filled: true,
+                        fillColor: AppColors.paper.withOpacity(0.4),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.line),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.civic, width: 1.5),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return "Test name is required";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "NUMBER OF QUESTIONS",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                            color: AppColors.muted,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        Text(
+                          "$selectedCount Qs",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                            color: AppColors.civic,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Slider(
+                      value: selectedCount.toDouble(),
+                      min: 1,
+                      max: min(100, available).toDouble(),
+                      divisions: min(100, available) > 1 ? min(100, available) - 1 : 1,
+                      activeColor: AppColors.civic,
+                      inactiveColor: AppColors.line,
+                      onChanged: (val) {
+                        setSheetState(() {
+                          selectedCount = val.toInt();
+                        });
+                      },
+                    ),
+                    Text(
+                      "Drag to choose from 1 to ${min(100, available)} questions.",
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    CheckboxListTile(
+                      title: Text(
+                        "Include already attempted questions",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      value: includeAttempted,
+                      activeColor: AppColors.civic,
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      onChanged: (val) {
+                        setSheetState(() {
+                          includeAttempted = val ?? false;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.civic,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            Navigator.pop(context); // Close bottom sheet
+                            
+                            final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
+                            final category = _resolveCategory(node, nodesList);
+                            final family = isMains ? 'mains_subjective' : 'objective';
+
+                            setState(() => _compiling = true);
+                            try {
+                              final attemptId = await _service.startCompiledAttempt(
+                                examId: _selectedExamId!,
+                                testType: isMains ? 'sectional_test' : 'quick_test',
+                                categories: [
+                                  {
+                                    ...category,
+                                    'question_count': selectedCount,
+                                    'question_family': family,
+                                  },
+                                ],
+                                includeAttempted: includeAttempted,
+                                title: nameController.text.trim(),
+                              );
+
+                              if (mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AttemptEngineScreen(attemptId: attemptId),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            } finally {
+                              if (mounted) setState(() => _compiling = false);
+                            }
+                          }
+                        },
+                        child: Text(
+                          "Start Test Now",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
         );
       },
     );
-
-    if (selectedFormat != null) {
-      setState(() => _compiling = true);
-      try {
-        final attemptId = await _service.startCompiledAttempt(
-          examId: _selectedExamId!,
-          testType: selectedFormat!,
-          categories: [
-            {
-              ...category,
-              'question_count': questionCount,
-              'question_family': family,
-            },
-          ],
-          includeAttempted: includeAttempted,
-          title: title,
-        );
-
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => AttemptEngineScreen(attemptId: attemptId),
-            ),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-      } finally {
-        if (mounted) setState(() => _compiling = false);
-      }
-    }
-  }
-
-  Future<String?> _showTestNameDialog(String defaultName) async {
-    final controller = TextEditingController(text: defaultName);
-    final formKey = GlobalKey<FormState>();
-
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            "Enter Test Name",
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: "Test Name",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) {
-                  return "Test name is compulsory";
-                }
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.civic,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Navigator.pop(context, controller.text.trim());
-                }
-              },
-              child: Text("Start", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _startDirectTest(_TreeNode node) async {
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    if (!apiClient.hasEntitlement('assessment.premium_tests')) {
-      _showPremiumLockDialog();
-      return;
-    }
-
-    final available = _getAvailableCount(node.id);
-    if (available <= 0) return;
-    if (_selectedExamId == null) return;
-
-    final isMains = _activeTab == 'mains';
-    
-    // Prompt for Test Name first
-    final defaultTitle = "${node.name} Quick Test";
-    final testName = await _showTestNameDialog(defaultTitle);
-    if (testName == null || testName.isEmpty) return; // Cancelled
-
-    final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
-    final category = _resolveCategory(node, nodesList);
-    final family = isMains ? 'mains_subjective' : 'objective';
-
-    final bool shouldPrompt = (isMains && available > 25) || (!isMains && available > 75);
-
-    if (shouldPrompt) {
-      await _showFormatSelectionDialog(
-        available: available,
-        isMains: isMains,
-        node: node,
-        category: category,
-        family: family,
-        title: testName,
-      );
-    } else {
-      setState(() => _compiling = true);
-      try {
-        final attemptId = await _service.startCompiledAttempt(
-          examId: _selectedExamId!,
-          testType: isMains ? 'sectional_test' : 'quick_test',
-          categories: [
-            {
-              ...category,
-              'question_count': available,
-              'question_family': family,
-            },
-          ],
-          title: testName,
-        );
-
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => AttemptEngineScreen(attemptId: attemptId),
-            ),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      } finally {
-        if (mounted) setState(() => _compiling = false);
-      }
-    }
   }
 
   Future<void> _showCustomizeSyllabusModal() async {
@@ -1686,7 +1688,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
-  Future<void> _compileAndStart() async {
+  Future<void> _startCompiledTest() async {
+    final name = _customTestNameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Test name is required")),
+      );
+      return;
+    }
+
     final apiClient = Provider.of<ApiClient>(context, listen: false);
     if (!apiClient.hasEntitlement('assessment.premium_tests')) {
       _showPremiumLockDialog();
@@ -1713,11 +1723,14 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         testType: _selectedFormat,
         categories: categories,
         includeAttempted: _compiledIncludeAttempted,
+        title: name,
       );
 
       if (mounted) {
-        Navigator.pop(context); // Close bottom sheet
-        setState(() => _compiledItems.clear());
+        setState(() {
+          _compiledItems.clear();
+          _isCartExpanded = false;
+        });
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -1726,198 +1739,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     } finally {
       if (mounted) setState(() => _compiling = false);
     }
-  }
-
-  void _showCartBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final totalQs = _compiledItems.fold<int>(
-              0,
-              (sum, item) => sum + (item['count'] as int),
-            );
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Compiled Test Builder",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.ink,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      Expanded(
-                        child: _compiledItems.isEmpty
-                            ? Center(
-                                child: Text(
-                                  "Cart is empty",
-                                  style: GoogleFonts.inter(
-                                    color: AppColors.muted,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              )
-                            : ListView.separated(
-                                itemCount: _compiledItems.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  final item = _compiledItems[index];
-                                  final node = item['node'] as _TreeNode;
-                                  final count = item['count'] as int;
-                                  final available = _getAvailableCount(node.id);
-                                  return Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.paper,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: AppColors.line),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                node.name,
-                                                style: GoogleFonts.plusJakartaSans(
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 14,
-                                                  color: AppColors.ink,
-                                                ),
-                                              ),
-                                              Text(
-                                                "$count selected / $available available",
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 12,
-                                                  color: AppColors.muted,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.remove_circle_outline,
-                                            color: AppColors.berry,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _compiledItems.removeAt(index);
-                                            });
-                                            setModalState(() {});
-                                            if (_compiledItems.isEmpty)
-                                              Navigator.pop(context);
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                      const Divider(height: 24),
-                      CheckboxListTile(
-                        title: Text(
-                          "Include attempted questions",
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.ink,
-                          ),
-                        ),
-                        value: _compiledIncludeAttempted,
-                        activeColor: AppColors.civic,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (val) {
-                          setModalState(() {
-                            _compiledIncludeAttempted = val ?? false;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 8),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.ink,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        onPressed: (_compiledItems.isNotEmpty && !_compiling)
-                            ? () async {
-                                setModalState(() => _compiling = true);
-                                await _compileAndStart();
-                                if (mounted)
-                                  setModalState(() => _compiling = false);
-                              }
-                            : null,
-                        child: _compiling
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                "Compile & Start ($totalQs Qs)",
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   Widget _buildTreeNodes(List<_TreeNode> nodes, int depth) {
@@ -2085,6 +1912,26 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         ),
                         child: Text(
                           "Add",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => _startDirectTest(node),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.ink,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          "Start",
                           style: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -2270,7 +2117,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         "$available Qs",
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          fontWeight: FontWeight.w750,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.civic,
                         ),
                       ),
@@ -2439,316 +2286,516 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       (sum, item) => sum + (item['count'] as int),
     );
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverToBoxAdapter(
-                  child: Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      top: 16,
-                      bottom: 8,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.rootNodeId == null) ...[
-                          Text(
-                            "EXAM",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 10,
-                              color: AppColors.muted,
-                              letterSpacing: 0.8,
-                            ),
+        Positioned.fill(
+          child: Column(
+            children: [
+              Expanded(
+                child: NestedScrollView(
+                  headerSliverBuilder: (context, innerBoxIsScrolled) {
+                    return [
+                      SliverToBoxAdapter(
+                        child: Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            top: 16,
+                            bottom: 8,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "UPSC CSE",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                              color: AppColors.civic,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        Text(
-                          "Test Topics",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 22,
-                            color: AppColors.ink,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Build and practice dedicated syllabus trees.",
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Material(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CustomTestCreateScreen(
-                                          contentType: widget.contentType == 'aptitude' ? 'aptitude' : (widget.contentType ?? 'gk'),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: AppColors.civic.withOpacity(0.15)),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(Icons.add_circle_outline_rounded, color: AppColors.civic, size: 16),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          "Create",
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.civic,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Material(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CustomTestsListScreen(
-                                          contentType: widget.contentType == 'aptitude' ? 'aptitude' : (widget.contentType ?? 'gk'),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: AppColors.civic.withOpacity(0.15)),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(Icons.assignment_outlined, color: AppColors.civic, size: 16),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          "My Tests",
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.civic,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                 if (widget.rootNodeId == null && !widget.isRevisionMode && (widget.contentType == null || widget.contentType == 'revision'))
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _SliverTabHeaderDelegate(
-                      child: Container(
-                        color: Colors.white,
-                        padding: const EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          bottom: 16,
-                          top: 8,
-                        ),
-                        child: _buildSegmentedTabs(),
-                      ),
-                    ),
-                  ),
-              ];
-            },
-            body: _activeTab == 'mains' && !Provider.of<ApiClient>(context, listen: false).hasEntitlement('assessment.premium_tests')
-                ? const PremiumLockOverlay(
-                    title: "Unlock Premium Mains Mock Tests",
-                    description: "Get access to GS & CSAT sectional tests, comprehensive test series, detailed performance analytics, and AI-powered evaluation of mains answers.",
-                    planName: "Assessment Premium",
-                    ctaText: "Upgrade to Premium",
-                  )
-                : _activeTab == 'revision'
-                    ? _buildRevisionView()
-                    : _activeTree.isEmpty
-                        ? Center(
-                            child: Text(
-                              "No categories found.",
-                              style: GoogleFonts.inter(
-                                color: AppColors.muted,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        : ListView(
-                            padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Card(
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: AppColors.civic.withOpacity(0.2)),
+                              if (widget.rootNodeId == null) ...[
+                                Text(
+                                  "EXAM",
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 10,
+                                    color: AppColors.muted,
+                                    letterSpacing: 0.8,
+                                  ),
                                 ),
-                                color: AppColors.civic.withOpacity(0.05),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: _showCustomizeSyllabusModal,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.tune_rounded,
-                                          color: AppColors.civic,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Customize Syllabus View",
-                                                style: GoogleFonts.plusJakartaSans(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                  color: AppColors.ink,
-                                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "UPSC CSE",
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                    color: AppColors.civic,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              Text(
+                                "Test Topics",
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 22,
+                                  color: AppColors.ink,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Build and practice dedicated syllabus trees.",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Material(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => CustomTestCreateScreen(
+                                                contentType: widget.contentType == 'aptitude' ? 'aptitude' : (widget.contentType ?? 'gk'),
                                               ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                "Hide/show books, sources or specific topics.",
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 11,
-                                                  color: AppColors.muted,
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 11,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: AppColors.line),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.search_rounded,
+                                                color: AppColors.muted,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Text(
+                                                  "Search or build custom test...",
+                                                  style: GoogleFonts.inter(
+                                                    color: AppColors.muted,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        const Icon(
-                                          Icons.chevron_right_rounded,
-                                          color: AppColors.muted,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildSegmentedTabs(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ];
+                  },
+                  body: _loadingBookmarks
+                      ? const Center(
+                          child: CircularProgressIndicator(color: AppColors.civic),
+                        )
+                      : _activeTab == 'revision' && _bookmarks.isEmpty
+                          ? Center(
+                              child: Text(
+                                "No bookmarks found.",
+                                style: GoogleFonts.inter(
+                                  color: AppColors.muted,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : _activeTab == 'mains' &&
+                                  Provider.of<ApiClient>(context, listen: false)
+                                      .hasEntitlement('assessment.premium_tests') ==
+                                      false
+                              ? const PremiumLockOverlay(
+                                  title: "Mains Subjective Tests",
+                                  description:
+                                      "Unlock the syllabus tree and start essay reviews with expert feedback.",
+                                  planName: "Assessment Premium",
+                                  ctaText: "Upgrade to Premium",
+                                )
+                              : _activeTab == 'revision'
+                                  ? _buildRevisionView()
+                                  : _activeTree.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                            "No categories found.",
+                                            style: GoogleFonts.inter(
+                                              color: AppColors.muted,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        )
+                                      : ListView(
+                                          padding: const EdgeInsets.all(16),
+                                          children: [
+                                            Card(
+                                              elevation: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                                side: BorderSide(
+                                                    color: AppColors.civic.withOpacity(0.2)),
+                                              ),
+                                              color: AppColors.civic.withOpacity(0.05),
+                                              child: InkWell(
+                                                borderRadius: BorderRadius.circular(12),
+                                                onTap: _showCustomizeSyllabusModal,
+                                                child: Padding(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 16, vertical: 12),
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.tune_rounded,
+                                                        color: AppColors.civic,
+                                                        size: 20,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment.start,
+                                                          children: [
+                                                            Text(
+                                                              "Customize Syllabus View",
+                                                              style: GoogleFonts.plusJakartaSans(
+                                                                fontWeight: FontWeight.bold,
+                                                                fontSize: 14,
+                                                                color: AppColors.ink,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(height: 2),
+                                                            Text(
+                                                              "Hide/show books, sources or specific topics.",
+                                                              style: GoogleFonts.inter(
+                                                                fontSize: 11,
+                                                                color: AppColors.muted,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const Icon(
+                                                        Icons.chevron_right_rounded,
+                                                        color: AppColors.muted,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            _buildTreeNodes(_activeTree, 0),
+                                            const SizedBox(height: 80),
+                                          ],
+                                        ),
+                ),
+              ),
+              if (_compiledItems.isNotEmpty)
+                const SizedBox(height: 76),
+            ],
+          ),
+        ),
+
+        // Bottom collapsible Panel
+        if (_compiledItems.isNotEmpty)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              height: _isCartExpanded ? 480.0 : 76.0,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header trigger
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isCartExpanded = !_isCartExpanded;
+                      });
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      child: Column(
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: AppColors.line,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Custom Test Cart",
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "${_compiledItems.length} Categories • $totalCartQs / 100 Qs",
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 15,
+                                          color: totalCartQs > 100 ? Colors.red : AppColors.ink,
+                                        ),
+                                      ),
+                                      if (totalCartQs > 100) ...[
+                                        const SizedBox(width: 6),
+                                        const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 16),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Icon(
+                                _isCartExpanded
+                                    ? Icons.keyboard_arrow_down_rounded
+                                    : Icons.keyboard_arrow_up_rounded,
+                                color: AppColors.civic,
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Divider(color: AppColors.line, height: 1),
+
+                  if (_isCartExpanded)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "TEST NAME *",
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                                color: AppColors.muted,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _customTestNameController,
+                              decoration: InputDecoration(
+                                hintText: "e.g., My Custom Practice Test",
+                                filled: true,
+                                fillColor: AppColors.paper.withOpacity(0.4),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: AppColors.line),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: AppColors.civic, width: 1.5),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "SELECTED CATEGORIES",
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                                color: AppColors.muted,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Expanded(
+                              child: ListView.separated(
+                                itemCount: _compiledItems.length,
+                                separatorBuilder: (_, __) => const Divider(color: AppColors.line, height: 1),
+                                itemBuilder: (context, index) {
+                                  final item = _compiledItems[index];
+                                  final node = item['node'] as _TreeNode;
+                                  final count = item['count'] as int;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            node.name,
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              color: AppColors.ink,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          "$count Qs",
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: AppColors.civic,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline_rounded,
+                                              color: Colors.red, size: 20),
+                                          onPressed: () {
+                                            setState(() {
+                                              _compiledItems.removeAt(index);
+                                              if (_compiledItems.isEmpty) {
+                                                _isCartExpanded = false;
+                                              }
+                                            });
+                                          },
                                         ),
                                       ],
                                     ),
-                                  ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            CheckboxListTile(
+                              title: Text(
+                                "Include already attempted questions",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.ink,
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              _buildTreeNodes(_activeTree, 0),
-                              const SizedBox(height: 80),
+                              value: _compiledIncludeAttempted,
+                              activeColor: AppColors.civic,
+                              contentPadding: EdgeInsets.zero,
+                              controlAffinity: ListTileControlAffinity.leading,
+                              onChanged: (val) {
+                                setState(() {
+                                  _compiledIncludeAttempted = val ?? false;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            if (totalCartQs > 100) ...[
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.06),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red.withOpacity(0.15)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.error_outline_rounded, color: Colors.red, size: 16),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        "Max 100 questions allowed in a single test.",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
                             ],
-                          ),
-            ),
-        ),
-
-        // Bottom Cart Bar
-        if (_compiledItems.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 10,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "Compiled Test Cart",
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: AppColors.muted,
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.civic,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                onPressed: (totalCartQs > 0 && totalCartQs <= 100 && !_compiling)
+                                    ? _startCompiledTest
+                                    : null,
+                                child: _compiling
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        "Start Test Now",
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        "${_compiledItems.length} Categories • $totalCartQs Qs",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          color: AppColors.ink,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.civic,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                  onPressed: _showCartBottomSheet,
-                  child: Text(
-                    "View Cart",
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
       ],
