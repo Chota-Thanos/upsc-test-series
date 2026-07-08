@@ -1866,7 +1866,25 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (hasChildren)
+                  IconButton(
+                    icon: const Icon(Icons.analytics_outlined, color: AppColors.civic, size: 20),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CategoryDetailScreen(
+                            nodeId: node.id,
+                            nodeName: node.name,
+                            contentType: _activeTab,
+                          ),
+                        ),
+                      );
+                    },
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                  if (hasChildren) ...[
+                    const SizedBox(width: 12),
                     Icon(
                       isExpanded
                           ? Icons.keyboard_arrow_up_rounded
@@ -1874,6 +1892,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       color: AppColors.muted,
                       size: 22,
                     ),
+                  ],
                 ],
               ),
             ),
@@ -1945,53 +1964,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             ),
           ],
 
-          // Footer Details Link
-          const Divider(color: AppColors.line, height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CategoryDetailScreen(
-                          nodeId: node.id,
-                          nodeName: node.name,
-                          contentType: _activeTab,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.analytics_outlined, size: 14, color: AppColors.civic),
-                  label: Text(
-                    "View Topic Details & Stats",
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.civic,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-                if (hasChildren)
-                  Text(
-                    "${node.children.length} subtopics",
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.muted,
-                    ),
-                  ),
-              ],
-            ),
-          ),
+
 
           // Children list nested inside the card!
           if (childrenWidget != null) ...[
@@ -2053,30 +2026,53 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 Row(
                   children: [
                     Expanded(
-                      child: GestureDetector(
-                        onTap: hasChildren ? () => _toggleExpanded(node.id) : null,
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                node.name,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.ink,
-                                ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: hasChildren ? () => _toggleExpanded(node.id) : null,
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      node.name,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: AppColors.ink,
+                                      ),
+                                    ),
+                                  ),
+                                  if (hasChildren) ...[
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                      size: 16,
+                                      color: AppColors.muted,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
-                            if (hasChildren) ...[
-                              const SizedBox(width: 4),
-                              Icon(
-                                isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                                size: 16,
-                                color: AppColors.muted,
-                              ),
-                            ],
-                          ],
-                        ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.analytics_outlined, color: AppColors.civic, size: 16),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CategoryDetailScreen(
+                                    nodeId: node.id,
+                                    nodeName: node.name,
+                                    contentType: _activeTab,
+                                  ),
+                                ),
+                              );
+                            },
+                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.only(left: 6),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -2401,7 +2397,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              _buildSegmentedTabs(),
                             ],
                           ),
                         ),
@@ -2802,61 +2797,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
-  Widget _buildSegmentedTabs() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.line.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          _buildTabBtn('GS', 'gk'),
-          const SizedBox(width: 4),
-          _buildTabBtn('CSAT', 'aptitude'),
-          const SizedBox(width: 4),
-          _buildTabBtn('Mains', 'mains'),
-          const SizedBox(width: 4),
-          _buildTabBtn('Revision', 'revision'),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildTabBtn(String label, String value) {
-    final isSelected = _activeTab == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _handleTabChange(value),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w800,
-              fontSize: 13,
-              color: isSelected ? AppColors.civic : AppColors.muted,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
   void _showPremiumLockDialog() {
     showDialog(
       context: context,
