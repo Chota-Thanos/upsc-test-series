@@ -1072,10 +1072,31 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
 
 
+  bool _isNodeDescendant(int childId, int parentId) {
+    final parentNode = _findNodeInTree(_activeTree, parentId);
+    if (parentNode == null) return false;
+    return _findNodeInTree(parentNode.children, childId) != null;
+  }
+
   int _getAvailableCount(int nodeId) {
     final node = _findNodeInTree(_activeTree, nodeId);
     if (node == null) return _questionCounts[nodeId] ?? 0;
-    return _sumNodeQuestions(node);
+    final total = _sumNodeQuestions(node);
+
+    int selectedOverlap = 0;
+    for (var item in _compiledItems) {
+      final itemNode = item['node'] as _TreeNode;
+      final itemCount = item['count'] as int;
+
+      final isDescendant = _isNodeDescendant(itemNode.id, nodeId);
+      final isAncestor = _isNodeDescendant(nodeId, itemNode.id);
+
+      if (isDescendant || isAncestor || itemNode.id == nodeId) {
+        selectedOverlap += itemCount;
+      }
+    }
+
+    return max(0, total - selectedOverlap);
   }
 
   _TreeNode? _findNodeInTree(List<_TreeNode> nodes, int id) {
