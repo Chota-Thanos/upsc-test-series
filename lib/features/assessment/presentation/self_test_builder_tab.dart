@@ -13,6 +13,7 @@ import 'attempt_engine_screen.dart';
 import 'category_detail_screen.dart';
 import 'custom_test_create_screen.dart';
 import 'custom_tests_list_screen.dart';
+import 'ai_based_parsing_screen.dart';
 
 class _TreeNode {
   final int id;
@@ -25,6 +26,7 @@ class _TreeNode {
   final String? contentType;
   final int displayOrder;
   final List<_TreeNode> children;
+  final bool isUserNode;
 
   _TreeNode({
     required this.id,
@@ -37,6 +39,7 @@ class _TreeNode {
     this.contentType,
     this.displayOrder = 0,
     List<_TreeNode>? children,
+    this.isUserNode = false,
   }) : children = children ?? [];
 }
 
@@ -68,6 +71,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   List<Map<String, dynamic>> _objNodesRaw = [];
   List<Map<String, dynamic>> _mainsNodesRaw = [];
   Map<int, int> _questionCounts = {};
+  Map<int, int> _userQuestionCounts = {};
 
   List<_TreeNode> _activeTree = [];
   Set<int> _expandedNodes = {};
@@ -177,14 +181,18 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           : 'objective';
       final counts = await _service.getQuestionCounts(_selectedExamId!, family);
       final Map<int, int> newCounts = {};
+      final Map<int, int> newUserCounts = {};
       for (var c in counts) {
         final nodeId = int.tryParse(c['node_id']?.toString() ?? '');
         if (nodeId == null) continue;
         newCounts[nodeId] =
             int.tryParse(c['question_count']?.toString() ?? '') ?? 0;
+        newUserCounts[nodeId] =
+            int.tryParse(c['user_question_count']?.toString() ?? '') ?? 0;
       }
       setState(() {
         _questionCounts = newCounts;
+        _userQuestionCounts = newUserCounts;
       });
     } catch (e) {
       debugPrint("Failed to load counts: $e");
@@ -263,6 +271,23 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         }
       }
       roots.add(current);
+    }
+
+    // Inject virtual user question nodes under categories
+    for (var node in nodeMap.values) {
+      final userQuestionsCount = _userQuestionCounts[node.id] ?? 0;
+      if (userQuestionsCount > 0) {
+        final userNode = _TreeNode(
+          id: -node.id,
+          name: "Your Questions",
+          slug: "user-questions",
+          nodeType: "user_questions",
+          parentId: node.id,
+          displayOrder: 9999,
+          isUserNode: true,
+        );
+        node.children.add(userNode);
+      }
     }
 
     // Sort
@@ -1080,19 +1105,24 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
   int _getAvailableCount(int nodeId) {
     final node = _findNodeInTree(_activeTree, nodeId);
-    if (node == null) return _questionCounts[nodeId] ?? 0;
+    if (node == null) return nodeId < 0 ? (_userQuestionCounts[-nodeId] ?? 0) : (_questionCounts[nodeId] ?? 0);
     final total = _sumNodeQuestions(node);
 
     int selectedOverlap = 0;
+    final isNodeUser = nodeId < 0 || node.isUserNode;
+
     for (var item in _compiledItems) {
       final itemNode = item['node'] as _TreeNode;
       final itemCount = item['count'] as int;
+      final isItemUser = itemNode.id < 0 || itemNode.isUserNode;
 
-      final isDescendant = _isNodeDescendant(itemNode.id, nodeId);
-      final isAncestor = _isNodeDescendant(nodeId, itemNode.id);
+      if (isNodeUser == isItemUser) {
+        final isDescendant = _isNodeDescendant(itemNode.id, nodeId);
+        final isAncestor = _isNodeDescendant(nodeId, itemNode.id);
 
-      if (isDescendant || isAncestor || itemNode.id == nodeId) {
-        selectedOverlap += itemCount;
+        if (isDescendant || isAncestor || itemNode.id == nodeId) {
+          selectedOverlap += itemCount;
+        }
       }
     }
 
@@ -1109,9 +1139,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   }
 
   int _sumNodeQuestions(_TreeNode node) {
+    if (node.isUserNode || node.id < 0) {
+      final parentId = node.id < 0 ? -node.id : node.id;
+      return _userQuestionCounts[parentId] ?? 0;
+    }
     int sum = _questionCounts[node.id] ?? 0;
     for (var child in node.children) {
-      sum += _sumNodeQuestions(child);
+      if (!child.isUserNode) {
+        sum += _sumNodeQuestions(child);
+      }
     }
     return sum;
   }
@@ -1243,6 +1279,285 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       'topic_node_id': topicNodeId,
       'subtopic_node_id': subtopicNodeId,
     };
+  }
+
+  void _openManualAddForm(_TreeNode node) {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    if (!apiClient.hasEntitlement('assessment.premium_tests')) {
+      _showPremiumLockDialog();
+      return;
+    }
+    if (_selectedExamId == null) return;
+
+    final nodesList = _activeTab == 'mains' ? _mainsNodesRaw : _objNodesRaw;
+    final resolved = _resolveCategory(node, nodesList);
+
+    final statementController = TextEditingController();
+    final optionAController = TextEditingController();
+    final optionBController = TextEditingController();
+    final optionCController = TextEditingController();
+    final optionDController = TextEditingController();
+    final explanationController = TextEditingController();
+
+    String correctAnswer = 'a';
+    bool markForRevision = false;
+
+    final formKey = GlobalKey<FormState>();
+    bool submitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: AppColors.line,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Add Custom Question",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Add a private question directly to ${node.name}.",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: statementController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: "Question Statement *",
+                          hintText: "Enter question statement here...",
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                      ),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: optionAController,
+                              decoration: const InputDecoration(
+                                labelText: "Option A *",
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: optionBController,
+                              decoration: const InputDecoration(
+                                labelText: "Option B *",
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: optionCController,
+                              decoration: const InputDecoration(
+                                labelText: "Option C *",
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: optionDController,
+                              decoration: const InputDecoration(
+                                labelText: "Option D *",
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: correctAnswer,
+                              decoration: const InputDecoration(
+                                labelText: "Correct Answer *",
+                                border: OutlineInputBorder(),
+                              ),
+                              items: ['a', 'b', 'c', 'd'].map((label) => DropdownMenuItem(
+                                value: label,
+                                child: Text("Option ${label.toUpperCase()}"),
+                              )).toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setSheetState(() => correctAnswer = val);
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: markForRevision,
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setSheetState(() => markForRevision = val);
+                                  }
+                                },
+                              ),
+                              Text(
+                                "Mark for Revision",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: explanationController,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: "Explanation (Optional)",
+                          hintText: "Enter correct explanation here...",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: submitting ? null : () => Navigator.pop(context),
+                            child: const Text("Cancel"),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: submitting ? null : () async {
+                              if (!formKey.currentState!.validate()) return;
+                              setSheetState(() => submitting = true);
+                              try {
+                                final questions = [
+                                  ParsedQuestion(
+                                    questionStatement: statementController.text.trim(),
+                                    options: [
+                                      QuestionOption(key: 'a', text: optionAController.text.trim()),
+                                      QuestionOption(key: 'b', text: optionBController.text.trim()),
+                                      QuestionOption(key: 'c', text: optionCController.text.trim()),
+                                      QuestionOption(key: 'd', text: optionDController.text.trim()),
+                                    ],
+                                    correctAnswer: correctAnswer,
+                                    explanation: explanationController.text.trim().isEmpty ? null : explanationController.text.trim(),
+                                  )
+                                ];
+
+                                await _service.aiSaveQuestions(
+                                  examId: _selectedExamId!,
+                                  examLevelId: 1,
+                                  subjectNodeId: resolved['subject_node_id'] as int,
+                                  topicNodeId: resolved['topic_node_id'] as int?,
+                                  questions: questions,
+                                );
+
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Question saved successfully!")),
+                                  );
+                                  await _loadCounts();
+                                  _buildActiveTree();
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Failed to save: $e")),
+                                );
+                              } finally {
+                                setSheetState(() => submitting = false);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.civic,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            ),
+                            child: submitting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text("Save"),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   List<_TreeNode> _filterTree(List<_TreeNode> nodes, String query) {
@@ -1462,10 +1777,17 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         ),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
+                            final apiClient = Provider.of<ApiClient>(context, listen: false);
+                            if (isMains && !apiClient.hasEntitlement('assessment.premium_tests')) {
+                              Navigator.pop(context); // Close bottom sheet
+                              _showPremiumLockDialog();
+                              return;
+                            }
                             Navigator.pop(context); // Close bottom sheet
                             
                             final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
-                            final category = _resolveCategory(node, nodesList);
+                            final targetNode = node.isUserNode ? _findNodeInTree(_activeTree, node.parentId!)! : node;
+                            final category = _resolveCategory(targetNode, nodesList);
                             final family = isMains ? 'mains_subjective' : 'objective';
 
                             setState(() => _compiling = true);
@@ -1478,6 +1800,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                     ...category,
                                     'question_count': selectedCount,
                                     'question_family': family,
+                                    if (node.isUserNode) 'is_user_private': true,
                                   },
                                 ],
                                 includeAttempted: includeAttempted,
@@ -1766,13 +2089,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     setState(() => _compiling = true);
     try {
       final categories = _compiledItems.map((item) {
+        final node = item['node'] as _TreeNode;
         final isMains = item['question_family'] == 'mains_subjective';
         final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
-        final cat = _resolveCategory(item['node'] as _TreeNode, nodesList);
+        final targetNode = node.isUserNode ? _findNodeInTree(_activeTree, node.parentId!)! : node;
+        final cat = _resolveCategory(targetNode, nodesList);
         return {
           ...cat,
           'question_count': item['count'],
           'question_family': item['question_family'],
+          if (node.isUserNode) 'is_user_private': true,
         };
       }).toList();
 
@@ -1964,12 +2290,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "$available questions available",
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.civic,
+                  Expanded(
+                    child: Text(
+                      "$available Qs",
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.civic,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Row(
@@ -2051,6 +2381,112 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     required bool isExpanded,
     required int available,
   }) {
+    if (node.isUserNode) {
+      final double leftPadding = (depth - 1) * 16.0;
+      return Container(
+        margin: const EdgeInsets.only(top: 10, bottom: 4),
+        padding: EdgeInsets.only(left: leftPadding + 8, right: 8, top: 8, bottom: 8),
+        decoration: BoxDecoration(
+          color: Colors.amber.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.amber.withOpacity(0.4), style: BorderStyle.solid),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.person_outline_rounded, color: Colors.amber[800], size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    node.name,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.amber[900],
+                    ),
+                  ),
+                  Text(
+                    "Private questions submitted by you",
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: Colors.amber[800],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (available > 0) ...[
+              Text(
+                "$available Qs",
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.amber[900],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _buildQuantitySelector(node, available),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => _addQuantityToTest(node),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[700],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  "Add",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              ElevatedButton(
+                onPressed: () => _startDirectTest(node),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.ink,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  "Start",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ] else ...[
+              Text(
+                "0 Qs",
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.muted,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
     final double leftPadding = (depth - 1) * 16.0;
 
     return Container(
@@ -2225,11 +2661,68 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   ),
                 ] else ...[
                   Text(
-                    "No questions available",
+                    "0 Available",
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       color: AppColors.muted.withOpacity(0.7),
                     ),
+                  ),
+                ],
+                if (!node.isUserNode) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () => _openManualAddForm(node),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.add_circle_outline_rounded, size: 12, color: AppColors.civic),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Add Q",
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.civic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      InkWell(
+                        onTap: () {
+                          final apiClient = Provider.of<ApiClient>(context, listen: false);
+                          if (!apiClient.hasEntitlement('assessment.premium_tests')) {
+                            _showPremiumLockDialog();
+                            return;
+                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AiBasedParsingScreen(
+                                categoryNodeId: node.id,
+                                contentType: _activeTab,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.psychology_outlined, size: 12, color: AppColors.civic),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Parse AI",
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.civic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -2472,18 +2965,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 ),
                               ),
                             )
-                          : _activeTab == 'mains' &&
-                                  Provider.of<ApiClient>(context, listen: false)
-                                      .hasEntitlement('assessment.premium_tests') ==
-                                      false
-                              ? const PremiumLockOverlay(
-                                  title: "Mains Subjective Tests",
-                                  description:
-                                      "Unlock the syllabus tree and start essay reviews with expert feedback.",
-                                  planName: "Assessment Premium",
-                                  ctaText: "Upgrade to Premium",
-                                )
-                              : _activeTab == 'revision'
+                          : _activeTab == 'revision'
                                   ? _buildRevisionView()
                                   : _activeTree.isEmpty
                                       ? Center(

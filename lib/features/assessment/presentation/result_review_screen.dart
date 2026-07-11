@@ -637,6 +637,21 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         "Q${idx + 1}",
                         style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted),
                       ),
+                      if (q.questionVersion.createdByUserId != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            "Your Question",
+                            style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.amber[800]),
+                          ),
+                        ),
+                      ],
                       const SizedBox(width: 8),
                       badge,
                     ],
@@ -1238,6 +1253,21 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   "Q${index + 1}",
                   style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
                 ),
+                if (item.questionVersion.createdByUserId != null) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      "Your Question",
+                      style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.amber[800]),
+                    ),
+                  ),
+                ],
                 if (timeSpent > 0) ...[
                   const SizedBox(width: 8),
                   const Icon(Icons.timer_outlined, size: 12, color: AppColors.muted),

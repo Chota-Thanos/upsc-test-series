@@ -183,6 +183,8 @@ class QuestionVersion {
   final Map<String, dynamic> contentJson;
   final dynamic correctAnswer;
   final String? explanation;
+  final int? createdByUserId;
+  final bool? isAiGenerated;
 
   QuestionVersion({
     required this.id,
@@ -195,6 +197,8 @@ class QuestionVersion {
     required this.contentJson,
     this.correctAnswer,
     this.explanation,
+    this.createdByUserId,
+    this.isAiGenerated,
   });
 
   factory QuestionVersion.fromJson(Map<String, dynamic> json) {
@@ -211,6 +215,12 @@ class QuestionVersion {
           : {},
       correctAnswer: json['correct_answer'],
       explanation: json['explanation'] as String?,
+      createdByUserId: json['created_by_user_id'] != null
+          ? int.tryParse(json['created_by_user_id'].toString())
+          : null,
+      isAiGenerated: json['is_ai_generated'] is bool
+          ? json['is_ai_generated'] as bool
+          : (json['is_ai_generated']?.toString() == 'true' || json['is_ai_generated']?.toString() == '1'),
     );
   }
 }

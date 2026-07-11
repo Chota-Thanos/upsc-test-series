@@ -621,6 +621,32 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                           "QUESTION ${_activeIndex + 1}",
                           style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted),
                         ),
+                        if (activeQ.questionVersion.createdByUserId != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.warning_amber_rounded, size: 10, color: Colors.amber[800]),
+                                const SizedBox(width: 2),
+                                Text(
+                                  "Your Question",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.amber[800],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const Spacer(),
                         Text(
                           "+${activeQ.marks} Marks",

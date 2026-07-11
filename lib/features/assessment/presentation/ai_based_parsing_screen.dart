@@ -13,7 +13,8 @@ import '../models/assessment_models.dart';
 class AiBasedParsingScreen extends StatefulWidget {
   final int? testTemplateId;
   final String? contentType;
-  const AiBasedParsingScreen({super.key, this.testTemplateId, this.contentType});
+  final int? categoryNodeId;
+  const AiBasedParsingScreen({super.key, this.testTemplateId, this.contentType, this.categoryNodeId});
 
   @override
   State<AiBasedParsingScreen> createState() => _AiBasedParsingScreenState();
@@ -45,6 +46,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _instructionsController = TextEditingController();
   PlatformFile? _selectedFile;
+  List<PlatformFile> _selectedImages = [];
 
   // Target Test States
   int? _testTemplateId;
@@ -142,6 +144,45 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
     }
   }
 
+  Future<void> _pickImages() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png'],
+        allowMultiple: true,
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+      setState(() {
+        _selectedImages.addAll(result.files);
+      });
+    } catch (e) {
+      debugPrint("Error picking images: $e");
+    }
+  }
+
+  void _moveImageUp(int index) {
+    if (index <= 0) return;
+    setState(() {
+      final item = _selectedImages.removeAt(index);
+      _selectedImages.insert(index - 1, item);
+    });
+  }
+
+  void _moveImageDown(int index) {
+    if (index >= _selectedImages.length - 1) return;
+    setState(() {
+      final item = _selectedImages.removeAt(index);
+      _selectedImages.insert(index + 1, item);
+    });
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
   Future<void> _fetchExamData() async {
     if (_selectedExamId == null) return;
     setState(() {
@@ -166,10 +207,40 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
         }
         _nodes = nodes;
         _filterSubjects();
+        if (widget.categoryNodeId != null) {
+          _prefillCategory();
+        }
       });
     } catch (e) {
       setState(() {
         _error = "Failed to load exam configurations: $e";
+      });
+    }
+  }
+
+  void _prefillCategory() {
+    if (widget.categoryNodeId == null || _nodes.isEmpty) return;
+
+    final nodeMap = {for (var n in _nodes) int.tryParse(n['id']?.toString() ?? '') ?? 0: n};
+    final targetNode = nodeMap[widget.categoryNodeId];
+    if (targetNode != null) {
+      int subjectId = targetNode['id'] as int;
+      int? topicId;
+      if (targetNode['parent_id'] != null) {
+        final parent = nodeMap[targetNode['parent_id']];
+        if (parent != null && parent['parent_id'] != null) {
+          topicId = parent['id'] as int;
+          subjectId = parent['parent_id'] as int;
+        } else {
+          topicId = targetNode['id'] as int;
+          subjectId = targetNode['parent_id'] as int;
+        }
+      }
+
+      setState(() {
+        _selectedSubjectId = subjectId;
+        _filterTopics();
+        _selectedTopicId = topicId;
       });
     }
   }
@@ -248,6 +319,13 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
       return;
     }
 
+    if (_parseMode == 'images' && _selectedImages.isEmpty) {
+      setState(() {
+        _error = "Please capture/select at least one photo page.";
+      });
+      return;
+    }
+
     if (_parseMode == 'file' && _selectedFile == null) {
       setState(() {
         _error = "Please upload/select a document file.";
@@ -267,6 +345,30 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           contentType: _contentType,
           instructions: _instructionsController.text.trim(),
         );
+      } else if (_parseMode == 'images') {
+        final List<Map<String, String>> imagesPayload = [];
+        for (final img in _selectedImages) {
+          List<int> bytes;
+          if (img.bytes != null) {
+            bytes = img.bytes!;
+          } else if (img.path != null) {
+            bytes = await io.File(img.path!).readAsBytes();
+          } else {
+            continue;
+          }
+          final mime = lookupMimeType(img.name) ?? 'image/jpeg';
+          final base64Data = base64Encode(bytes);
+          imagesPayload.add({
+            'base64_data': "data:$mime;base64,$base64Data",
+            'mime_type': mime,
+          });
+        }
+
+        result = await _service.aiParseImages(
+          images: imagesPayload,
+          contentType: _contentType,
+          instructions: _instructionsController.text.trim(),
+        );
       } else {
         List<int> bytes;
         if (_selectedFile!.bytes != null) {
@@ -279,7 +381,6 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
         }
 
         final mimeType = lookupMimeType(_selectedFile!.name) ?? 'application/pdf';
-        // Prefix with correct base64 dataURI header
         final base64String = "data:$mimeType;base64,${base64Encode(bytes)}";
 
         result = await _service.aiParseFile(
@@ -866,7 +967,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             children: [
               Expanded(
                 child: ChoiceChip(
-                  label: Text("Document Upload", style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                  label: Text("Document", style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold)),
                   selected: _parseMode == 'file',
                   selectedColor: AppColors.civic.withOpacity(0.15),
                   checkmarkColor: AppColors.civic,
@@ -876,10 +977,23 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               Expanded(
                 child: ChoiceChip(
-                  label: Text("Paste Text Pool", style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                  label: Text("OCR Photos", style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                  selected: _parseMode == 'images',
+                  selectedColor: AppColors.civic.withOpacity(0.15),
+                  checkmarkColor: AppColors.civic,
+                  labelStyle: TextStyle(color: _parseMode == 'images' ? AppColors.civic : AppColors.muted),
+                  onSelected: (val) {
+                    if (val) setState(() => _parseMode = 'images');
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: ChoiceChip(
+                  label: Text("Paste Text", style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold)),
                   selected: _parseMode == 'text',
                   selectedColor: AppColors.civic.withOpacity(0.15),
                   checkmarkColor: AppColors.civic,
@@ -936,6 +1050,127 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     ],
                   ],
                 ),
+              ),
+            ),
+          ] else if (_parseMode == 'images') ...[
+            Text(
+              "OCR Photo Pages (Reorderable)",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: AppColors.ink,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.line),
+                borderRadius: BorderRadius.circular(12),
+                color: AppColors.paper.withOpacity(0.4),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  if (_selectedImages.isEmpty) ...[
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.photo_library_outlined, size: 36, color: AppColors.muted),
+                          const SizedBox(height: 8),
+                          Text(
+                            "No images selected",
+                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: _pickImages,
+                            icon: const Icon(Icons.add_a_photo_outlined, size: 14),
+                            label: const Text("Capture/Select Photos"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.civic,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _selectedImages.length,
+                      separatorBuilder: (_, __) => const Divider(height: 12, color: AppColors.line),
+                      itemBuilder: (context, index) {
+                        final file = _selectedImages[index];
+                        return Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: file.bytes != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.memory(file.bytes!, fit: BoxFit.cover),
+                                    )
+                                  : (file.path != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.file(io.File(file.path!), fit: BoxFit.cover),
+                                        )
+                                      : const Icon(Icons.image, color: AppColors.muted)),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    file.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.ink,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${(file.size / 1024).toStringAsFixed(1)} KB",
+                                    style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_upward_rounded, size: 16, color: AppColors.civic),
+                              onPressed: index > 0 ? () => _moveImageUp(index) : null,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_downward_rounded, size: 16, color: AppColors.civic),
+                              onPressed: index < _selectedImages.length - 1 ? () => _moveImageDown(index) : null,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.berry),
+                              onPressed: () => _removeImage(index),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: _pickImages,
+                      icon: const Icon(Icons.add_photo_alternate_outlined, size: 16, color: AppColors.civic),
+                      label: const Text("Add More Photos", style: TextStyle(color: AppColors.civic, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ],
               ),
             ),
           ] else ...[

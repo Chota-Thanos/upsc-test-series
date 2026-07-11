@@ -711,6 +711,28 @@ class AssessmentService extends ChangeNotifier {
     }
   }
 
+  Future<ParsedResult> aiParseImages({
+    required List<Map<String, String>> images,
+    required String contentType,
+    String? instructions,
+  }) async {
+    try {
+      final Map<String, dynamic> payload = {
+        'images': images,
+        'content_type': contentType,
+        if (instructions != null && instructions.isNotEmpty) 'instructions': instructions,
+      };
+      final Map<String, dynamic> data = await apiClient.post(
+        '/api/v1/assessment/user/ai/parse-images',
+        payload,
+      );
+      return ParsedResult.fromJson(data);
+    } catch (e) {
+      debugPrint("Error parsing images with AI: $e");
+      rethrow;
+    }
+  }
+
   // Save AI parsed questions into the user library
   Future<void> aiSaveQuestions({
     required int examId,
