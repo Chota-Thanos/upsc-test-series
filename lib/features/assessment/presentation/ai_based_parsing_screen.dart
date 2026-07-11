@@ -62,7 +62,8 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
   bool _parsing = false;
   bool _saving = false;
   ParsedResult? _parsedResult;
-  final Map<int, String> _selectedAnswers = {};
+  Map<int, String>? _selectedAnswers;
+  Map<int, String> get selectedAnswers => _selectedAnswers ??= {};
 
   @override
   void initState() {
@@ -1401,7 +1402,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
 
                   // Render options in an attemptable format
                   ...q.options.map((opt) {
-                    final selectedKey = _selectedAnswers[idx];
+                    final selectedKey = selectedAnswers[idx];
                     final hasSelected = selectedKey != null;
                     final isSelected = selectedKey == opt.key;
                     final isCorrect = opt.key.toUpperCase() == q.correctAnswer.toUpperCase();
@@ -1428,7 +1429,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                         onTap: () {
                           if (!hasSelected) {
                             setState(() {
-                              _selectedAnswers[idx] = opt.key;
+                              selectedAnswers[idx] = opt.key;
                             });
                           }
                         },
@@ -1531,7 +1532,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             _parsedResult = null;
             _selectedFile = null;
             _textController.clear();
-            _selectedAnswers.clear();
+            selectedAnswers.clear();
           });
         },
         child: Text(
