@@ -41,10 +41,13 @@ class _MyTestsTabState extends State<MyTestsTab> {
     });
     try {
       final isMains = widget.contentType == 'mains';
-      final attempts = await _service.getMyAssessmentAttempts(
+      final rawAttempts = await _service.getMyAssessmentAttempts(
         contentType: isMains ? null : widget.contentType,
       );
-      final templates = await _service.getUserCustomTests();
+      final rawTemplates = await _service.getUserCustomTests();
+
+      final List<StudentAttemptSummary> attempts = (rawAttempts as dynamic) ?? <StudentAttemptSummary>[];
+      final List<AssessmentTestTemplate> templates = (rawTemplates as dynamic) ?? <AssessmentTestTemplate>[];
 
       setState(() {
         var filteredAttempts = isMains
@@ -115,7 +118,9 @@ class _MyTestsTabState extends State<MyTestsTab> {
       );
     }
 
-    final bool isEmpty = _customTests.isEmpty && _attempts.isEmpty;
+    final bool isCustomTestsEmpty = (_customTests as dynamic) == null || _customTests.isEmpty;
+    final bool isAttemptsEmpty = (_attempts as dynamic) == null || _attempts.isEmpty;
+    final bool isEmpty = isCustomTestsEmpty && isAttemptsEmpty;
 
     return RefreshIndicator(
       onRefresh: _loadAttempts,
@@ -156,7 +161,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
               padding: const EdgeInsets.all(16),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                if (_customTests.isNotEmpty) ...[
+                if (!isCustomTestsEmpty) ...[
                   Text(
                     "My Custom Tests",
                     style: GoogleFonts.plusJakartaSans(
@@ -333,7 +338,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                   }),
                   const SizedBox(height: 20),
                 ],
-                if (_attempts.isNotEmpty) ...[
+                if (!isAttemptsEmpty) ...[
                   Text(
                     "Attempt History",
                     style: GoogleFonts.plusJakartaSans(

@@ -1493,7 +1493,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     });
     List<AssessmentTestTemplate> tests = [];
     try {
-      final templates = await _service.getUserCustomTests();
+      final rawTemplates = await _service.getUserCustomTests();
+      final templates = (rawTemplates as dynamic) ?? <AssessmentTestTemplate>[];
       tests = templates.where((t) => t.latestAttemptStatus == null).toList();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

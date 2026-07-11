@@ -43,7 +43,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
     try {
       final data = await _service.getUserCustomTests();
       setState(() {
-        _tests = data;
+        _tests = (data as dynamic) ?? <AssessmentTestTemplate>[];
         _loading = false;
       });
     } catch (e) {
@@ -289,7 +289,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.civic))
-                : _tests.isEmpty
+                : ((_tests as dynamic) == null || _tests.isEmpty)
                     ? _buildEmptyState()
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
