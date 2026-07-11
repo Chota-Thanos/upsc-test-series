@@ -1092,33 +1092,56 @@ class QuestionOption {
 class ParsedQuestion {
   final String questionStatement;
   final String? suppQuestionStatement;
+  final String? questionPrompt;
   final List<QuestionOption> options;
   final String correctAnswer;
   final String? explanation;
   final int? questionNatureId;
+  final int? wordLimit;
+  final double? marks;
+  final String? directive;
 
   ParsedQuestion({
     required this.questionStatement,
     this.suppQuestionStatement,
+    this.questionPrompt,
     required this.options,
     required this.correctAnswer,
     this.explanation,
     this.questionNatureId,
+    this.wordLimit,
+    this.marks,
+    this.directive,
   });
 
   factory ParsedQuestion.fromJson(Map<String, dynamic> json) {
     var optList = (json['options'] as List? ?? [])
         .map((o) => QuestionOption.fromJson(o as Map<String, dynamic>))
         .toList();
+    
+    double? parsedMarks;
+    if (json['marks'] != null) {
+      parsedMarks = double.tryParse(json['marks'].toString());
+    }
+
+    int? parsedWordLimit;
+    if (json['word_limit'] != null) {
+      parsedWordLimit = int.tryParse(json['word_limit'].toString());
+    }
+
     return ParsedQuestion(
       questionStatement: json['question_statement'] as String? ?? '',
       suppQuestionStatement: json['supp_question_statement'] as String?,
+      questionPrompt: json['question_prompt'] as String?,
       options: optList,
       correctAnswer: json['correct_answer'] as String? ?? '',
       explanation: json['explanation'] as String?,
       questionNatureId: json['question_nature_id'] != null
           ? int.tryParse(json['question_nature_id'].toString())
           : null,
+      wordLimit: parsedWordLimit,
+      marks: parsedMarks,
+      directive: json['directive'] as String?,
     );
   }
 
@@ -1126,10 +1149,14 @@ class ParsedQuestion {
     return {
       'question_statement': questionStatement,
       if (suppQuestionStatement != null) 'supp_question_statement': suppQuestionStatement,
+      if (questionPrompt != null) 'question_prompt': questionPrompt,
       'options': options.map((o) => {'key': o.key, 'text': o.text}).toList(),
       'correct_answer': correctAnswer,
       if (explanation != null) 'explanation': explanation,
       if (questionNatureId != null) 'question_nature_id': questionNatureId,
+      if (wordLimit != null) 'word_limit': wordLimit,
+      if (marks != null) 'marks': marks,
+      if (directive != null) 'directive': directive,
     };
   }
 }

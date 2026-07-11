@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../data/assessment_service.dart';
@@ -61,6 +62,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
   bool _parsing = false;
   bool _saving = false;
   ParsedResult? _parsedResult;
+  final Map<int, String> _selectedAnswers = {};
 
   @override
   void initState() {
@@ -541,15 +543,37 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                           _buildActionBtn(),
                         ] else ...[
                           _buildPreviewSection(),
-                          const SizedBox(height: 20),
-                          _buildSaveBtn(),
-                          const SizedBox(height: 12),
-                          _buildResetBtn(),
                         ],
                       ],
                     ),
                   ),
                 ),
+                if (_parsedResult != null) ...[
+                  Container(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          offset: const Offset(0, -4),
+                          blurRadius: 10,
+                        ),
+                      ],
+                      border: const Border(
+                        top: BorderSide(color: AppColors.line),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildSaveBtn(),
+                        const SizedBox(height: 8),
+                        _buildResetBtn(),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
     );
@@ -1340,77 +1364,117 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     q.questionStatement,
                     style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13.5, color: AppColors.ink),
                   ),
-                  const SizedBox(height: 12),
-
-                  // Render options
-                  ...q.options.map((opt) {
-                    final isCorrect = opt.key.toUpperCase() == q.correctAnswer.toUpperCase();
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isCorrect ? AppColors.emerald.withOpacity(0.08) : Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: isCorrect ? AppColors.emerald : AppColors.line),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 22,
-                            height: 22,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isCorrect ? AppColors.emerald : AppColors.paper,
-                            ),
-                            child: Text(
-                              opt.key,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: isCorrect ? Colors.white : AppColors.muted,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              opt.text,
-                              style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
-                            ),
-                          ),
-                          if (isCorrect)
-                            const Icon(Icons.check_circle, color: AppColors.emerald, size: 16),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-
-                  // Render explanation
-                  if (q.explanation != null && q.explanation!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                  if (q.suppQuestionStatement != null && q.suppQuestionStatement!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 10),
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.paper.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.paper,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Explanation:",
-                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 11.5, color: AppColors.muted),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            q.explanation!,
-                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink),
-                          ),
-                        ],
+                      child: MarkdownBody(
+                        data: q.suppQuestionStatement!,
+                        styleSheet: MarkdownStyleSheet(
+                          p: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, height: 1.4, fontStyle: FontStyle.italic),
+                        ),
                       ),
                     ),
                   ],
+                  if (q.questionPrompt != null && q.questionPrompt!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.civic.withOpacity(0.04),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.civic.withOpacity(0.1)),
+                      ),
+                      child: Text(
+                        q.questionPrompt!,
+                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.civic),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+
+                  // Render options in an attemptable format
+                  ...q.options.map((opt) {
+                    final selectedKey = _selectedAnswers[idx];
+                    final hasSelected = selectedKey != null;
+                    final isSelected = selectedKey == opt.key;
+                    final isCorrect = opt.key.toUpperCase() == q.correctAnswer.toUpperCase();
+
+                    Color cardBgColor = Colors.white;
+                    Color borderColor = AppColors.line;
+                    Widget? trailingIcon;
+
+                    if (hasSelected) {
+                      if (isCorrect) {
+                        cardBgColor = AppColors.emerald.withOpacity(0.08);
+                        borderColor = AppColors.emerald;
+                        trailingIcon = const Icon(Icons.check_circle, color: AppColors.emerald, size: 16);
+                      } else if (isSelected) {
+                        cardBgColor = AppColors.berry.withOpacity(0.08);
+                        borderColor = AppColors.berry;
+                        trailingIcon = const Icon(Icons.cancel, color: AppColors.berry, size: 16);
+                      }
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      child: InkWell(
+                        onTap: () {
+                          if (!hasSelected) {
+                            setState(() {
+                              _selectedAnswers[idx] = opt.key;
+                            });
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: cardBgColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 22,
+                                height: 22,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: hasSelected && isCorrect
+                                      ? AppColors.emerald
+                                      : (hasSelected && isSelected ? AppColors.berry : AppColors.paper),
+                                ),
+                                child: Text(
+                                  opt.key,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: hasSelected && (isCorrect || isSelected) ? Colors.white : AppColors.muted,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  opt.text,
+                                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                                ),
+                              ),
+                              if (trailingIcon != null) trailingIcon,
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ],
               ),
             );
@@ -1467,6 +1531,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             _parsedResult = null;
             _selectedFile = null;
             _textController.clear();
+            _selectedAnswers.clear();
           });
         },
         child: Text(

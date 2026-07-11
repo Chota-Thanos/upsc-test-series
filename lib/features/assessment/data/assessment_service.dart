@@ -661,6 +661,19 @@ class AssessmentService extends ChangeNotifier {
     }
   }
 
+  Map<String, dynamic> _normalizeParsedData(dynamic rawData) {
+    if (rawData is List) {
+      return {
+        'success': true,
+        'questions': rawData,
+      };
+    } else if (rawData is Map) {
+      return Map<String, dynamic>.from(rawData);
+    } else {
+      throw Exception("Invalid response format from AI parser");
+    }
+  }
+
   // Parse raw text for questions using AI
   Future<ParsedResult> aiParseText({
     required String rawText,
@@ -673,10 +686,11 @@ class AssessmentService extends ChangeNotifier {
         'content_type': contentType,
         if (instructions != null && instructions.isNotEmpty) 'instructions': instructions,
       };
-      final Map<String, dynamic> data = await apiClient.post(
+      final dynamic rawData = await apiClient.post(
         '/api/v1/assessment/user/ai/parse-text',
         payload,
       );
+      final Map<String, dynamic> data = _normalizeParsedData(rawData);
       return ParsedResult.fromJson(data);
     } catch (e) {
       debugPrint("Error parsing text with AI: $e");
@@ -700,10 +714,11 @@ class AssessmentService extends ChangeNotifier {
         'content_type': contentType,
         if (instructions != null && instructions.isNotEmpty) 'instructions': instructions,
       };
-      final Map<String, dynamic> data = await apiClient.post(
+      final dynamic rawData = await apiClient.post(
         '/api/v1/assessment/user/ai/parse-file',
         payload,
       );
+      final Map<String, dynamic> data = _normalizeParsedData(rawData);
       return ParsedResult.fromJson(data);
     } catch (e) {
       debugPrint("Error parsing file with AI: $e");
@@ -722,10 +737,11 @@ class AssessmentService extends ChangeNotifier {
         'content_type': contentType,
         if (instructions != null && instructions.isNotEmpty) 'instructions': instructions,
       };
-      final Map<String, dynamic> data = await apiClient.post(
+      final dynamic rawData = await apiClient.post(
         '/api/v1/assessment/user/ai/parse-images',
         payload,
       );
+      final Map<String, dynamic> data = _normalizeParsedData(rawData);
       return ParsedResult.fromJson(data);
     } catch (e) {
       debugPrint("Error parsing images with AI: $e");

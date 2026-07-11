@@ -364,6 +364,23 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                         ),
                       ),
                     ],
+
+                    if (activeQ.questionPrompt != null && activeQ.questionPrompt!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.civic.withOpacity(0.04),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.civic.withOpacity(0.1)),
+                        ),
+                        child: Text(
+                          activeQ.questionPrompt!,
+                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.civic),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
 
                     // Options Grid
