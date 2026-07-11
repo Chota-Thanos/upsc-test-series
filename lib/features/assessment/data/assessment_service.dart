@@ -612,6 +612,7 @@ class AssessmentService extends ChangeNotifier {
   // Create a user custom test template and return its ID
   Future<int> createUserCustomTest({
     required String title,
+    String? description,
     required int examId,
     required int examLevelId,
     required List<int> questionIds,
@@ -620,6 +621,7 @@ class AssessmentService extends ChangeNotifier {
     try {
       final Map<String, dynamic> payload = {
         'title': title,
+        if (description != null) 'description': description,
         'exam_id': examId,
         'exam_level_id': examLevelId,
         'question_ids': questionIds,
@@ -632,6 +634,37 @@ class AssessmentService extends ChangeNotifier {
       return data['id'] as int;
     } catch (e) {
       debugPrint("Error creating user custom test: $e");
+      rethrow;
+    }
+  }
+
+  // Add questions to a user custom test template
+  Future<void> addQuestionsToUserTest({
+    required int testTemplateId,
+    required List<int> questionIds,
+  }) async {
+    try {
+      await apiClient.post(
+        '/api/v1/assessment/user/custom-tests/$testTemplateId/add-questions',
+        {
+          'question_ids': questionIds,
+        },
+      );
+    } catch (e) {
+      debugPrint("Error adding questions to custom test: $e");
+      rethrow;
+    }
+  }
+
+  // Fetch a single custom test template by ID
+  Future<AssessmentTestTemplate> getTestTemplate(int id) async {
+    try {
+      final Map<String, dynamic> data = await apiClient.get(
+        '/api/v1/assessment/test-templates/$id',
+      );
+      return AssessmentTestTemplate.fromJson(data);
+    } catch (e) {
+      debugPrint("Error fetching test template $id: $e");
       rethrow;
     }
   }

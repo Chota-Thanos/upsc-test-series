@@ -47,11 +47,14 @@ class SelfTestBuilderTab extends StatefulWidget {
   final String? contentType;
   final int? rootNodeId;
   final bool isRevisionMode;
+  final int? testTemplateId;
+
   const SelfTestBuilderTab({
     super.key,
     this.contentType,
     this.rootNodeId,
     this.isRevisionMode = false,
+    this.testTemplateId,
   });
 
   @override
@@ -1216,33 +1219,339 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     
     final selectedCount = _getCategoryQuantity(node.id, available);
     
-    setState(() {
-      final existingIdx = _compiledItems.indexWhere(
-        (item) => item['node'].id == node.id,
-      );
-      final family = _activeTab == 'mains' ? 'mains_subjective' : 'objective';
+    if (widget.testTemplateId != null) {
+      _addQuestionsToTargetTest(node, widget.testTemplateId!, selectedCount);
+      return;
+    }
 
-      if (existingIdx >= 0) {
-        final currentCount = _compiledItems[existingIdx]['count'] as int;
-        _compiledItems[existingIdx]['count'] = min(
-          currentCount + selectedCount,
-          available,
-        );
-      } else {
-        _compiledItems.add({
-          'node': node,
-          'count': selectedCount,
-          'question_family': family,
-        });
+    _showAddOptionsBottomSheet(node, selectedCount);
+  }
+
+  Future<void> _addQuestionsToTargetTest(_TreeNode node, int testId, int count) async {
+    setState(() {
+      _compiling = true;
+    });
+    try {
+      final resolved = _resolveCategory(
+        node,
+        _activeTab == 'mains' ? _mainsNodesRaw : _objNodesRaw,
+      );
+      final isMains = _activeTab == 'mains';
+      final subjectId = resolved['subject_node_id'];
+      final topicId = resolved['topic_node_id'];
+      final subtopicId = resolved['subtopic_node_id'];
+
+      final apiClient = Provider.of<ApiClient>(context, listen: false);
+      String path = isMains ? '/api/v1/assessment/mains/questions' : '/api/v1/assessment/questions';
+      final queryParams = <String, String>{
+        'limit': '100',
+        'subject_node_id': subjectId.toString(),
+      };
+      if (topicId != null) queryParams['topic_node_id'] = topicId.toString();
+      if (subtopicId != null) queryParams['subtopic_node_id'] = subtopicId.toString();
+
+      final queryString = Uri(queryParameters: queryParams).query;
+      final List<dynamic> data = await apiClient.get('$path?$queryString');
+      
+      if (data.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("No questions found in this category")),
+          );
+        }
+        return;
       }
+
+      final shuffled = List.from(data)..shuffle();
+      final selected = shuffled.take(count).toList();
+      final questionIds = selected.map<int>((q) {
+        final qId = q['id'] ?? q['question_id'];
+        return int.tryParse(qId.toString()) ?? 0;
+      }).where((id) => id > 0).toList();
+
+      if (questionIds.isEmpty) return;
+
+      await _service.addQuestionsToUserTest(
+        testTemplateId: testId,
+        questionIds: questionIds,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Successfully added ${questionIds.length} questions!")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to add questions: $e")),
+        );
+      }
+    } finally {
+      setState(() {
+        _compiling = false;
+      });
+    }
+  }
+
+  void _showAddOptionsBottomSheet(_TreeNode node, int selectedCount) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Add Questions to Test",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Add $selectedCount questions from \"${node.name}\". Choose where to send them:",
+                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.shopping_cart_outlined, color: AppColors.civic),
+                  title: const Text("Add to Dynamic practice cart"),
+                  subtitle: const Text("Keep building a session in your cart"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      final existingIdx = _compiledItems.indexWhere(
+                        (item) => item['node'].id == node.id,
+                      );
+                      final available = _getAvailableCount(node.id);
+                      final family = _activeTab == 'mains' ? 'mains_subjective' : 'objective';
+
+                      if (existingIdx >= 0) {
+                        final currentCount = _compiledItems[existingIdx]['count'] as int;
+                        _compiledItems[existingIdx]['count'] = min(
+                          currentCount + selectedCount,
+                          available,
+                        );
+                      } else {
+                        _compiledItems.add({
+                          'node': node,
+                          'count': selectedCount,
+                          'question_family': family,
+                        });
+                      }
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Added to cart")),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.add_box_outlined, color: AppColors.civic),
+                  title: const Text("Add to New Custom Test"),
+                  subtitle: const Text("Create a blank test and insert questions"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showNewTestTitleDialog(node, selectedCount);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.folder_open_outlined, color: AppColors.civic),
+                  title: const Text("Add to Existing Custom Test"),
+                  subtitle: const Text("Select an unattempted custom test"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showExistingTestsSelector(node, selectedCount);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showNewTestTitleDialog(_TreeNode node, int selectedCount) {
+    final titleController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Create Test & Add",
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: titleController,
+          decoration: const InputDecoration(
+            hintText: "Enter test title",
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final title = titleController.text.trim();
+              if (title.isEmpty) return;
+              Navigator.pop(context);
+
+              setState(() {
+                _compiling = true;
+              });
+
+              try {
+                final resolved = _resolveCategory(
+                  node,
+                  _activeTab == 'mains' ? _mainsNodesRaw : _objNodesRaw,
+                );
+                final isMains = _activeTab == 'mains';
+                final subjectId = resolved['subject_node_id'];
+                final topicId = resolved['topic_node_id'];
+                final subtopicId = resolved['subtopic_node_id'];
+
+                final apiClient = Provider.of<ApiClient>(context, listen: false);
+                String path = isMains ? '/api/v1/assessment/mains/questions' : '/api/v1/assessment/questions';
+                final queryParams = <String, String>{
+                  'limit': '100',
+                  'subject_node_id': subjectId.toString(),
+                };
+                if (topicId != null) queryParams['topic_node_id'] = topicId.toString();
+                if (subtopicId != null) queryParams['subtopic_node_id'] = subtopicId.toString();
+
+                final queryString = Uri(queryParameters: queryParams).query;
+                final List<dynamic> data = await apiClient.get('$path?$queryString');
+                
+                if (data.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("No questions found in this category")),
+                  );
+                  return;
+                }
+
+                final shuffled = List.from(data)..shuffle();
+                final selected = shuffled.take(selectedCount).toList();
+                final questionIds = selected.map<int>((q) {
+                  final qId = q['id'] ?? q['question_id'];
+                  return int.tryParse(qId.toString()) ?? 0;
+                }).where((id) => id > 0).toList();
+
+                if (questionIds.isEmpty) return;
+
+                int examLevelId = 7;
+                String testType = 'sectional_test';
+                if (_activeTab == 'aptitude') {
+                  examLevelId = 1;
+                } else if (_activeTab == 'mains') {
+                  examLevelId = 3;
+                  testType = 'mains_test';
+                }
+
+                await _service.createUserCustomTest(
+                  title: title,
+                  examId: _selectedExamId ?? 1,
+                  examLevelId: examLevelId,
+                  testType: testType,
+                  questionIds: questionIds,
+                );
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Successfully created \"$title\"!")),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Failed to create custom test: $e")),
+                );
+              } finally {
+                setState(() {
+                  _compiling = false;
+                });
+              }
+            },
+            child: Text("Save & Add", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.civic)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExistingTestsSelector(_TreeNode node, int selectedCount) async {
+    setState(() {
+      _compiling = true;
+    });
+    List<AssessmentTestTemplate> tests = [];
+    try {
+      final templates = await _service.getUserCustomTests();
+      tests = templates.where((t) => t.latestAttemptStatus == null).toList();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load custom tests: $e")),
+      );
+      setState(() {
+        _compiling = false;
+      });
+      return;
+    }
+    setState(() {
+      _compiling = false;
     });
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Added $selectedCount questions from ${node.name} to cart"),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
+    if (tests.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("No Tests Found"),
+          content: const Text("You do not have any unattempted custom tests. Create one first!"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Select Target Test",
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: tests.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, idx) {
+              final t = tests[idx];
+              return ListTile(
+                title: Text(t.title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold)),
+                subtitle: Text("${t.questionCount ?? 0} Questions"),
+                trailing: const Icon(Icons.chevron_right, size: 16),
+                onTap: () {
+                  Navigator.pop(context);
+                  _addQuestionsToTargetTest(node, t.id, selectedCount);
+                },
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -2291,15 +2600,38 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      "$available Qs",
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.civic,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      children: [
+                        Text(
+                          "$available Qs",
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.civic,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (_userQuestionCounts[node.id] != null && _userQuestionCounts[node.id]! > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade50,
+                              border: Border.all(color: Colors.amber.shade200),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              "+${_userQuestionCounts[node.id]} yours",
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   Row(
@@ -2611,6 +2943,25 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           color: AppColors.civic,
                         ),
                       ),
+                      if (_userQuestionCounts[node.id] != null && _userQuestionCounts[node.id]! > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade50,
+                            border: Border.all(color: Colors.amber.shade200),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            "+${_userQuestionCounts[node.id]} yours",
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade800,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(width: 8),
                       _buildQuantitySelector(node, available),
                       const SizedBox(width: 8),

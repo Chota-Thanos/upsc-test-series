@@ -7,6 +7,9 @@ import '../data/assessment_service.dart';
 import '../models/assessment_models.dart';
 import 'attempt_engine_screen.dart';
 import 'custom_test_create_screen.dart';
+import 'custom_test_detail_screen.dart';
+import 'self_test_builder_tab.dart';
+import 'result_review_screen.dart';
 
 class CustomTestsListScreen extends StatefulWidget {
   final String? contentType;
@@ -120,6 +123,100 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
     }
   }
 
+  void _showCreateTestDialog() {
+    final titleController = TextEditingController();
+    final descController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Create Custom Test",
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                hintText: "Test Title (e.g. Modern History Mock)",
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(
+                hintText: "Description (Optional)",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final title = titleController.text.trim();
+              if (title.isEmpty) return;
+              Navigator.pop(context);
+
+              setState(() {
+                _loading = true;
+              });
+
+              try {
+                int examLevelId = 7;
+                String testType = 'sectional_test';
+                if (widget.contentType == 'aptitude') {
+                  examLevelId = 1;
+                } else if (widget.contentType == 'mains') {
+                  examLevelId = 3;
+                  testType = 'mains_test';
+                }
+
+                final templateId = await _service.createUserCustomTest(
+                  title: title,
+                  description: descController.text.trim(),
+                  examId: 1,
+                  examLevelId: examLevelId,
+                  testType: testType,
+                  questionIds: [],
+                );
+
+                if (mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CustomTestDetailScreen(
+                        testTemplateId: templateId,
+                        contentType: widget.contentType,
+                      ),
+                    ),
+                  ).then((_) => _fetchCustomTests());
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Failed to create test: $e")),
+                  );
+                }
+              } finally {
+                _fetchCustomTests();
+              }
+            },
+            child: Text("Create", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.civic)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,6 +253,39 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                 ),
               ),
             ),
+          
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.civic.withOpacity(0.1),
+                  child: const Icon(Icons.add_task_rounded, color: AppColors.civic),
+                ),
+                title: Text(
+                  "Create custom test template",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: AppColors.ink,
+                  ),
+                ),
+                subtitle: Text(
+                  "Build a test template with name and description",
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                ),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
+                onTap: _showCreateTestDialog,
+              ),
+            ),
+          ),
+
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.civic))
@@ -173,17 +303,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CustomTestCreateScreen(
-                contentType: widget.contentType,
-              ),
-            ),
-          );
-          _fetchCustomTests(); // Refresh list on return
-        },
+        onPressed: _showCreateTestDialog,
         backgroundColor: AppColors.civic,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -262,6 +382,9 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
             ? AppColors.saffron
             : AppColors.civic;
 
+    final bool hasAttempt = test.latestAttemptStatus != null;
+    final bool isCompleted = test.latestAttemptStatus == "submitted" || test.latestAttemptStatus == "completed";
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -276,104 +399,190 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    "$typeLabel Test",
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: badgeText,
-                    ),
-                  ),
-                ),
-                Text(
-                  test.createdAt.split('T').first,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.muted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              test.title,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CustomTestDetailScreen(
+                testTemplateId: test.id,
+                contentType: widget.contentType,
               ),
             ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                _buildStatBadge(Icons.layers_outlined, "${test.questionCount ?? test.totalMarks.round()} Qs"),
-                const SizedBox(width: 12),
-                _buildStatBadge(Icons.timer_outlined, "${test.durationMinutes} Min"),
-                const SizedBox(width: 12),
-                _buildStatBadge(Icons.emoji_events_outlined, "${test.totalMarks.round()} Marks"),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(color: AppColors.line, height: 1),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
+          ).then((_) => _fetchCustomTests());
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "$typeLabel Test",
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: badgeText,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isCompleted ? AppColors.emerald.withOpacity(0.1) :
+                             hasAttempt ? AppColors.saffron.withOpacity(0.1) :
+                             AppColors.muted.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isCompleted ? "COMPLETED" : hasAttempt ? "IN PROGRESS" : "NOT STARTED",
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: isCompleted ? AppColors.emerald : hasAttempt ? AppColors.saffron : AppColors.muted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                test.title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _buildStatBadge(Icons.layers_outlined, "${test.questionCount ?? 0} Qs"),
+                  const SizedBox(width: 12),
+                  _buildStatBadge(Icons.timer_outlined, "${test.durationMinutes} Min"),
+                  const SizedBox(width: 12),
+                  _buildStatBadge(Icons.emoji_events_outlined, "${test.totalMarks.round()} Marks"),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: AppColors.line, height: 1),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (!hasAttempt) ...[
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Scaffold(
+                                  appBar: AppBar(
+                                    title: const Text("Select Category to Add"),
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: AppColors.ink,
+                                    elevation: 0,
+                                  ),
+                                  body: SelfTestBuilderTab(
+                                    testTemplateId: test.id,
+                                    contentType: widget.contentType,
+                                  ),
+                                ),
+                              ),
+                            ).then((_) => _fetchCustomTests());
+                          },
+                          icon: const Icon(Icons.add_circle_outline, size: 16),
+                          label: Text(
+                            "Add Qs",
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.civic,
+                            side: const BorderSide(color: AppColors.civic),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: ElevatedButton.icon(
+                        onPressed: _startingId == test.id
+                            ? null
+                            : () {
+                                if (isCompleted && test.latestResultId != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ResultReviewScreen(resultId: test.latestResultId!),
+                                    ),
+                                  );
+                                } else if (hasAttempt && test.latestAttemptId != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AttemptEngineScreen(attemptId: test.latestAttemptId!),
+                                    ),
+                                  ).then((_) => _fetchCustomTests());
+                                } else {
+                                  _handleStartAttempt(test.id);
+                                }
+                              },
+                        icon: _startingId == test.id
+                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : Icon(
+                                isCompleted ? Icons.emoji_events_outlined :
+                                hasAttempt ? Icons.play_arrow_rounded : Icons.rocket_launch_outlined,
+                                size: 16,
+                              ),
+                        label: Text(
+                          isCompleted ? "Result" : hasAttempt ? "Resume" : "Start",
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.ink,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
                     height: 38,
-                    child: ElevatedButton.icon(
-                      onPressed: _startingId == test.id ? null : () => _handleStartAttempt(test.id),
-                      icon: _startingId == test.id
-                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.play_arrow_rounded, size: 18),
-                      label: Text(
-                        "Attempt",
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.ink,
-                        foregroundColor: Colors.white,
+                    width: 44,
+                    child: OutlinedButton(
+                      onPressed: _deletingId == test.id ? null : () => _handleDeleteTest(test.id),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.berry,
+                        side: const BorderSide(color: AppColors.line),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 0,
+                        padding: EdgeInsets.zero,
                       ),
+                      child: _deletingId == test.id
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.berry))
+                          : const Icon(Icons.delete_outline_rounded, size: 18),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  height: 38,
-                  width: 44,
-                  child: OutlinedButton(
-                    onPressed: _deletingId == test.id ? null : () => _handleDeleteTest(test.id),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.berry,
-                      side: const BorderSide(color: AppColors.line),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: _deletingId == test.id
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.berry))
-                        : const Icon(Icons.delete_outline_rounded, size: 18),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

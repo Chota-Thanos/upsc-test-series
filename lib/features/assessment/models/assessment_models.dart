@@ -73,6 +73,9 @@ class AssessmentTestTemplate {
   final String createdAt;
   final String updatedAt;
   final int? createdByUserId;
+  final int? latestAttemptId;
+  final String? latestAttemptStatus;
+  final int? latestResultId;
 
   AssessmentTestTemplate({
     required this.id,
@@ -91,6 +94,9 @@ class AssessmentTestTemplate {
     required this.createdAt,
     required this.updatedAt,
     this.createdByUserId,
+    this.latestAttemptId,
+    this.latestAttemptStatus,
+    this.latestResultId,
   });
 
   factory AssessmentTestTemplate.fromJson(Map<String, dynamic> json) {
@@ -116,6 +122,13 @@ class AssessmentTestTemplate {
       updatedAt: json['updated_at'] as String? ?? '',
       createdByUserId: json['created_by_user_id'] != null
           ? int.tryParse(json['created_by_user_id'].toString())
+          : null,
+      latestAttemptId: json['latest_attempt_id'] != null
+          ? int.tryParse(json['latest_attempt_id'].toString())
+          : null,
+      latestAttemptStatus: json['latest_attempt_status'] as String?,
+      latestResultId: json['latest_result_id'] != null
+          ? int.tryParse(json['latest_result_id'].toString())
           : null,
     );
   }
