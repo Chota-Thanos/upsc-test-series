@@ -2,8 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/tour/app_tour_service.dart';
 import '../../../../core/utils/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/assessment_service.dart';
@@ -12,7 +14,6 @@ import 'attempt_engine_screen.dart';
 import 'custom_tests_list_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/utils/auth_interception_helper.dart';
 
 class _TreeNode {
   final int id;
@@ -51,6 +52,9 @@ class CustomTestCreateScreen extends StatefulWidget {
 class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
   late AssessmentService _service;
   
+  // Page Steps: 'name' = step 1 (enter test name), 'build' = step 2 (add questions)
+  String _step = 'name';
+
   // Page States
   bool _loadingExams = true;
   bool _loadingCategories = false;
@@ -60,6 +64,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
   List<Exam> _exams = [];
   int? _selectedExamId;
+  List<ExamLevel> _examLevels = [];
   late String _contentType;
   final TextEditingController _titleController = TextEditingController();
 
@@ -72,6 +77,11 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
   // Basket for Custom Test
   final List<Map<String, dynamic>> _addedCategories = []; // List of {'node': node, 'count': count}
   final Map<int, int> _selectedQuantities = {};
+
+  // Tour
+  final GlobalKey _tourCategoriesKey = GlobalKey();
+  final GlobalKey _tourBottomBarKey = GlobalKey();
+  bool _tourChecked = false;
 
   @override
   void initState() {
@@ -103,6 +113,14 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
       if (exams.isNotEmpty) {
         _selectedExamId = exams.first.id;
+        // Fetched rather than hardcoded — exam_levels are auto-incremented ids that
+        // can differ between environments, so a hardcoded id previously caused a
+        // foreign-key error on test creation whenever it didn't match the server.
+        try {
+          _examLevels = await _service.getAssessmentExamLevels(_selectedExamId!);
+        } catch (e) {
+          debugPrint("Error loading exam levels: $e");
+        }
         await _fetchCategories();
         await _restoreGuestSavedCustomTest();
       }
@@ -112,6 +130,20 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
         _loadingExams = false;
       });
     }
+  }
+
+  int _examLevelIdForContentType() {
+    final slug = _contentType == 'aptitude'
+        ? 'prelims-csat'
+        : (_contentType == 'mains' ? 'mains-written' : 'prelims-gs');
+    final match = _examLevels.where((l) => l.slug == slug);
+    if (match.isNotEmpty) return match.first.id;
+
+    // Fallback only if exam levels failed to load — best-effort guess, may not
+    // match the actual row id on whichever server this request hits.
+    if (_contentType == 'aptitude') return 1;
+    if (_contentType == 'mains') return 3;
+    return 7;
   }
 
   Future<void> _restoreGuestSavedCustomTest() async {
@@ -266,6 +298,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
     setState(() {
       _activeTree = roots;
+      // Auto-expand all root (first-level) nodes
+      _expandedNodes.addAll(roots.map((n) => n.id));
     });
   }
 
@@ -339,35 +373,12 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
     final totalQs = _getTotalAddedQuestions();
     final apiClient = Provider.of<ApiClient>(context, listen: false);
+    final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
-    if (apiClient.isGuestMode) {
-      final prefs = await SharedPreferences.getInstance();
-      final config = {
-        'title': _titleController.text.trim(),
-        'selectedExamId': _selectedExamId,
-        'contentType': _contentType,
-        'addedCategories': _addedCategories.map((item) {
-          final node = item['node'] as _TreeNode;
-          return {
-            'id': node.id,
-            'name': node.name,
-            'slug': node.slug,
-            'nodeType': node.nodeType,
-            'parentId': node.parentId,
-            'contentType': node.contentType,
-            'count': item['count'],
-          };
-        }).toList(),
-      };
-      await prefs.setString('guest_saved_custom_test', jsonEncode(config));
-      if (mounted) {
-        AuthInterceptionHelper.checkAuthAndPrompt(context, apiClient);
-      }
-      return;
-    }
-
-    if (totalQs > 10 && !apiClient.hasEntitlement('assessment.premium_tests')) {
-      _showPremiumLimitDialog();
+    // Guests can build and start a real test too (server caps them at 10
+    // questions, same as the free-tier check below) — no sign-in wall here.
+    if (totalQs > _questionCap(hasPremium)) {
+      _showPremiumLimitDialog(hasPremium);
       return;
     }
 
@@ -432,12 +443,16 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
       final templateId = await _service.createUserCustomTest(
         title: _titleController.text.trim(),
         examId: _selectedExamId!,
-        examLevelId: 1, // Fallback
+        examLevelId: _examLevelIdForContentType(),
         questionIds: allPickedQuestionIds,
         testType: _contentType == 'mains' ? 'mains_test' : 'sectional_test',
       );
 
       final attemptId = await _service.startAttempt(templateId);
+
+      if (apiClient.isGuestMode) {
+        await apiClient.setPendingGuestClaim(attemptId);
+      }
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -455,28 +470,71 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
     }
   }
 
+  void _startBuildStepTour(BuildContext ctx) {
+    ShowCaseWidget.of(ctx).startShowCase([_tourCategoriesKey, _tourBottomBarKey]);
+  }
+
+  Future<void> _maybeAutoStartTour(BuildContext ctx) async {
+    if (await AppTourService.shouldShowTour(AppTourService.createScreenKey)) {
+      await AppTourService.markTourSeen(AppTourService.createScreenKey);
+      if (mounted) _startBuildStepTour(ctx);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final apiClient = Provider.of<ApiClient>(context);
-    final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
+    return ShowCaseWidget(
+      builder: (ctx) {
+        final apiClient = Provider.of<ApiClient>(context);
+        final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
+
+        if (_step == 'name') {
+          return _buildNameStep();
+        }
+
+        // Build step: check tour first time we arrive here
+        if (!_tourChecked) {
+          _tourChecked = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoStartTour(ctx));
+        }
+
+        return _buildBuildStep(ctx, hasPremium);
+      },
+    );
+  }
+
+  Widget _buildBuildStep(BuildContext ctx, bool hasPremium) {
+
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: Text(
-          "Create Custom Test",
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.ink,
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _titleController.text.isEmpty ? "Custom Test" : _titleController.text,
+              style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              "Adding questions",
+              style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+            ),
+          ],
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => setState(() => _step = 'name'),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined, color: AppColors.civic, size: 20),
+            tooltip: "App Tour",
+            onPressed: () => _startBuildStepTour(ctx),
+          ),
           IconButton(
             icon: const Icon(Icons.assignment_outlined, color: AppColors.civic),
             tooltip: "My Custom Tests",
@@ -484,9 +542,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CustomTestsListScreen(
-                    contentType: _contentType,
-                  ),
+                  builder: (context) => CustomTestsListScreen(contentType: _contentType),
                 ),
               );
             },
@@ -532,7 +588,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    "Free Tier: Custom tests are limited to 10 questions. Upgrade for unlimited questions.",
+                                    "Free Tier: ${_contentType == 'mains' ? 'Mains' : 'GK/CSAT'} tests are limited to ${_questionCap(false)} questions. Upgrade to Premium for up to ${_questionCap(true)}.",
                                     style: GoogleFonts.inter(
                                       color: const Color(0xFF9A3412),
                                       fontSize: 12,
@@ -544,138 +600,43 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                             ),
                           ),
                         ],
-                        // Title Input
-                        Text(
-                          "Test Name",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _titleController,
-                          decoration: InputDecoration(
-                            hintText: "e.g. Ancient History revision",
-                            hintStyle: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
-                            fillColor: Colors.white,
-                            filled: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.line),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.line),
-                            ),
-                          ),
-                          style: GoogleFonts.inter(fontSize: 14, color: AppColors.ink),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Exam Profile selector
-                        Text(
-                          "Exam Profile",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.line),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              value: _selectedExamId,
-                              isExpanded: true,
-                              items: _exams.map((exam) {
-                                return DropdownMenuItem<int>(
-                                  value: exam.id,
-                                  child: Text(
-                                    exam.name,
-                                    style: GoogleFonts.inter(fontSize: 14, color: AppColors.ink),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setState(() {
-                                    _selectedExamId = val;
-                                  });
-                                  _fetchCategories();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Content Type Selector (only if not passed)
-                        if (widget.contentType == null) ...[
-                          Text(
-                            "Content Type",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.ink,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildChoiceChip(
-                                  label: "General Studies",
-                                  isSelected: _contentType == 'gk',
-                                  onTap: () {
-                                    setState(() => _contentType = 'gk');
-                                    _fetchCategories();
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _buildChoiceChip(
-                                  label: "CSAT",
-                                  isSelected: _contentType == 'aptitude',
-                                  onTap: () {
-                                    setState(() => _contentType = 'aptitude');
-                                    _fetchCategories();
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _buildChoiceChip(
-                                  label: "Mains",
-                                  isSelected: _contentType == 'mains',
-                                  onTap: () {
-                                    setState(() => _contentType = 'mains');
-                                    _fetchCategories();
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-
                         // Selected Categories summary
                         if (_addedCategories.isNotEmpty) ...[
+                          // Test name header above the basket
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.civic.withOpacity(0.06),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.civic.withOpacity(0.12)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.bookmark_rounded, size: 14, color: AppColors.civic),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _titleController.text,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.ink,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           Text(
-                            "Selected Categories",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
+                            "Questions Added",
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.ink,
+                              color: AppColors.muted,
+                              letterSpacing: 0.8,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -750,13 +711,44 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           const SizedBox(height: 20),
                         ],
 
+                        // Content type selector above categories
+                        if (widget.contentType == null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            "Content Type",
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.muted,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(child: _buildChoiceChip(label: "General Studies", isSelected: _contentType == 'gk', onTap: () { setState(() => _contentType = 'gk'); _fetchCategories(); })),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildChoiceChip(label: "CSAT", isSelected: _contentType == 'aptitude', onTap: () { setState(() => _contentType = 'aptitude'); _fetchCategories(); })),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildChoiceChip(label: "Mains", isSelected: _contentType == 'mains', onTap: () { setState(() => _contentType = 'mains'); _fetchCategories(); })),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
                         // Syllabus / Category tree builder
-                        Text(
-                          "Syllabus Filters",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.ink,
+                        Showcase(
+                          key: _tourCategoriesKey,
+                          title: "Browse & Add Questions",
+                          description: "Expand any subject to see its topics, then tap the quantity stepper and 'Add Qs' to include them in your test.",
+                          targetBorderRadius: BorderRadius.circular(8),
+                          child: Text(
+                            "Browse & Add Questions",
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.ink,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -788,9 +780,153 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                     ),
                   ),
                 ),
-                _buildStickyBottomBar(hasPremium),
+                Showcase(
+                  key: _tourBottomBarKey,
+                  title: "Create & Start Your Test",
+                  description: "Once you've added questions, tap 'Create & Start' to generate your test and begin immediately.",
+                  targetBorderRadius: BorderRadius.circular(16),
+                  child: _buildStickyBottomBar(hasPremium),
+                ),
               ],
             ),
+    );
+  }
+
+  Widget _buildNameStep() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Icon
+                Container(
+                  height: 72,
+                  width: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.civic.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.edit_note_rounded, color: AppColors.civic, size: 36),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  "Name your test",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Give your custom practice test a name.\nYou'll pick topics on the next step.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF94A3B8),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Name input card
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "TEST NAME",
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.muted,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _titleController,
+                        autofocus: true,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) {
+                          if (_titleController.text.trim().isNotEmpty) {
+                            setState(() => _step = 'build');
+                          }
+                        },
+                        decoration: InputDecoration(
+                          hintText: "e.g. Ancient History Focus Test",
+                          hintStyle: GoogleFonts.inter(color: AppColors.muted, fontSize: 14),
+                          fillColor: AppColors.paper,
+                          filled: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: AppColors.civic, width: 2),
+                          ),
+                        ),
+                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          onPressed: _titleController.text.trim().isEmpty ? null : () {
+                            setState(() => _step = 'build');
+                          },
+                          icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                          label: Text(
+                            "Start Building My Test",
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.ink,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Center(
+                        child: Text(
+                          "You can rename it later",
+                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    "← Back",
+                    style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1003,6 +1139,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
   Widget _buildStickyBottomBar(bool hasPremium) {
     final int totalQs = _getTotalAddedQuestions();
+    final int cap = _questionCap(hasPremium);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -1029,19 +1166,19 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  hasPremium ? "$totalQs Selected" : "$totalQs Selected / 10 Max",
+                  "$totalQs Selected / $cap Max",
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
-                    color: (!hasPremium && totalQs > 10) ? AppColors.berry : AppColors.ink,
+                    color: totalQs > cap ? AppColors.berry : AppColors.ink,
                   ),
                 ),
                 Text(
-                  hasPremium ? "Unlimited (Premium Active)" : "Free Account Limit",
+                  hasPremium ? "Premium Limit" : "Free Account Limit",
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: (!hasPremium && totalQs > 10) ? AppColors.berry : AppColors.muted,
-                    fontWeight: (!hasPremium && totalQs > 10) ? FontWeight.bold : FontWeight.normal,
+                    color: totalQs > cap ? AppColors.berry : AppColors.muted,
+                    fontWeight: totalQs > cap ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ],
@@ -1087,7 +1224,15 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
     );
   }
 
-  void _showPremiumLimitDialog() {
+  int _questionCap(bool hasPremium) {
+    final isMains = _contentType == 'mains';
+    if (hasPremium) return isMains ? 25 : 100;
+    return isMains ? 10 : 50;
+  }
+
+  void _showPremiumLimitDialog(bool hasPremium) {
+    final cap = _questionCap(hasPremium);
+    final kind = _contentType == 'mains' ? 'Mains' : 'GK/CSAT';
     showDialog(
       context: context,
       builder: (context) {
@@ -1104,35 +1249,38 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
             ],
           ),
           content: Text(
-            "Custom tests for free accounts are limited to a maximum of 10 questions. Upgrade to Assessment Premium for unlimited questions, sectional tests, and AI subjective grading.",
+            hasPremium
+                ? "$kind tests are limited to a maximum of $cap questions, even on Assessment Premium. Remove a few questions to continue."
+                : "$kind tests for free accounts are limited to a maximum of $cap questions. Upgrade to Assessment Premium for a higher limit ($kind: ${_contentType == 'mains' ? 25 : 100} questions) plus AI subjective grading.",
             style: GoogleFonts.inter(fontSize: 13, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                "Cancel",
+                hasPremium ? "OK" : "Cancel",
                 style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
               ),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            if (!hasPremium)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
+                  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                    debugPrint("Could not launch $url");
+                  }
+                },
+                child: Text(
+                  "View Plans",
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                ),
               ),
-              onPressed: () async {
-                Navigator.pop(context);
-                final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
-                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-                  debugPrint("Could not launch $url");
-                }
-              },
-              child: Text(
-                "View Plans",
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-              ),
-            ),
           ],
         );
       },

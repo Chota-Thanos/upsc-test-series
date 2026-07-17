@@ -2,18 +2,21 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/tour/app_tour_service.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/premium_lock_overlay.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/assessment_service.dart';
 import '../models/assessment_models.dart';
 import 'attempt_engine_screen.dart';
-import 'category_detail_screen.dart';
 import 'custom_test_create_screen.dart';
 import 'custom_tests_list_screen.dart';
 import 'ai_based_parsing_screen.dart';
+
+part 'category_drill_down_screen.dart';
 
 class _TreeNode {
   final int id;
@@ -48,6 +51,10 @@ class SelfTestBuilderTab extends StatefulWidget {
   final int? rootNodeId;
   final bool isRevisionMode;
   final int? testTemplateId;
+  // Whether this specific tab is actually on screen right now — TabBarView
+  // pre-builds neighbouring tabs, so this must be checked before auto-
+  // starting the tour (see ContentTypeScreen).
+  final bool isActive;
 
   const SelfTestBuilderTab({
     super.key,
@@ -55,6 +62,7 @@ class SelfTestBuilderTab extends StatefulWidget {
     this.rootNodeId,
     this.isRevisionMode = false,
     this.testTemplateId,
+    this.isActive = true,
   });
 
   @override
@@ -68,6 +76,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
   List<Exam> _exams = [];
   int? _selectedExamId;
+  List<ExamLevel> _examLevels = [];
 
   String _activeTab = 'gk'; // gk, aptitude, mains
 
@@ -79,6 +88,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   List<_TreeNode> _activeTree = [];
   Set<int> _expandedNodes = {};
   final Map<int, int> _selectedQuantities = {};
+
+  // Category browser: top-level nodes render as a tab strip; selecting a tab
+  // shows its children inline below via a breadcrumb, drilling deeper on the
+  // same screen instead of pushing a new one.
+  int? _browseActiveSubjectId;
+  List<int> _browseDrillPath = [];
   Map<String, List<int>> _exclusionsMap = {'objective': [], 'mains': []};
 
   // Cart for compiled test
@@ -88,20 +103,32 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   List<dynamic> _bookmarks = [];
   bool _loadingBookmarks = false;
   final Set<int> _selectedBookmarkIds = {};
-  String _selectedFormat = 'sectional_test';
   bool _compiling = false;
   int? _selectedRevisionNodeId;
-  bool _compiledIncludeAttempted = false;
   bool _isCartExpanded = false;
   final _customTestNameController = TextEditingController(text: "My Custom Practice Test");
   String _searchQuery = '';
   final _searchController = TextEditingController();
+
+  // Tour — content-type-aware walkthrough of the real builder (see AppTourService)
+  final GlobalKey _tourBrowseKey = GlobalKey();
+  final GlobalKey _tourAddKey = GlobalKey();
+  bool _tourChecked = false;
 
   @override
   void dispose() {
     _customTestNameController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant SelfTestBuilderTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isActive && widget.isActive) {
+      // Only now actually on screen — re-run the first-visit tour check.
+      _tourChecked = false;
+    }
   }
 
   @override
@@ -124,14 +151,25 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     });
     try {
       final exams = await _service.getAssessmentExams();
+      if (!mounted) return;
       if (exams.isNotEmpty) {
         _exams = exams;
         _selectedExamId = exams.first.id;
+        // Fetched rather than hardcoded — exam_levels are auto-incremented ids
+        // that can differ between environments (e.g. local dev vs production),
+        // so a hardcoded id here previously caused a foreign-key error whenever
+        // it didn't match the actual row id on the server being hit.
+        try {
+          _examLevels = await _service.getAssessmentExamLevels(_selectedExamId!);
+        } catch (e) {
+          debugPrint("Error loading exam levels: $e");
+        }
         await _loadSyllabus();
       } else {
         setState(() => _loading = false);
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
         _loading = false;
@@ -148,27 +186,33 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       _objNodesRaw = objNodes;
       _mainsNodesRaw = mainsNodes;
 
-      // Load user syllabus exclusions
-      try {
-        final exclusions = await _service.getExcludedTaxonomyNodes();
-        _exclusionsMap = exclusions;
-      } catch (e) {
-        debugPrint("Error loading exclusions in app: $e");
+      // Load user syllabus exclusions (guests have no personalized syllabus)
+      final apiClient = Provider.of<ApiClient>(context, listen: false);
+      if (!apiClient.isGuestMode) {
+        try {
+          final exclusions = await _service.getExcludedTaxonomyNodes();
+          _exclusionsMap = exclusions;
+        } catch (e) {
+          debugPrint("Error loading exclusions in app: $e");
+        }
       }
 
       await _loadCounts();
+      if (!mounted) return;
       _buildActiveTree();
 
       if (_activeTab == 'revision') {
         await _loadBookmarks();
       }
 
+      if (!mounted) return;
       setState(() {
         _compiledItems.clear();
         _selectedQuantities.clear();
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = "Could not load syllabus structure.";
         _loading = false;
@@ -193,6 +237,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         newUserCounts[nodeId] =
             int.tryParse(c['user_question_count']?.toString() ?? '') ?? 0;
       }
+      if (!mounted) return;
       setState(() {
         _questionCounts = newCounts;
         _userQuestionCounts = newUserCounts;
@@ -315,6 +360,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     }
 
     _expandedNodes.clear(); // Clear old expansion state when tree rebuilds
+    _browseActiveSubjectId = null; // Node ids belong to the old tree — re-pick a tab below
+    _browseDrillPath = [];
 
     if (widget.rootNodeId != null) {
       final rootNode = nodeMap[widget.rootNodeId];
@@ -379,8 +426,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       if (widget.isRevisionMode && widget.contentType != null) {
         filteredBookmarks = bookmarks.where((b) {
           if (b == null || b is! Map) return false;
-          final q = b['question_version'] as Map? ?? {};
-          return q['taxonomy_content_type'] == widget.contentType;
+          final tax = b['taxonomy'] as Map? ?? {};
+          return tax['content_type'] == widget.contentType;
         }).toList();
       }
       if (widget.rootNodeId != null) {
@@ -468,8 +515,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         final qIdVal = b['question_id'];
         final qId = qIdVal is int ? qIdVal : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
         if (qIds.contains(qId)) {
-          final q = b['question_version'] as Map? ?? {};
-          if (q['taxonomy_content_type'] == 'mains') {
+          final tax = b['taxonomy'] as Map? ?? {};
+          if (tax['content_type'] == 'mains') {
             hasMains = true;
             break;
           }
@@ -496,7 +543,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       final customTestId = await _service.createUserCustomTest(
         title: "Revision: $categoryName - ${DateTime.now().day}/${DateTime.now().month}",
         examId: _selectedExamId!,
-        examLevelId: 1,
+        examLevelId: hasMains ? _examLevelIdForSlug('mains-written') : _examLevelIdForSlug('prelims-gs'),
         questionIds: qIds,
         testType: hasMains ? 'mains_test' : 'sectional_test',
       );
@@ -1007,6 +1054,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             if (bookmark == null || bookmark is! Map) return const SizedBox();
             final b = bookmark;
             final q = b['question_version'] as Map? ?? {};
+            final tax = b['taxonomy'] as Map? ?? {};
             final qIdVal = b['question_id'];
             final qId = qIdVal is int ? qIdVal : (qIdVal != null ? int.tryParse(qIdVal.toString()) ?? 0 : 0);
             final isSelected = _selectedBookmarkIds.contains(qId);
@@ -1051,7 +1099,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            (q['taxonomy_content_type']?.toString() ?? 'gk').toUpperCase(),
+                            (tax['content_type']?.toString() ?? 'gk').toUpperCase(),
                             style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.muted),
                           ),
                         ),
@@ -1141,6 +1189,19 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     return null;
   }
 
+  /// The first root category worth showcasing — prefers one with both
+  /// sub-categories (so "Browse" is meaningful) and available questions (so
+  /// the quantity/Add step has something to point at). Falls back to the
+  /// first root node so the tour still runs on thinner syllabi.
+  int? _findTourAnchorNodeId() {
+    for (final node in _activeTree) {
+      if (node.children.isNotEmpty && _getAvailableCount(node.id) > 0) {
+        return node.id;
+      }
+    }
+    return _activeTree.isNotEmpty ? _activeTree.first.id : null;
+  }
+
   int _sumNodeQuestions(_TreeNode node) {
     if (node.isUserNode || node.id < 0) {
       final parentId = node.id < 0 ? -node.id : node.id;
@@ -1160,6 +1221,22 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       _selectedQuantities[nodeId] = min(10, available);
     }
     return _selectedQuantities[nodeId]!;
+  }
+
+  void _setSelectedQuantity(int nodeId, int value) {
+    _selectedQuantities[nodeId] = value;
+  }
+
+  List<String> _breadcrumbFor(_TreeNode node) {
+    final names = <String>[node.name];
+    int? parentId = node.parentId;
+    while (parentId != null) {
+      final parent = _findNodeInTree(_activeTree, parentId);
+      if (parent == null) break;
+      names.insert(0, parent.name);
+      parentId = parent.parentId;
+    }
+    return names;
   }
 
   Widget _buildQuantitySelector(_TreeNode node, int available) {
@@ -1216,15 +1293,35 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   void _addQuantityToTest(_TreeNode node) {
     final available = _getAvailableCount(node.id);
     if (available <= 0) return;
-    
+
     final selectedCount = _getCategoryQuantity(node.id, available);
-    
+
     if (widget.testTemplateId != null) {
       _addQuestionsToTargetTest(node, widget.testTemplateId!, selectedCount);
       return;
     }
 
-    _showAddOptionsBottomSheet(node, selectedCount);
+    // Always accumulate into the shared cart — the destination (new test vs
+    // an existing one) is chosen once, when the cart is finalized below, not
+    // on every single Add tap.
+    setState(() {
+      final existingIdx = _compiledItems.indexWhere((item) => item['node'].id == node.id);
+      final family = _activeTab == 'mains' ? 'mains_subjective' : 'objective';
+
+      if (existingIdx >= 0) {
+        final currentCount = _compiledItems[existingIdx]['count'] as int;
+        _compiledItems[existingIdx]['count'] = min(currentCount + selectedCount, available);
+      } else {
+        _compiledItems.add({
+          'node': node,
+          'count': selectedCount,
+          'question_family': family,
+        });
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Added to cart"), duration: Duration(seconds: 1)),
+    );
   }
 
   Future<void> _addQuestionsToTargetTest(_TreeNode node, int testId, int count) async {
@@ -1294,227 +1391,118 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     }
   }
 
-  void _showAddOptionsBottomSheet(_TreeNode node, int selectedCount) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Add Questions to Test",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: AppColors.ink,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Add $selectedCount questions from \"${node.name}\". Choose where to send them:",
-                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: const Icon(Icons.shopping_cart_outlined, color: AppColors.civic),
-                  title: const Text("Add to Dynamic practice cart"),
-                  subtitle: const Text("Keep building a session in your cart"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      final existingIdx = _compiledItems.indexWhere(
-                        (item) => item['node'].id == node.id,
-                      );
-                      final available = _getAvailableCount(node.id);
-                      final family = _activeTab == 'mains' ? 'mains_subjective' : 'objective';
+  int _examLevelIdForSlug(String slug) {
+    final match = _examLevels.where((l) => l.slug == slug);
+    if (match.isNotEmpty) return match.first.id;
 
-                      if (existingIdx >= 0) {
-                        final currentCount = _compiledItems[existingIdx]['count'] as int;
-                        _compiledItems[existingIdx]['count'] = min(
-                          currentCount + selectedCount,
-                          available,
-                        );
-                      } else {
-                        _compiledItems.add({
-                          'node': node,
-                          'count': selectedCount,
-                          'question_family': family,
-                        });
-                      }
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Added to cart")),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.add_box_outlined, color: AppColors.civic),
-                  title: const Text("Add to New Custom Test"),
-                  subtitle: const Text("Create a blank test and insert questions"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showNewTestTitleDialog(node, selectedCount);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.folder_open_outlined, color: AppColors.civic),
-                  title: const Text("Add to Existing Custom Test"),
-                  subtitle: const Text("Select an unattempted custom test"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showExistingTestsSelector(node, selectedCount);
-                  },
-                ),
-              ],
-            ),
-          ),
+    // Fallback only if exam levels failed to load — best-effort guess, may not
+    // match the actual row id on whichever server this request hits.
+    if (slug == 'prelims-csat') return 1;
+    if (slug == 'mains-written') return 3;
+    return 7;
+  }
+
+  int _examLevelIdForActiveTab() {
+    final slug = _activeTab == 'aptitude'
+        ? 'prelims-csat'
+        : (_activeTab == 'mains' ? 'mains-written' : 'prelims-gs');
+    return _examLevelIdForSlug(slug);
+  }
+
+  String _testTypeForActiveTab() => _activeTab == 'mains' ? 'mains_test' : 'sectional_test';
+
+  // Builds category specs (any taxonomy level) from the whole cart, resolved
+  // server-side with the same rollup logic used for live compiled attempts —
+  // so a category card built from an upper-level category (not just leaves)
+  // resolves correctly instead of the old client-side exact-match lookup.
+  List<Map<String, dynamic>> _cartToCategories() {
+    return _compiledItems.map((item) {
+      final node = item['node'] as _TreeNode;
+      final count = item['count'] as int;
+      final family = item['question_family'] as String? ?? 'objective';
+      final isMainsItem = family == 'mains_subjective';
+      final sourceList = isMainsItem ? _mainsNodesRaw : _objNodesRaw;
+      final targetNode = node.isUserNode ? _findNodeInTree(_activeTree, node.parentId!)! : node;
+      final resolved = _resolveCategory(targetNode, sourceList);
+      return {
+        ...resolved,
+        'question_count': count,
+        'question_family': family,
+        if (node.isUserNode) 'is_user_private': true,
+      };
+    }).toList();
+  }
+
+  Future<void> _saveCartAsNewTest() async {
+    final name = _customTestNameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Test name is required")),
+      );
+      return;
+    }
+    if (_compiledItems.isEmpty || _selectedExamId == null) return;
+
+    setState(() => _compiling = true);
+    try {
+      await _service.createUserCustomTest(
+        title: name,
+        examId: _selectedExamId!,
+        examLevelId: _examLevelIdForActiveTab(),
+        testType: _testTypeForActiveTab(),
+        categories: _cartToCategories(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _compiledItems.clear();
+        _isCartExpanded = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Saved \"$name\" — find it under My Tests")),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to save test: $e")),
         );
-      },
-    );
+      }
+    } finally {
+      if (mounted) setState(() => _compiling = false);
+    }
   }
 
-  void _showNewTestTitleDialog(_TreeNode node, int selectedCount) {
-    final titleController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          "Create Test & Add",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: titleController,
-          decoration: const InputDecoration(
-            hintText: "Enter test title",
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
-          ),
-          TextButton(
-            onPressed: () async {
-              final title = titleController.text.trim();
-              if (title.isEmpty) return;
-              Navigator.pop(context);
-
-              setState(() {
-                _compiling = true;
-              });
-
-              try {
-                final resolved = _resolveCategory(
-                  node,
-                  _activeTab == 'mains' ? _mainsNodesRaw : _objNodesRaw,
-                );
-                final isMains = _activeTab == 'mains';
-                final subjectId = resolved['subject_node_id'];
-                final topicId = resolved['topic_node_id'];
-                final subtopicId = resolved['subtopic_node_id'];
-
-                final apiClient = Provider.of<ApiClient>(context, listen: false);
-                String path = isMains ? '/api/v1/assessment/mains/questions' : '/api/v1/assessment/questions';
-                final queryParams = <String, String>{
-                  'limit': '100',
-                  'subject_node_id': subjectId.toString(),
-                };
-                if (topicId != null) queryParams['topic_node_id'] = topicId.toString();
-                if (subtopicId != null) queryParams['subtopic_node_id'] = subtopicId.toString();
-
-                final queryString = Uri(queryParameters: queryParams).query;
-                final List<dynamic> data = await apiClient.get('$path?$queryString');
-                
-                if (data.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("No questions found in this category")),
-                  );
-                  return;
-                }
-
-                final shuffled = List.from(data)..shuffle();
-                final selected = shuffled.take(selectedCount).toList();
-                final questionIds = selected.map<int>((q) {
-                  final qId = q['id'] ?? q['question_id'];
-                  return int.tryParse(qId.toString()) ?? 0;
-                }).where((id) => id > 0).toList();
-
-                if (questionIds.isEmpty) return;
-
-                int examLevelId = 7;
-                String testType = 'sectional_test';
-                if (_activeTab == 'aptitude') {
-                  examLevelId = 1;
-                } else if (_activeTab == 'mains') {
-                  examLevelId = 3;
-                  testType = 'mains_test';
-                }
-
-                await _service.createUserCustomTest(
-                  title: title,
-                  examId: _selectedExamId ?? 1,
-                  examLevelId: examLevelId,
-                  testType: testType,
-                  questionIds: questionIds,
-                );
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Successfully created \"$title\"!")),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Failed to create custom test: $e")),
-                );
-              } finally {
-                setState(() {
-                  _compiling = false;
-                });
-              }
-            },
-            child: Text("Save & Add", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.civic)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showExistingTestsSelector(_TreeNode node, int selectedCount) async {
-    setState(() {
-      _compiling = true;
-    });
+  Future<void> _addCartToExistingTest() async {
+    if (_compiledItems.isEmpty) return;
+    // Captured once from this State's own (stable) context — the dialog below closes
+    // itself via Navigator.pop before its async work finishes, so ScaffoldMessenger.of()
+    // on the dialog's own context would throw ("deactivated widget's ancestor is unsafe")
+    // once that dialog/list-item context is gone. The messenger instance itself stays
+    // valid as long as this screen (this State) is still mounted.
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _compiling = true);
     List<AssessmentTestTemplate> tests = [];
     try {
       final rawTemplates = await _service.getUserCustomTests();
       final templates = (rawTemplates as dynamic) ?? <AssessmentTestTemplate>[];
       tests = templates.where((t) => t.latestAttemptStatus == null).toList();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load custom tests: $e")),
-      );
-      setState(() {
-        _compiling = false;
-      });
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text("Failed to load custom tests: $e")),
+        );
+      }
+      setState(() => _compiling = false);
       return;
     }
-    setState(() {
-      _compiling = false;
-    });
+    setState(() => _compiling = false);
+    if (!mounted) return;
 
     if (tests.isEmpty) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("No Tests Found"),
-          content: const Text("You do not have any unattempted custom tests. Create one first!"),
+          content: const Text("You do not have any unattempted custom tests. Save this cart as a new test first!"),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -1545,9 +1533,31 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 title: Text(t.title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold)),
                 subtitle: Text("${t.questionCount ?? 0} Questions"),
                 trailing: const Icon(Icons.chevron_right, size: 16),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  _addQuestionsToTargetTest(node, t.id, selectedCount);
+                  setState(() => _compiling = true);
+                  try {
+                    await _service.addQuestionsToUserTest(
+                      testTemplateId: t.id,
+                      categories: _cartToCategories(),
+                    );
+                    if (!mounted) return;
+                    setState(() {
+                      _compiledItems.clear();
+                      _isCartExpanded = false;
+                    });
+                    messenger.showSnackBar(
+                      SnackBar(content: Text("Added to \"${t.title}\"")),
+                    );
+                  } catch (e) {
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text("Failed to add questions: $e")),
+                      );
+                    }
+                  } finally {
+                    if (mounted) setState(() => _compiling = false);
+                  }
                 },
               );
             },
@@ -1589,6 +1599,23 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       'topic_node_id': topicNodeId,
       'subtopic_node_id': subtopicNodeId,
     };
+  }
+
+  void _openAiParsing(_TreeNode node) {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    if (!apiClient.hasEntitlement('assessment.premium_tests')) {
+      _showPremiumLockDialog();
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AiBasedParsingScreen(
+          categoryNodeId: node.id,
+          contentType: _activeTab,
+        ),
+      ),
+    );
   }
 
   void _openManualAddForm(_TreeNode node) {
@@ -1822,7 +1849,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
                                 await _service.aiSaveQuestions(
                                   examId: _selectedExamId!,
-                                  examLevelId: 1,
+                                  examLevelId: _examLevelIdForActiveTab(),
                                   subjectNodeId: resolved['subject_node_id'] as int,
                                   topicNodeId: resolved['topic_node_id'] as int?,
                                   questions: questions,
@@ -1915,8 +1942,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
     final isMains = _activeTab == 'mains';
     final defaultTitle = "${node.name} Practice Test";
-    
-    final nameController = TextEditingController(text: defaultTitle);
+
+    // No pre-filled text — the name must be an intentional choice, not a
+    // silently-accepted auto-generated default (shown only as a hint).
+    final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     int selectedCount = min(10, available);
     bool includeAttempted = false;
@@ -1988,7 +2017,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     TextFormField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        hintText: "e.g., Ancient History Revision",
+                        hintText: defaultTitle,
                         filled: true,
                         fillColor: AppColors.paper.withOpacity(0.4),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2087,14 +2116,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         ),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final apiClient = Provider.of<ApiClient>(context, listen: false);
-                            if (isMains && !apiClient.hasEntitlement('assessment.premium_tests')) {
-                              Navigator.pop(context); // Close bottom sheet
-                              _showPremiumLockDialog();
-                              return;
-                            }
                             Navigator.pop(context); // Close bottom sheet
-                            
+
                             final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
                             final targetNode = node.isUserNode ? _findNodeInTree(_activeTree, node.parentId!)! : node;
                             final category = _resolveCategory(targetNode, nodesList);
@@ -2126,9 +2149,13 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 );
                               }
                             } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.toString())),
-                              );
+                              if (e is ApiException && e.code == 'free_test_limit_reached') {
+                                if (mounted) _showFreeLimitDialog(e.message);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.toString())),
+                                );
+                              }
                             } finally {
                               if (mounted) setState(() => _compiling = false);
                             }
@@ -2379,69 +2406,361 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
-  Future<void> _startCompiledTest() async {
-    final name = _customTestNameController.text.trim();
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Test name is required")),
-      );
-      return;
-    }
 
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    if (!apiClient.hasEntitlement('assessment.premium_tests')) {
-      _showPremiumLockDialog();
-      return;
-    }
-
-    if (_compiledItems.isEmpty || _selectedExamId == null) return;
-
-    setState(() => _compiling = true);
-    try {
-      final categories = _compiledItems.map((item) {
-        final node = item['node'] as _TreeNode;
-        final isMains = item['question_family'] == 'mains_subjective';
-        final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
-        final targetNode = node.isUserNode ? _findNodeInTree(_activeTree, node.parentId!)! : node;
-        final cat = _resolveCategory(targetNode, nodesList);
-        return {
-          ...cat,
-          'question_count': item['count'],
-          'question_family': item['question_family'],
-          if (node.isUserNode) 'is_user_private': true,
-        };
-      }).toList();
-
-      final attemptId = await _service.startCompiledAttempt(
-        examId: _selectedExamId!,
-        testType: _selectedFormat,
-        categories: categories,
-        includeAttempted: _compiledIncludeAttempted,
-        title: name,
-      );
-
-      if (mounted) {
-        setState(() {
-          _compiledItems.clear();
-          _isCartExpanded = false;
-        });
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AttemptEngineScreen(attemptId: attemptId),
+  // Top-level subjects rendered as a tab strip. Selecting a tab (or drilling
+  // into a row below it) shows that node's children inline via a breadcrumb —
+  // no separate pushed screen. Every row, whether it has children or not,
+  // carries the quantity stepper + Add/Start using the rolled-up total
+  // question count across its whole subtree (see _getAvailableCount), so a
+  // student can pull a balanced test straight from any level.
+  Widget _buildCategoryBrowser(List<_TreeNode> nodes, int? tourAnchorId) {
+    if (nodes.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Text(
+            "No categories found.",
+            style: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
           ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        ),
       );
-    } finally {
-      if (mounted) setState(() => _compiling = false);
     }
+
+    if (_browseActiveSubjectId == null || !nodes.any((n) => n.id == _browseActiveSubjectId)) {
+      _browseActiveSubjectId = nodes.first.id;
+      _browseDrillPath = [];
+    }
+
+    final subjectNode = _findNodeInTree(_activeTree, _browseActiveSubjectId!) ?? nodes.first;
+
+    final pathNodes = <_TreeNode>[subjectNode];
+    for (final id in _browseDrillPath) {
+      final child = _findNodeInTree(pathNodes.last.children, id);
+      if (child == null) break;
+      pathNodes.add(child);
+    }
+    if (pathNodes.length - 1 != _browseDrillPath.length) {
+      _browseDrillPath = _browseDrillPath.sublist(0, pathNodes.length - 1);
+    }
+    final currentNode = pathNodes.last;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSubjectTabStrip(nodes, tourAnchorId),
+        const SizedBox(height: 12),
+        if (pathNodes.length > 1) ...[
+          _buildBrowseBreadcrumb(pathNodes),
+          const SizedBox(height: 10),
+        ],
+        if (currentNode.children.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                "No sub-categories here.",
+                style: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
+              ),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.line),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (int i = 0; i < currentNode.children.length; i++)
+                  _buildBrowseRow(
+                    currentNode.children[i],
+                    isLast: i == currentNode.children.length - 1,
+                    isTourAddAnchor: tourAnchorId != null &&
+                        subjectNode.id == tourAnchorId &&
+                        pathNodes.length == 1 &&
+                        i == 0,
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
-  Widget _buildTreeNodes(List<_TreeNode> nodes, int depth) {
+  Widget _buildSubjectTabStrip(List<_TreeNode> nodes, int? tourAnchorId) {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: nodes.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final node = nodes[i];
+          final isActive = node.id == _browseActiveSubjectId;
+          final tab = InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => setState(() {
+              _browseActiveSubjectId = node.id;
+              _browseDrillPath = [];
+            }),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.civic.withOpacity(0.1) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isActive ? AppColors.civic : AppColors.line),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                node.name,
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: isActive ? AppColors.civic : AppColors.ink,
+                ),
+              ),
+            ),
+          );
+          if (tourAnchorId == null || node.id != tourAnchorId) return tab;
+          return Showcase(
+            key: _tourBrowseKey,
+            title: "Browse categories",
+            description: _tourBrowseDescription,
+            targetBorderRadius: BorderRadius.circular(10),
+            child: tab,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBrowseBreadcrumb(List<_TreeNode> pathNodes) {
+    return SizedBox(
+      height: 22,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (int i = 0; i < pathNodes.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.muted),
+              ),
+            GestureDetector(
+              onTap: () => setState(() => _browseDrillPath = _browseDrillPath.sublist(0, i)),
+              child: Text(
+                pathNodes[i].name,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: i == pathNodes.length - 1 ? FontWeight.w800 : FontWeight.w600,
+                  color: i == pathNodes.length - 1 ? AppColors.ink : AppColors.civic,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBrowseRow(_TreeNode node, {required bool isLast, bool isTourAddAnchor = false}) {
+    final available = _getAvailableCount(node.id);
+    final hasChildren = node.children.isNotEmpty;
+
+    final content = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: isLast ? null : const Border(bottom: BorderSide(color: AppColors.line)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: hasChildren
+                ? () => setState(() => _browseDrillPath = [..._browseDrillPath, node.id])
+                : null,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: (hasChildren ? AppColors.civic : AppColors.emerald).withOpacity(hasChildren ? 0.08 : 0.1),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(
+                    _drillDownNodeIcon(node.nodeType, hasChildren),
+                    size: 17,
+                    color: hasChildren ? AppColors.civic : AppColors.emerald,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        node.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.ink),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        available > 0 ? "$available questions total" : "No questions available",
+                        style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                if (hasChildren)
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: 20),
+              ],
+            ),
+          ),
+          if (available > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _buildQuantitySelector(node, available),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _addQuantityToTest(node)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.civic),
+                      foregroundColor: AppColors.civic,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: Text("Add", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _startDirectTest(node),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.ink,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.play_arrow_rounded, size: 14, color: Colors.white),
+                        const SizedBox(width: 2),
+                        Text("Start", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              onTap: () => _showAddQuestionsSheet(node),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.add_rounded, size: 13, color: AppColors.muted),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Add your questions",
+                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!isTourAddAnchor) return content;
+    return Showcase(
+      key: _tourAddKey,
+      title: "Add questions to your test",
+      description: _tourAddDescription,
+      child: content,
+    );
+  }
+
+  void _showAddQuestionsSheet(_TreeNode node) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Add your questions",
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.ink),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.edit_rounded, color: AppColors.ink, size: 18),
+                ),
+                title: Text("Write manually", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
+                subtitle: Text("Type out the question yourself", style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _openManualAddForm(node);
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(color: AppColors.civic.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.civic, size: 18),
+                ),
+                title: Text("Parse with AI", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
+                subtitle: Text("Upload a file, image, or text and post with A.I.", style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _openAiParsing(node);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Legacy inline expand/collapse tree — superseded by _buildCategoryBrowser +
+  // _CategoryDrillDownScreen (see above). No longer reachable from the
+  // build() call site but left in place for now; slated for removal once
+  // the grid has been verified in real use.
+  Widget _buildTreeNodes(List<_TreeNode> nodes, int depth, {int? tourAnchorId}) {
     return Column(
       children: nodes.map((node) {
         final bool hasChildren = node.children.isNotEmpty;
@@ -2453,17 +2772,21 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         if (isExpanded && hasChildren) {
           childrenWidget = Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: _buildTreeNodes(node.children, depth + 1),
+            child: _buildTreeNodes(node.children, depth + 1, tourAnchorId: tourAnchorId),
           );
         }
 
         if (isRoot) {
+          // Root cards always drill into a new screen (_openCategoryBrowse)
+          // rather than expanding inline — never pass childrenWidget here,
+          // even if search matching happened to mark this node expanded.
           return _buildRootCategoryCard(
             node: node,
             hasChildren: hasChildren,
             isExpanded: isExpanded,
             available: available,
-            childrenWidget: childrenWidget,
+            childrenWidget: null,
+            isTourAnchor: tourAnchorId != null && node.id == tourAnchorId,
           );
         } else {
           return Column(
@@ -2484,12 +2807,103 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
+  Future<void> _openCategoryBrowse(_TreeNode node) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        settings: const RouteSettings(name: 'drilldown_0'),
+        builder: (_) => _CategoryDrillDownScreen(
+          levelNodes: node.children,
+          breadcrumb: [node.name],
+          getAvailableCount: _getAvailableCount,
+          getQuantity: _getCategoryQuantity,
+          setQuantity: _setSelectedQuantity,
+          onAdd: _addQuantityToTest,
+          onStart: _startDirectTest,
+          onManualAdd: _openManualAddForm,
+          onParseAI: _openAiParsing,
+          getCartTotal: () => _compiledItems.fold<int>(0, (s, i) => s + (i['count'] as int)),
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  String get _tourBrowseDescription {
+    switch (_activeTab) {
+      case 'mains':
+        return "Papers go several levels deep — Subject Area, Theme, Topic, Subtopic. Tap here to step into any of them one level at a time.";
+      case 'aptitude':
+        return "Tap here to step into this subject's sources and topics one level at a time, instead of scrolling a long nested list.";
+      default:
+        return "Tap here to step into this subject's sources and topics one level at a time, instead of scrolling a long nested list.";
+    }
+  }
+
+  Widget _buildAddStartRow(_TreeNode node, int available) {
+    return Row(
+      children: [
+        _buildQuantitySelector(node, available),
+        const SizedBox(width: 10),
+        ElevatedButton(
+          onPressed: () => _addQuantityToTest(node),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.civic,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 0,
+          ),
+          child: Text(
+            "Add",
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: () => _startDirectTest(node),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.ink,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 0,
+          ),
+          child: Text(
+            "Start",
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String get _tourAddDescription {
+    switch (_activeTab) {
+      case 'mains':
+        return "Set how many subjective questions you want from here, then Add — Mains tests work best with a smaller, focused set (try 5-10 to start).";
+      default:
+        return "Set how many questions you want from here, then Add. Repeat across categories to build a combined test, or Start for a quick one right away.";
+    }
+  }
+
   Widget _buildRootCategoryCard({
     required _TreeNode node,
     required bool hasChildren,
     required bool isExpanded,
     required int available,
     Widget? childrenWidget,
+    bool isTourAnchor = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -2508,14 +2922,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+          // Header Row — tapping anywhere here browses into this subject's
+          // sub-categories one level at a time (see _CategoryDrillDownScreen).
           InkWell(
-            onTap: hasChildren ? () => _toggleExpanded(node.id) : null,
+            onTap: hasChildren ? () => _openCategoryBrowse(node) : null,
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(16),
               topRight: const Radius.circular(16),
-              bottomLeft: childrenWidget == null && available == 0 ? const Radius.circular(16) : Radius.zero,
-              bottomRight: childrenWidget == null && available == 0 ? const Radius.circular(16) : Radius.zero,
+              bottomLeft: available == 0 ? const Radius.circular(16) : Radius.zero,
+              bottomRight: available == 0 ? const Radius.circular(16) : Radius.zero,
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -2559,33 +2974,17 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.analytics_outlined, color: AppColors.civic, size: 20),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CategoryDetailScreen(
-                            nodeId: node.id,
-                            nodeName: node.name,
-                            contentType: _activeTab,
-                          ),
-                        ),
-                      );
-                    },
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
-                  ),
                   if (hasChildren) ...[
-                    const SizedBox(width: 12),
-                    Icon(
-                      isExpanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
-                      color: AppColors.muted,
-                      size: 22,
-                    ),
+                    const SizedBox(width: 8),
+                    isTourAnchor
+                        ? Showcase(
+                            key: _tourBrowseKey,
+                            title: "Browse Sub-Categories",
+                            description: _tourBrowseDescription,
+                            targetBorderRadius: BorderRadius.circular(8),
+                            child: const Icon(Icons.chevron_right_rounded, color: AppColors.civic, size: 24),
+                          )
+                        : const Icon(Icons.chevron_right_rounded, color: AppColors.civic, size: 24),
                   ],
                 ],
               ),
@@ -2635,51 +3034,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       ],
                     ),
                   ),
-                  Row(
-                    children: [
-                      _buildQuantitySelector(node, available),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () => _addQuantityToTest(node),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.civic,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          "Add",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () => _startDirectTest(node),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.ink,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          "Start",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  isTourAnchor
+                      ? Showcase(
+                          key: _tourAddKey,
+                          title: "Add Questions to Your Test",
+                          description: _tourAddDescription,
+                          targetBorderRadius: BorderRadius.circular(8),
+                          child: _buildAddStartRow(node, available),
+                        )
+                      : _buildAddStartRow(node, available),
                 ],
               ),
             ),
@@ -2882,23 +3245,35 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.analytics_outlined, color: AppColors.civic, size: 16),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => CategoryDetailScreen(
-                                    nodeId: node.id,
-                                    nodeName: node.name,
-                                    contentType: _activeTab,
+                          if (hasChildren)
+                            IconButton(
+                              icon: const Icon(Icons.list_alt_rounded, color: AppColors.civic, size: 16),
+                              tooltip: "Browse sub-categories",
+                              onPressed: () async {
+                                final breadcrumb = _breadcrumbFor(node);
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    settings: RouteSettings(name: 'drilldown_0'),
+                                    builder: (_) => _CategoryDrillDownScreen(
+                                      levelNodes: node.children,
+                                      breadcrumb: breadcrumb,
+                                      getAvailableCount: _getAvailableCount,
+                                      getQuantity: _getCategoryQuantity,
+                                      setQuantity: _setSelectedQuantity,
+                                      onAdd: _addQuantityToTest,
+                                      onStart: _startDirectTest,
+                                      onManualAdd: _openManualAddForm,
+                                      onParseAI: _openAiParsing,
+                                      getCartTotal: () => _compiledItems.fold<int>(0, (s, i) => s + (i['count'] as int)),
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                            constraints: const BoxConstraints(),
-                            padding: const EdgeInsets.only(left: 6),
-                          ),
+                                );
+                                if (mounted) setState(() {});
+                              },
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.only(left: 6),
+                            ),
                         ],
                       ),
                     ),
@@ -3185,6 +3560,48 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       (sum, item) => sum + (item['count'] as int),
     );
 
+    return ShowCaseWidget(
+      builder: (showcaseContext) {
+        if (!_tourChecked && widget.isActive) {
+          _tourChecked = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _maybeAutoStartBuilderTour(showcaseContext);
+          });
+        }
+        return _buildBuilderStack(totalCartQs);
+      },
+    );
+  }
+
+  Future<void> _maybeAutoStartBuilderTour(BuildContext showcaseContext) async {
+    if (!widget.isActive) return;
+    final tourKey = AppTourService.builderScreenKeyFor(_activeTab);
+    if (!await AppTourService.shouldShowTour(tourKey)) return;
+    if (!mounted || !showcaseContext.mounted) return;
+
+    // GlobalKeys for the anchor row may not be attached yet on the very
+    // first post-frame callback (e.g. if syllabus data just finished
+    // loading this same frame). Retry across a couple of frames before
+    // giving up, and — importantly — only mark the tour "seen" once it has
+    // actually been shown, so a transient miss doesn't silently burn the
+    // one-time flag forever.
+    for (var attempt = 0; attempt < 5; attempt++) {
+      final keys = <GlobalKey>[
+        if (_tourBrowseKey.currentContext != null) _tourBrowseKey,
+        if (_tourAddKey.currentContext != null) _tourAddKey,
+      ];
+      if (keys.isNotEmpty) {
+        await AppTourService.markTourSeen(tourKey);
+        if (!mounted || !showcaseContext.mounted) return;
+        ShowCaseWidget.of(showcaseContext).startShowCase(keys);
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted || !showcaseContext.mounted) return;
+    }
+  }
+
+  Widget _buildBuilderStack(int totalCartQs) {
     return Stack(
       children: [
         Positioned.fill(
@@ -3388,7 +3805,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                               ),
                                             ),
                                             const SizedBox(height: 16),
-                                            _buildTreeNodes(_filterTree(_activeTree, _searchQuery), 0),
+                                            _buildCategoryBrowser(
+                                              _filterTree(_activeTree, _searchQuery),
+                                              _findTourAnchorNodeId(),
+                                            ),
                                             const SizedBox(height: 80),
                                           ],
                                         ),
@@ -3594,26 +4014,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            CheckboxListTile(
-                              title: Text(
-                                "Include already attempted questions",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.ink,
-                                ),
-                              ),
-                              value: _compiledIncludeAttempted,
-                              activeColor: AppColors.civic,
-                              contentPadding: EdgeInsets.zero,
-                              controlAffinity: ListTileControlAffinity.leading,
-                              onChanged: (val) {
-                                setState(() {
-                                  _compiledIncludeAttempted = val ?? false;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 12),
                             if (totalCartQs > 100) ...[
                               Container(
                                 padding: const EdgeInsets.all(10),
@@ -3641,38 +4041,65 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                               ),
                               const SizedBox(height: 12),
                             ],
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.civic,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                onPressed: (totalCartQs > 0 && totalCartQs <= 100 && !_compiling)
-                                    ? _startCompiledTest
-                                    : null,
-                                child: _compiling
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Text(
-                                        "Start Test Now",
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                            // Destination is chosen once, here — not per Add
+                            // tap. Both paths follow the same shape: name a
+                            // new test, or pick from your existing ones.
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 48,
+                                    child: OutlinedButton(
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(color: AppColors.civic),
+                                        foregroundColor: AppColors.civic,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
                                       ),
-                              ),
+                                      onPressed: (totalCartQs > 0 && totalCartQs <= 100 && !_compiling)
+                                          ? _addCartToExistingTest
+                                          : null,
+                                      child: Text(
+                                        "Add to Existing",
+                                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 48,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.civic,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      onPressed: (totalCartQs > 0 && totalCartQs <= 100 && !_compiling)
+                                          ? _saveCartAsNewTest
+                                          : null,
+                                      child: _compiling
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Text(
+                                              "Save as New Test",
+                                              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -3686,6 +4113,58 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
+
+  void _showFreeLimitDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.lock_outline_rounded, color: Colors.indigo),
+              const SizedBox(width: 10),
+              Text(
+                "Free Tests Used Up",
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: GoogleFonts.inter(fontSize: 13, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "Cancel",
+                style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
+                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                  debugPrint("Could not launch $url");
+                }
+              },
+              child: Text(
+                "View Plans",
+                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showPremiumLockDialog() {
     showDialog(
@@ -3704,7 +4183,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             ],
           ),
           content: Text(
-            "GK & CSAT sectional tests are a premium feature. Upgrade to Assessment Premium to access unlimited tests, custom test configurations, and AI evaluations.",
+            "Manually authoring or AI-parsing new questions is a premium feature. Upgrade to Assessment Premium for unlimited access.",
             style: GoogleFonts.inter(fontSize: 13, height: 1.4),
           ),
           actions: [

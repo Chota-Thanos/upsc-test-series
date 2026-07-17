@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/tour/app_tour_service.dart';
 import '../data/assessment_service.dart';
 import '../models/assessment_models.dart';
 import 'attempt_engine_screen.dart';
@@ -26,6 +28,10 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
   List<AssessmentTestTemplate> _tests = [];
   int? _deletingId;
   int? _startingId;
+
+  // Tour
+  final GlobalKey _tourCreateTileKey = GlobalKey();
+  bool _tourChecked = false;
 
   @override
   void initState() {
@@ -217,8 +223,31 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
     );
   }
 
+  void _startTour(BuildContext ctx) {
+    ShowCaseWidget.of(ctx).startShowCase([_tourCreateTileKey]);
+  }
+
+  Future<void> _maybeAutoStartTour(BuildContext ctx) async {
+    if (await AppTourService.shouldShowTour(AppTourService.listScreenKey)) {
+      await AppTourService.markTourSeen(AppTourService.listScreenKey);
+      if (mounted) _startTour(ctx);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    return ShowCaseWidget(
+      builder: (ctx) {
+        if (!_tourChecked) {
+          _tourChecked = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoStartTour(ctx));
+        }
+        return _buildScaffold(ctx);
+      },
+    );
+  }
+
+  Widget _buildScaffold(BuildContext ctx) {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
@@ -236,6 +265,13 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
           icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined, color: AppColors.civic, size: 20),
+            tooltip: "App Tour",
+            onPressed: () => _startTour(ctx),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -256,32 +292,38 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
           
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.line),
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.civic.withOpacity(0.1),
-                  child: const Icon(Icons.add_task_rounded, color: AppColors.civic),
+            child: Showcase(
+              key: _tourCreateTileKey,
+              title: "Build Custom Tests",
+              description: "Tap here to create a personalised practice test — choose the name, pick topics from the syllabus, and set how many questions to include.",
+              targetBorderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.line),
                 ),
-                title: Text(
-                  "Create custom test template",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.ink,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.civic.withOpacity(0.1),
+                    child: const Icon(Icons.add_task_rounded, color: AppColors.civic),
                   ),
+                  title: Text(
+                    "Create custom test template",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "Build a test template with name and description",
+                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
+                  onTap: _showCreateTestDialog,
                 ),
-                subtitle: Text(
-                  "Build a test template with name and description",
-                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
-                ),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
-                onTap: _showCreateTestDialog,
               ),
             ),
           ),

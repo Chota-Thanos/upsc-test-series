@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/tour/app_tour_service.dart';
 import '../data/assessment_service.dart';
 import '../models/assessment_models.dart';
 import 'category_performance_detail_screen.dart';
@@ -25,6 +27,7 @@ class AssessmentDashboardScreen extends StatefulWidget {
 
 class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
   late AssessmentService _service;
+  late ApiClient _apiClient;
   bool _loading = true;
   String? _error;
   AssessmentDashboardResponse? _dashboardResponse;
@@ -40,6 +43,10 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // Tour
+  final GlobalKey _tourTitleKey = GlobalKey();
+  bool _tourChecked = false;
+
   @override
   void initState() {
     super.initState();
@@ -48,9 +55,15 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         _searchQuery = _searchController.text;
       });
     });
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    _service = AssessmentService(apiClient: apiClient);
-    _loadData();
+    _apiClient = Provider.of<ApiClient>(context, listen: false);
+    _service = AssessmentService(apiClient: _apiClient);
+    // Guests get a sign-in prompt instead of fetching (these endpoints require
+    // a real account, and a 401 here would otherwise silently drop guest mode).
+    if (_apiClient.isGuestMode) {
+      _loading = false;
+    } else {
+      _loadData();
+    }
   }
 
   @override
@@ -107,6 +120,54 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_apiClient.isGuestMode) {
+      return Scaffold(
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: AppTheme.cardDecoration,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 56,
+                      width: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.civic.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(child: Text("📊", style: TextStyle(fontSize: 26))),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Your scorecard is waiting",
+                      style: Theme.of(context).textTheme.displayMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Sign in to see your full attempt history, topic-wise accuracy trends, and weak-area heatmap — all saved to your account.",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => _apiClient.setGuestMode(false),
+                      child: const Text("SIGN IN / CREATE ACCOUNT"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     if (_loading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator(color: AppColors.civic)),
@@ -151,41 +212,62 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
 
     final res = _dashboardResponse!;
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        backgroundColor: AppColors.paper,
-        appBar: AppBar(
-          backgroundColor: AppColors.paper,
-          elevation: 0,
-          title: Text(
-            "Performance",
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
+    return ShowCaseWidget(
+      builder: (ctx) {
+        if (!_tourChecked) {
+          _tourChecked = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!mounted) return;
+            final show = await AppTourService.shouldShowTour(AppTourService.dashboardScreenKey);
+            if (show && mounted) {
+              await AppTourService.markTourSeen(AppTourService.dashboardScreenKey);
+              if (mounted && ctx.mounted) ShowCaseWidget.of(ctx).startShowCase([_tourTitleKey]);
+            }
+          });
+        }
+        return DefaultTabController(
+          length: 3,
+          child: Scaffold(
+            backgroundColor: AppColors.paper,
+            appBar: AppBar(
+              backgroundColor: AppColors.paper,
+              elevation: 0,
+              title: Showcase(
+                key: _tourTitleKey,
+                title: "Your Performance Dashboard",
+                description: "See your accuracy, score trends, and topic-wise breakdown across all your tests. Switch between GK, CSAT, and Mains tabs.",
+                targetBorderRadius: BorderRadius.circular(8),
+                child: Text(
+                  "Performance",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ),
+              actions: const [],
+              bottom: const TabBar(
+                labelColor: AppColors.civic,
+                unselectedLabelColor: AppColors.muted,
+                indicatorColor: AppColors.civic,
+                tabs: [
+                  Tab(text: "GK"),
+                  Tab(text: "CSAT"),
+                  Tab(text: "Mains"),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                _buildNestedTabWrapper('gk', _buildDashboardTab(res.gk, _gkAttempts, 'gk')),
+                _buildNestedTabWrapper('aptitude', _buildDashboardTab(res.aptitude, _aptitudeAttempts, 'aptitude')),
+                _buildNestedTabWrapper('mains', _buildMainsDashboardTab(res.mains)),
+              ],
             ),
           ),
-          actions: const [],
-          bottom: const TabBar(
-            labelColor: AppColors.civic,
-            unselectedLabelColor: AppColors.muted,
-            indicatorColor: AppColors.civic,
-            tabs: [
-              Tab(text: "GK"),
-              Tab(text: "CSAT"),
-              Tab(text: "Mains"),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildNestedTabWrapper('gk', _buildDashboardTab(res.gk, _gkAttempts, 'gk')),
-            _buildNestedTabWrapper('aptitude', _buildDashboardTab(res.aptitude, _aptitudeAttempts, 'aptitude')),
-            _buildNestedTabWrapper('mains', _buildMainsDashboardTab(res.mains)),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 

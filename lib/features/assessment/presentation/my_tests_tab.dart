@@ -44,7 +44,10 @@ class _MyTestsTabState extends State<MyTestsTab> {
       final rawAttempts = await _service.getMyAssessmentAttempts(
         contentType: isMains ? null : widget.contentType,
       );
-      final rawTemplates = await _service.getUserCustomTests();
+      // Resolved server-side against actual question tagging rather than a
+      // guessed exam_level_id — a hardcoded id here previously hid custom
+      // tests whenever it didn't match the actual row id on the server.
+      final rawTemplates = await _service.getUserCustomTests(contentType: widget.contentType);
 
       final List<StudentAttemptSummary> attempts = (rawAttempts as dynamic) ?? <StudentAttemptSummary>[];
       final List<AssessmentTestTemplate> templates = (rawTemplates as dynamic) ?? <AssessmentTestTemplate>[];
@@ -59,18 +62,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
               .toList();
         }
         _attempts = filteredAttempts;
-
-        _customTests = templates.where((t) {
-          if (isMains) {
-            return t.testType == 'mains_test';
-          } else {
-            if (widget.contentType == 'aptitude') {
-              return t.examLevelId == 1;
-            } else {
-              return t.examLevelId == 7;
-            }
-          }
-        }).toList();
+        _customTests = templates;
 
         _loading = false;
       });

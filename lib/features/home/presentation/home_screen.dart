@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/tour/app_tour_service.dart';
 import '../../../../core/utils/constants.dart';
 import '../../assessment/data/assessment_service.dart';
 import '../../assessment/models/assessment_models.dart';
@@ -146,7 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final apiClient = Provider.of<ApiClient>(context);
-    final username = apiClient.user?['username'] ?? 'Student';
+    final isGuest = apiClient.isGuestMode;
+    final username = isGuest ? 'Guest' : (apiClient.user?['username'] ?? 'Student');
     final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
     return Scaffold(
@@ -234,11 +236,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: hasPremium ? const Color(0xFF10B981) : Colors.amber.shade700,
+                                      color: isGuest ? Colors.white.withOpacity(0.25) : (hasPremium ? const Color(0xFF10B981) : Colors.amber.shade700),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
-                                      hasPremium ? "PRO" : "FREE",
+                                      isGuest ? "GUEST" : (hasPremium ? "PRO" : "FREE"),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 8.5,
@@ -251,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                "Accelerate your UPSC preparation journey.",
+                                isGuest ? "Sign in to save your progress and unlock analytics." : "Accelerate your UPSC preparation journey.",
                                 style: GoogleFonts.inter(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
@@ -265,6 +267,52 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+
+              // TEMP — dev-only button to replay the guided tour for testing.
+              // Remove once the tour has been verified.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.06),
+                    border: Border.all(color: Colors.orange.withOpacity(0.4), style: BorderStyle.solid),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.bug_report_outlined, color: Colors.orange, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "DEV: Replay guided tour",
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.orange.shade800),
+                        ),
+                      ),
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.orange.shade400),
+                          foregroundColor: Colors.orange.shade800,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () async {
+                          await AppTourService.resetAllTours();
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Tours reset — switching to Tests tab")),
+                          );
+                          widget.onTabSelected(2);
+                        },
+                        child: const Text("Reset & Go"),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -1249,6 +1297,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Widget _buildGuestStatsPlaceholder(BuildContext context, ApiClient apiClient) {
+    final hasResultWaiting = apiClient.hasPendingGuestClaim;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -1259,10 +1308,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.analytics_outlined, color: AppColors.civic, size: 36),
+          Text(hasResultWaiting ? "🎉" : "📊", style: const TextStyle(fontSize: 32)),
           const SizedBox(height: 12),
           Text(
-            "Unlock Performance Analytics",
+            hasResultWaiting ? "Your result is ready" : "Unlock Performance Analytics",
             style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               fontWeight: FontWeight.w800,
@@ -1272,7 +1321,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            "Take mock tests and practice quizzes as a guest to build your dashboard. Sign in to save progress forever.",
+            hasResultWaiting
+                ? "Create a free account to unlock your score, topic-wise breakdown, and save it to your dashboard for good."
+                : "Take a free diagnostic test as a guest, then sign in to unlock your score and save your progress forever.",
             style: GoogleFonts.inter(
               fontSize: 11,
               color: AppColors.muted,
@@ -1289,10 +1340,13 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
-              apiClient.setGuestMode(false);
-            },
-            child: const Text("Sign In / Register", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            onPressed: hasResultWaiting
+                ? () => apiClient.setGuestMode(false)
+                : () => widget.onTabSelected(2),
+            child: Text(
+              hasResultWaiting ? "Sign In / Register" : "Take the Diagnostic Test",
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

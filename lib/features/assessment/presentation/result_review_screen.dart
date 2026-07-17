@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/tour/app_tour_service.dart';
+import '../../../../core/utils/constants.dart';
 import '../data/assessment_service.dart';
 import '../models/assessment_models.dart';
 import '../../home/presentation/navigation_home.dart';
@@ -25,6 +28,7 @@ class ResultReviewScreen extends StatefulWidget {
 class _ResultReviewScreenState extends State<ResultReviewScreen>
     with SingleTickerProviderStateMixin {
   late AssessmentService _service;
+  late ApiClient _apiClient;
   bool _loading = true;
   String? _error;
   ResultReview? _review;
@@ -46,6 +50,10 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
   _ResultTab _activeTab = _ResultTab.summary;
   _QuestionFilter _qFilter = _QuestionFilter.all;
+
+  // Tour
+  final GlobalKey _tourTabBarKey = GlobalKey();
+  bool _tourChecked = false;
 
   void _jumpToQuestion(int index) {
     setState(() {
@@ -99,9 +107,15 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   @override
   void initState() {
     super.initState();
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    _service = AssessmentService(apiClient: apiClient);
-    _loadResult();
+    _apiClient = Provider.of<ApiClient>(context, listen: false);
+    _service = AssessmentService(apiClient: _apiClient);
+    // Guests hit a sign-in wall here instead of fetching (the backend keeps
+    // results private to real accounts) — see the guest branch in build().
+    if (_apiClient.isGuestMode) {
+      _loading = false;
+    } else {
+      _loadResult();
+    }
   }
 
   @override
@@ -244,6 +258,14 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   }
 
   Future<void> _triggerAiEvaluation(int mainsAnswerId, int questionId) async {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    final canAiEvaluate = apiClient.hasEntitlement('assessment.ai_evaluation') ||
+        apiClient.hasEntitlement('assessment.premium_tests');
+    if (!canAiEvaluate) {
+      _showAiEvaluationPaywall();
+      return;
+    }
+
     setState(() {
       _evaluatingQuestionIds.add(questionId);
     });
@@ -252,14 +274,70 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       await _service.triggerMainsAiEvaluation(mainsAnswerId);
       await _loadResult();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("AI Evaluation failed: $e")),
-      );
+      if (e is ApiException && e.code == 'ai_evaluation_requires_premium') {
+        _showAiEvaluationPaywall();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("AI Evaluation failed: $e")),
+        );
+      }
     } finally {
       setState(() {
         _evaluatingQuestionIds.remove(questionId);
       });
     }
+  }
+
+  void _showAiEvaluationPaywall() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.lock_outline_rounded, color: Colors.indigo),
+              const SizedBox(width: 10),
+              Text(
+                "Premium Feature",
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          content: Text(
+            "AI-based answer evaluation requires an Assessment Premium subscription. Test creation and taking stays free — this only gates AI review of your answers.",
+            style: GoogleFonts.inter(fontSize: 13, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "Cancel",
+                style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
+                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                  debugPrint("Could not launch $url");
+                }
+              },
+              child: Text(
+                "View Plans",
+                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   String _optionKey(dynamic option, int index) {
@@ -306,6 +384,54 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_apiClient.isGuestMode) {
+      return Scaffold(
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: AppTheme.cardDecoration,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 56,
+                      width: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.civic.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(child: Text("🎉", style: TextStyle(fontSize: 26))),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Your result is ready",
+                      style: Theme.of(context).textTheme.displayMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Create a free account (takes 10 seconds) to unlock your score, topic-wise breakdown, and full answer review — and save it to your dashboard for good.",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => _apiClient.setGuestMode(false),
+                      child: const Text("SIGN IN / CREATE ACCOUNT"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     if (_loading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator(color: AppColors.civic)),
@@ -336,55 +462,75 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     final review = _review!;
     final result = review.result;
 
-    return Scaffold(
-      backgroundColor: AppColors.paper,
-      appBar: AppBar(
-        title: Text(
-          "Performance Review",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
-        ),
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Tab Bar
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildTabChip(_ResultTab.summary, Icons.emoji_events_rounded, "Summary"),
-                  const SizedBox(width: 8),
-                  _buildTabChip(_ResultTab.questions, Icons.checklist_rounded, "Questions (${review.questions.length})"),
-                  const SizedBox(width: 8),
-                  _buildTabChip(_ResultTab.topics, Icons.track_changes_rounded, "Topics"),
-                  const SizedBox(width: 8),
-                  _buildTabChip(_ResultTab.time, Icons.timer_outlined, "Time Analysis"),
-                ],
-              ),
+    return ShowCaseWidget(
+      builder: (ctx) {
+        if (!_tourChecked) {
+          _tourChecked = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!mounted) return;
+            if (await AppTourService.shouldShowTour(AppTourService.resultScreenKey)) {
+              await AppTourService.markTourSeen(AppTourService.resultScreenKey);
+              if (mounted) ShowCaseWidget.of(ctx).startShowCase([_tourTabBarKey]);
+            }
+          });
+        }
+        return Scaffold(
+          backgroundColor: AppColors.paper,
+          appBar: AppBar(
+            title: Text(
+              "Performance Review",
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
+            ),
+            backgroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
+          body: Column(
+            children: [
+              // Tab Bar
+              Showcase(
+                key: _tourTabBarKey,
+                title: "Explore Your Results",
+                description: "Switch between Summary, Questions, Topics, and Time Analysis tabs to understand exactly how you performed and where to focus next.",
+                targetBorderRadius: BorderRadius.zero,
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildTabChip(_ResultTab.summary, Icons.emoji_events_rounded, "Summary"),
+                        const SizedBox(width: 8),
+                        _buildTabChip(_ResultTab.questions, Icons.checklist_rounded, "Questions (${review.questions.length})"),
+                        const SizedBox(width: 8),
+                        _buildTabChip(_ResultTab.topics, Icons.track_changes_rounded, "Topics"),
+                        const SizedBox(width: 8),
+                        _buildTabChip(_ResultTab.time, Icons.timer_outlined, "Time Analysis"),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
-          // Tab Content
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _loadResult,
-              color: AppColors.civic,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: _buildTabContent(review, result),
+              // Tab Content
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _loadResult,
+                  color: AppColors.civic,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: _buildTabContent(review, result),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -437,7 +583,12 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   // ─── Tab: Summary ──────────────────
   Widget _buildSummaryTab(ResultReview review, AssessmentResult result) {
     final pct = result.maxScore > 0 ? (result.score / result.maxScore * 100).clamp(0.0, 100.0) : 0.0;
-    final weakTopics = (review.topicBreakdowns ?? <TopicBreakdown>[]).where((t) => t.accuracy < 0.6).toList();
+    // Rolled up through the full taxonomy tree (same rollup as the Topics tab) so a
+    // uniformly weak subject/chapter surfaces here too, not just individually-tagged topics.
+    final weakTopics = _flattenTopicNodes(_buildTopicsTree(review))
+        .where((n) => n.attemptedQuestions > 0 && n.accuracy < 0.6)
+        .toList()
+      ..sort((a, b) => a.accuracy.compareTo(b.accuracy));
 
     final bool mainsPendingEvaluation = review.questions.any(
       (q) =>
@@ -1029,8 +1180,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     );
   }
 
-  Widget _buildWeakTopicCard(TopicBreakdown t) {
-    final name = t.taxonomyName ?? t.questionNatureName ?? 'General';
+  Widget _buildWeakTopicCard(_TopicPerformanceTreeNode node) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -1047,15 +1197,23 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: Theme.of(context).textTheme.titleMedium),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(node.name, style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildTopicLevelBadge(_topicNodeTypeLabel(node.nodeType)),
+                  ],
+                ),
                 const SizedBox(height: 2),
                 Text(
-                  "${(t.accuracy * 100).round()}% accuracy · ${t.totalQuestions} questions",
+                  "${(node.accuracy * 100).round()}% accuracy · ${node.totalQuestions} question${node.totalQuestions == 1 ? '' : 's'}",
                   style: const TextStyle(fontSize: 11, color: AppColors.muted),
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  "Revise this topic before your next test.",
+                  "Revise this before your next test.",
                   style: TextStyle(fontSize: 11, color: AppColors.muted),
                 ),
               ],

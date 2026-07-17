@@ -42,6 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
+      // Pop every pushed route (Login may be stacked on Welcome/Register) so
+      // the root Consumer's freshly-rebuilt NavigationHome becomes visible.
+      if (mounted) Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -81,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final apiClient = Provider.of<ApiClient>(context, listen: false);
       await apiClient.loginWithGoogle(idToken);
+      if (mounted) Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
       setState(() {
         _errorMessage = "Google login failed: ${e.toString().replaceFirst('Exception: ', '')}\n\nMake sure Google OAuth client credentials (google-services.json/Info.plist) are correctly configured.";
@@ -299,35 +303,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        Provider.of<ApiClient>(context, listen: false).setGuestMode(true);
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "Skip and explore as guest",
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: AppColors.muted,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.muted),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "New to Coaching Hub? ",
+                        "New to WayToIAS? ",
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       GestureDetector(

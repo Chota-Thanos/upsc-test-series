@@ -615,7 +615,8 @@ class AssessmentService extends ChangeNotifier {
     String? description,
     required int examId,
     required int examLevelId,
-    required List<int> questionIds,
+    List<int>? questionIds,
+    List<Map<String, dynamic>>? categories,
     String? testType,
   }) async {
     try {
@@ -624,7 +625,8 @@ class AssessmentService extends ChangeNotifier {
         if (description != null) 'description': description,
         'exam_id': examId,
         'exam_level_id': examLevelId,
-        'question_ids': questionIds,
+        if (questionIds != null) 'question_ids': questionIds,
+        if (categories != null) 'categories': categories,
         if (testType != null) 'test_type': testType,
       };
       final Map<String, dynamic> data = await apiClient.post(
@@ -638,16 +640,19 @@ class AssessmentService extends ChangeNotifier {
     }
   }
 
-  // Add questions to a user custom test template
+  // Add questions to a user custom test template — either explicit question
+  // ids, or category specs resolved server-side (any taxonomy level).
   Future<void> addQuestionsToUserTest({
     required int testTemplateId,
-    required List<int> questionIds,
+    List<int>? questionIds,
+    List<Map<String, dynamic>>? categories,
   }) async {
     try {
       await apiClient.post(
         '/api/v1/assessment/user/custom-tests/$testTemplateId/add-questions',
         {
-          'question_ids': questionIds,
+          if (questionIds != null) 'question_ids': questionIds,
+          if (categories != null) 'categories': categories,
         },
       );
     } catch (e) {
@@ -669,12 +674,15 @@ class AssessmentService extends ChangeNotifier {
     }
   }
 
-  // Get all user custom test templates (private access)
-  Future<List<AssessmentTestTemplate>> getUserCustomTests() async {
+  // Get all user custom test templates (private access). contentType, when
+  // given, is resolved server-side against actual question tagging (not a
+  // guessed exam_level_id), so it stays correct regardless of what ids a given
+  // environment's exam_levels rows happen to have.
+  Future<List<AssessmentTestTemplate>> getUserCustomTests({String? contentType}) async {
     try {
-      final List<dynamic> data = await apiClient.get(
-        '/api/v1/assessment/test-templates?access_type=private&limit=100',
-      );
+      final query = StringBuffer('/api/v1/assessment/test-templates?access_type=private&limit=100');
+      if (contentType != null) query.write('&content_type=$contentType');
+      final List<dynamic> data = await apiClient.get(query.toString());
       return data
           .map((json) => AssessmentTestTemplate.fromJson(json as Map<String, dynamic>))
           .toList();

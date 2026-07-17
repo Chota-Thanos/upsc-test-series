@@ -10,11 +10,15 @@ class ContentTypeScreen extends StatefulWidget {
   final String contentType; // 'gk' | 'aptitude' | 'mains'
   final String label;       // Display label e.g. 'General Studies'
   final int initialTabIndex;
+  // Whether this content type is the one actually on screen right now (see
+  // TestsHubScreen — TabBarView pre-builds neighbouring tabs too).
+  final bool isActive;
   const ContentTypeScreen({
     super.key,
     required this.contentType,
     required this.label,
     this.initialTabIndex = 0,
+    this.isActive = true,
   });
 
   @override
@@ -35,6 +39,9 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
           ? widget.initialTabIndex
           : 0,
     );
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
   }
 
   @override
@@ -45,6 +52,7 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bool createTestActive = widget.isActive && _tabController.index == 0;
     return Column(
       children: [
         Container(
@@ -68,7 +76,7 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
           child: TabBarView(
             controller: _tabController,
             children: [
-              SelfTestBuilderTab(contentType: widget.contentType),
+              SelfTestBuilderTab(contentType: widget.contentType, isActive: createTestActive),
               MyTestsTab(contentType: widget.contentType, onlyInProgress: true),
               SelfTestBuilderTab(
                 contentType: widget.contentType,

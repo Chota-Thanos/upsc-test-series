@@ -45,9 +45,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _usernameController.text.trim(),
         _passwordController.text,
       );
-      // Successful registration triggers auto-login, popping to root authentication stream in main.dart
+      // Successful registration triggers auto-login. Pop every pushed route
+      // (Register may be stacked on top of Login, which is itself stacked on
+      // Welcome) so the root Consumer's freshly-rebuilt NavigationHome shows.
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.popUntil(context, (route) => route.isFirst);
       }
     } catch (e) {
       setState(() {

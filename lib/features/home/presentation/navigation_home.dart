@@ -5,9 +5,13 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../assessment/presentation/tests_hub_screen.dart';
 import '../../assessment/presentation/assessment_dashboard_screen.dart';
+import '../../assessment/presentation/test_detail_screen.dart';
+import '../../assessment/presentation/custom_test_create_screen.dart';
 import '../../study_plans/presentation/study_plan_list_screen.dart';
 import '../../mentors/presentation/mentor_list_screen.dart';
 import '../../mentors/presentation/my_bookings_screen.dart';
+import '../../auth/presentation/login_screen.dart';
+import '../../auth/presentation/register_screen.dart';
 import 'home_screen.dart';
 
 class NavigationHome extends StatefulWidget {
@@ -21,6 +25,42 @@ class _NavigationHomeState extends State<NavigationHome> {
   int _currentIndex = 0;
   int _testsSubIndex = 0;
   int _testsSubSubIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    final diagnosticTestId = apiClient.consumePendingDiagnosticTestId();
+    final wantsDiagnostic = apiClient.consumeDiagnosticLaunchIntent();
+    final wantsCustomTest = apiClient.consumeCustomTestLaunchIntent();
+
+    if (diagnosticTestId != null) {
+      // Navigate to the specific diagnostic test after the first frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TestDetailScreen(testTemplateId: diagnosticTestId),
+            ),
+          );
+        }
+      });
+    } else if (wantsDiagnostic) {
+      _currentIndex = 2; // Fallback: show Tests tab if no specific test found.
+    }
+
+    if (wantsCustomTest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CustomTestCreateScreen()),
+          );
+        }
+      });
+    }
+  }
 
   void _onTabSelected(int index, {int subIndex = 0, int subSubIndex = 0}) {
     setState(() {
@@ -61,6 +101,7 @@ class _NavigationHomeState extends State<NavigationHome> {
   @override
   Widget build(BuildContext context) {
     final apiClient = Provider.of<ApiClient>(context);
+    final isGuest = apiClient.isGuestMode;
     final username = apiClient.user?['username'] ?? 'Student';
     final email = apiClient.user?['email'] ?? '';
     final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
@@ -74,6 +115,10 @@ class _NavigationHomeState extends State<NavigationHome> {
         key: ValueKey('tests_hub_${_testsSubIndex}_$_testsSubSubIndex'),
         initialIndex: _testsSubIndex,
         initialSubIndex: _testsSubSubIndex,
+        // IndexedStack below builds every tab immediately, even ones not on
+        // screen — without this, the tour would auto-start the instant the
+        // app loads regardless of which bottom-nav tab is actually visible.
+        isActive: _currentIndex == 2,
       ),
       const StudyPlanListScreen(),
       const MentorListScreen(),
@@ -151,7 +196,45 @@ class _NavigationHomeState extends State<NavigationHome> {
             ),
           ],
         ),
-        actions: [
+        actions: isGuest
+            ? [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    ),
+                    child: Text(
+                      "Sign In",
+                      style: GoogleFonts.inter(color: AppColors.civic, fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.civic,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(
+                      "Register",
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12),
+                    ),
+                  ),
+                ),
+              ]
+            : [
           PopupMenuButton<String>(
             offset: const Offset(0, 50),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

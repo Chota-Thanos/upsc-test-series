@@ -45,6 +45,7 @@ dependencies:
   url_launcher: ^6.2.5
   google_sign_in: ^6.2.1
   image: ^4.8.0
+  showcaseview: ^3.0.0
 
 dev_dependencies:
   flutter_test:

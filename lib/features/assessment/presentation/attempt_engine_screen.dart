@@ -7,8 +7,10 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/tour/app_tour_service.dart';
 import '../../../../core/utils/image_compressor.dart';
 import '../data/assessment_service.dart';
 import '../models/assessment_models.dart';
@@ -24,6 +26,7 @@ class AttemptEngineScreen extends StatefulWidget {
 
 class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
   late AssessmentService _service;
+  late ApiClient _apiClient;
   bool _loading = true;
   String? _error;
   String? _statusMessage;
@@ -36,6 +39,11 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
   // Local state copy of responses for instant UI updating
   // Key: question_version_id, Value: Map of values
   final Map<int, Map<String, dynamic>> _responses = {};
+
+  // Tour
+  final GlobalKey _tourStatsPanelKey = GlobalKey();
+  final GlobalKey _tourNextBtnKey = GlobalKey();
+  bool _tourChecked = false;
   
   // Subjective answering states
   final TextEditingController _subjectiveController = TextEditingController();
@@ -46,8 +54,8 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
   @override
   void initState() {
     super.initState();
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    _service = AssessmentService(apiClient: apiClient);
+    _apiClient = Provider.of<ApiClient>(context, listen: false);
+    _service = AssessmentService(apiClient: _apiClient);
     _loadPaper();
   }
 
@@ -158,6 +166,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         0,
         _paper!.testTemplate.durationMinutes,
       );
+      if (_apiClient.isGuestMode) {
+        await _apiClient.setPendingGuestClaim(widget.attemptId);
+      }
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -416,6 +427,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         _remainingSeconds,
         _paper!.testTemplate.durationMinutes,
       );
+      if (_apiClient.isGuestMode) {
+        await _apiClient.setPendingGuestClaim(widget.attemptId);
+      }
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -513,6 +527,36 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
     final skippedQ = _responses.values.where((r) => r['status'] == 'skipped').length;
     final unvisitedQ = totalQ - answeredQ - reviewQ - skippedQ;
 
+    return ShowCaseWidget(
+      builder: (ctx) {
+        if (!_tourChecked) {
+          _tourChecked = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!mounted) return;
+            if (await AppTourService.shouldShowTour(AppTourService.attemptScreenKey)) {
+              await AppTourService.markTourSeen(AppTourService.attemptScreenKey);
+              if (mounted) ShowCaseWidget.of(ctx).startShowCase([_tourStatsPanelKey, _tourNextBtnKey]);
+            }
+          });
+        }
+        return _buildAttemptScaffold(ctx, paper, activeQ, activeQResp, isSubjective, hasMainsAns, totalQ, answeredQ, reviewQ, skippedQ, unvisitedQ);
+      },
+    );
+  }
+
+  Widget _buildAttemptScaffold(
+    BuildContext ctx,
+    AttemptPaper paper,
+    TestQuestionItem activeQ,
+    Map<String, dynamic> activeQResp,
+    bool isSubjective,
+    bool hasMainsAns,
+    int totalQ,
+    int answeredQ,
+    int reviewQ,
+    int skippedQ,
+    int unvisitedQ,
+  ) {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
@@ -572,35 +616,41 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             ),
 
           // Overview Stats Panel
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildCompactStatBadge("${_activeIndex + 1}/$totalQ", "Question", Colors.grey[200]!, AppColors.ink),
-                _buildCompactStatBadge(answeredQ.toString(), "Done", AppColors.emerald.withOpacity(0.1), AppColors.emerald),
-                _buildCompactStatBadge(reviewQ.toString(), "Review", AppColors.saffron.withOpacity(0.1), AppColors.saffron),
-                Builder(
-                  builder: (context) => InkWell(
-                    onTap: () => Scaffold.of(context).openEndDrawer(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.civic.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.grid_view_rounded, size: 14, color: AppColors.civic),
-                          SizedBox(width: 4),
-                          Text("Grid", style: TextStyle(fontSize: 11, color: AppColors.civic, fontWeight: FontWeight.bold)),
-                        ],
+          Showcase(
+            key: _tourStatsPanelKey,
+            title: "Track Your Progress",
+            description: "See how many questions you've answered, marked for review, or skipped. Tap 'Grid' to jump to any question.",
+            targetBorderRadius: BorderRadius.zero,
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildCompactStatBadge("${_activeIndex + 1}/$totalQ", "Question", Colors.grey[200]!, AppColors.ink),
+                  _buildCompactStatBadge(answeredQ.toString(), "Done", AppColors.emerald.withOpacity(0.1), AppColors.emerald),
+                  _buildCompactStatBadge(reviewQ.toString(), "Review", AppColors.saffron.withOpacity(0.1), AppColors.saffron),
+                  Builder(
+                    builder: (context) => InkWell(
+                      onTap: () => Scaffold.of(context).openEndDrawer(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.civic.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.grid_view_rounded, size: 14, color: AppColors.civic),
+                            SizedBox(width: 4),
+                            Text("Grid", style: TextStyle(fontSize: 11, color: AppColors.civic, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -802,29 +852,35 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                   ],
                 ),
 
-                // Next Button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
-                  onPressed: _activeIndex < totalQ - 1
-                      ? () {
-                          setState(() {
-                            _activeIndex++;
-                          });
-                          _syncSubjectiveInputs();
-                        }
-                      : _submitAttempt,
-                  child: Row(
-                    children: [
-                      Text(_activeIndex == totalQ - 1 ? "SUBMIT" : "NEXT"),
-                      const SizedBox(width: 4),
-                      Icon(
-                        _activeIndex == totalQ - 1 ? Icons.send_rounded : Icons.arrow_forward_ios_rounded,
-                        size: 12,
-                      ),
-                    ],
+                // Next / Submit Button
+                Showcase(
+                  key: _tourNextBtnKey,
+                  title: "Submit When Ready",
+                  description: "Tap 'Next' to move through questions. On the last question this becomes 'Submit' — tap it to finish and see your results.",
+                  targetBorderRadius: BorderRadius.circular(12),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                    onPressed: _activeIndex < totalQ - 1
+                        ? () {
+                            setState(() {
+                              _activeIndex++;
+                            });
+                            _syncSubjectiveInputs();
+                          }
+                        : _submitAttempt,
+                    child: Row(
+                      children: [
+                        Text(_activeIndex == totalQ - 1 ? "SUBMIT" : "NEXT"),
+                        const SizedBox(width: 4),
+                        Icon(
+                          _activeIndex == totalQ - 1 ? Icons.send_rounded : Icons.arrow_forward_ios_rounded,
+                          size: 12,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
