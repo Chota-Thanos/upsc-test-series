@@ -299,6 +299,12 @@ class ApiClient extends ChangeNotifier {
         } else if (body['error'] == 'validation_error' && body['issues'] is List) {
           message = (body['issues'] as List).map((i) => i['message']).join(" ");
         }
+        // Postgres FK/constraint violations include a `detail` field naming the
+        // exact column/value at fault (e.g. "Key (exam_level_id)=(7) is not
+        // present..."); surface it instead of only the generic message.
+        if (body['detail'] is String && (body['detail'] as String).trim().isNotEmpty) {
+          message = "$message (${body['detail']})";
+        }
         if (body['error'] is String && body['error'] != 'validation_error') {
           errorCode = body['error'];
         }
