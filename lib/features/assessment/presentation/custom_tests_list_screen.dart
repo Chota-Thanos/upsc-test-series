@@ -177,20 +177,15 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
               });
 
               try {
-                int examLevelId = 7;
-                String testType = 'sectional_test';
-                if (widget.contentType == 'aptitude') {
-                  examLevelId = 1;
-                } else if (widget.contentType == 'mains') {
-                  examLevelId = 3;
-                  testType = 'mains_test';
-                }
+                final testType = widget.contentType == 'mains' ? 'mains_test' : 'sectional_test';
 
                 final templateId = await _service.createUserCustomTest(
                   title: title,
                   description: descController.text.trim(),
                   examId: 1,
-                  examLevelId: examLevelId,
+                  contentType: widget.contentType == 'aptitude'
+                      ? 'aptitude'
+                      : (widget.contentType == 'mains' ? 'mains' : 'gk'),
                   testType: testType,
                   questionIds: [],
                 );

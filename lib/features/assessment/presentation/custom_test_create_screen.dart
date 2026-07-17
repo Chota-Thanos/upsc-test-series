@@ -64,7 +64,6 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
   List<Exam> _exams = [];
   int? _selectedExamId;
-  List<ExamLevel> _examLevels = [];
   late String _contentType;
   final TextEditingController _titleController = TextEditingController();
 
@@ -113,14 +112,6 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
       if (exams.isNotEmpty) {
         _selectedExamId = exams.first.id;
-        // Fetched rather than hardcoded — exam_levels are auto-incremented ids that
-        // can differ between environments, so a hardcoded id previously caused a
-        // foreign-key error on test creation whenever it didn't match the server.
-        try {
-          _examLevels = await _service.getAssessmentExamLevels(_selectedExamId!);
-        } catch (e) {
-          debugPrint("Error loading exam levels: $e");
-        }
         await _fetchCategories();
         await _restoreGuestSavedCustomTest();
       }
@@ -130,20 +121,6 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
         _loadingExams = false;
       });
     }
-  }
-
-  int _examLevelIdForContentType() {
-    final slug = _contentType == 'aptitude'
-        ? 'prelims-csat'
-        : (_contentType == 'mains' ? 'mains-written' : 'prelims-gs');
-    final match = _examLevels.where((l) => l.slug == slug);
-    if (match.isNotEmpty) return match.first.id;
-
-    // Fallback only if exam levels failed to load — best-effort guess, may not
-    // match the actual row id on whichever server this request hits.
-    if (_contentType == 'aptitude') return 1;
-    if (_contentType == 'mains') return 3;
-    return 7;
   }
 
   Future<void> _restoreGuestSavedCustomTest() async {
@@ -443,7 +420,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
       final templateId = await _service.createUserCustomTest(
         title: _titleController.text.trim(),
         examId: _selectedExamId!,
-        examLevelId: _examLevelIdForContentType(),
+        contentType: _contentType,
         questionIds: allPickedQuestionIds,
         testType: _contentType == 'mains' ? 'mains_test' : 'sectional_test',
       );

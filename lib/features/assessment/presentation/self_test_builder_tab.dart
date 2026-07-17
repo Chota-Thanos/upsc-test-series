@@ -543,7 +543,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       final customTestId = await _service.createUserCustomTest(
         title: "Revision: $categoryName - ${DateTime.now().day}/${DateTime.now().month}",
         examId: _selectedExamId!,
-        examLevelId: hasMains ? _examLevelIdForSlug('mains-written') : _examLevelIdForSlug('prelims-gs'),
+        contentType: hasMains ? 'mains' : 'gk',
         questionIds: qIds,
         testType: hasMains ? 'mains_test' : 'sectional_test',
       );
@@ -1391,23 +1391,28 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     }
   }
 
-  int _examLevelIdForSlug(String slug) {
-    final match = _examLevels.where((l) => l.slug == slug);
-    if (match.isNotEmpty) return match.first.id;
+  // Different environments can seed exam_levels under different slugs (e.g.
+  // the original 'prelims-gs'/'prelims-csat'/'mains-written' vs a newer
+  // 'prelims'/'csat'/'mains' set — see the matching comment on the server's
+  // resolveExamLevelId), so try every known convention rather than assuming one.
+  static const Map<String, List<String>> _examLevelSlugCandidates = {
+    'aptitude': ['prelims-csat', 'csat'],
+    'mains': ['mains-written', 'mains'],
+    'gk': ['prelims-gs', 'prelims'],
+  };
 
-    // Fallback only if exam levels failed to load — best-effort guess, may not
-    // match the actual row id on whichever server this request hits.
-    if (slug == 'prelims-csat') return 1;
-    if (slug == 'mains-written') return 3;
-    return 7;
+  int _examLevelIdForContentType(String contentType) {
+    final candidates = _examLevelSlugCandidates[contentType] ?? _examLevelSlugCandidates['gk']!;
+    for (final slug in candidates) {
+      final match = _examLevels.where((l) => l.slug == slug);
+      if (match.isNotEmpty) return match.first.id;
+    }
+    throw Exception(
+      'No exam level configured for "$contentType" (looked for ${candidates.join(", ")}).',
+    );
   }
 
-  int _examLevelIdForActiveTab() {
-    final slug = _activeTab == 'aptitude'
-        ? 'prelims-csat'
-        : (_activeTab == 'mains' ? 'mains-written' : 'prelims-gs');
-    return _examLevelIdForSlug(slug);
-  }
+  int _examLevelIdForActiveTab() => _examLevelIdForContentType(_activeTab);
 
   String _testTypeForActiveTab() => _activeTab == 'mains' ? 'mains_test' : 'sectional_test';
 
@@ -1448,7 +1453,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       await _service.createUserCustomTest(
         title: name,
         examId: _selectedExamId!,
-        examLevelId: _examLevelIdForActiveTab(),
+        contentType: _activeTab,
         testType: _testTypeForActiveTab(),
         categories: _cartToCategories(),
       );

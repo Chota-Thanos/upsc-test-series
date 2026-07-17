@@ -609,22 +609,30 @@ class AssessmentService extends ChangeNotifier {
     }
   }
 
-  // Create a user custom test template and return its ID
+  // Create a user custom test template and return its ID. Prefer contentType
+  // over examLevelId — exam_level row ids (and even slugs) can differ between
+  // environments (see the server-side resolveExamLevelId comment), so letting
+  // the server resolve the level from content_type avoids the client having
+  // to guess an id that only happens to be right on one particular database.
   Future<int> createUserCustomTest({
     required String title,
     String? description,
     required int examId,
-    required int examLevelId,
+    int? examLevelId,
+    String? contentType,
     List<int>? questionIds,
     List<Map<String, dynamic>>? categories,
     String? testType,
   }) async {
+    assert(examLevelId != null || contentType != null,
+        'createUserCustomTest requires either examLevelId or contentType');
     try {
       final Map<String, dynamic> payload = {
         'title': title,
         if (description != null) 'description': description,
         'exam_id': examId,
-        'exam_level_id': examLevelId,
+        if (examLevelId != null) 'exam_level_id': examLevelId,
+        if (contentType != null) 'content_type': contentType,
         if (questionIds != null) 'question_ids': questionIds,
         if (categories != null) 'categories': categories,
         if (testType != null) 'test_type': testType,
