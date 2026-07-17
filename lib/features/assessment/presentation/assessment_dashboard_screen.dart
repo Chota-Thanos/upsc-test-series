@@ -2215,7 +2215,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
 
 
 
-  /// Level-grouped sections (Subjects / Books / Chapters / Topics), each a
+  /// Level-grouped sections (Subjects / Books / Chapters / Subtopics), each a
   /// flat weakest-first list — replaces an earlier nested expandable tree,
   /// which tested poorly: tapping a leaf row did nothing without noticing a
   /// tiny trailing icon, and nesting made a person's own weak subject harder
@@ -2245,7 +2245,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       'subject': 'Subjects',
       'source_bucket': 'Books',
       'topic': 'Chapters',
-      'subtopic': 'Topics',
+      'subtopic': 'Subtopics',
     };
     final groups = {for (final key in sectionOrder) key: <_TopicInsight>[]};
     for (final insight in filtered) {
