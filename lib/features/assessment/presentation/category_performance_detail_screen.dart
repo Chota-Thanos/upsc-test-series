@@ -846,55 +846,70 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
     final outcome = _text(question['outcome'], 'unattempted');
     final color = _outcomeColor(outcome);
 
+    // A colored accent bar as its own widget, not a non-uniform Border side —
+    // combining a non-uniform Border with borderRadius/boxShadow on the same
+    // BoxDecoration is a known problem spot for Flutter's decoration painter
+    // and was silently blanking this card's content on web.
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: color, width: 3), top: const BorderSide(color: AppColors.line), right: const BorderSide(color: AppColors.line), bottom: const BorderSide(color: AppColors.line)),
+        border: Border.all(color: AppColors.line),
         boxShadow: const [
           BoxShadow(color: Color(0x060F172A), offset: Offset(0, 3), blurRadius: 8),
         ],
       ),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(_outcomeIcon(outcome), color: color, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _text(question['test_title'], 'Test'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted),
-                ),
+          Container(width: 4, color: color),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(_outcomeIcon(outcome), color: color, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _text(question['test_title'], 'Test'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted),
+                        ),
+                      ),
+                      Text(
+                        outcome.toUpperCase(),
+                        style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w600, color: color),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _text(question['question_statement'], 'Question'),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink, height: 1.35),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _miniPill("${_num(question['score']).toStringAsFixed(1)} marks", AppColors.civic),
+                      _miniPill("${_num(question['time_spent_seconds']).toInt()}s", AppColors.saffron),
+                      if (_text(question['topic_name']).isNotEmpty) _miniPill(_text(question['topic_name']), AppColors.brand),
+                      if (_text(question['subtopic_name']).isNotEmpty) _miniPill(_text(question['subtopic_name']), AppColors.muted),
+                    ],
+                  ),
+                ],
               ),
-              Text(
-                outcome.toUpperCase(),
-                style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w600, color: color),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _text(question['question_statement'], 'Question'),
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink, height: 1.35),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _miniPill("${_num(question['score']).toStringAsFixed(1)} marks", AppColors.civic),
-              _miniPill("${_num(question['time_spent_seconds']).toInt()}s", AppColors.saffron),
-              if (_text(question['topic_name']).isNotEmpty) _miniPill(_text(question['topic_name']), AppColors.brand),
-              if (_text(question['subtopic_name']).isNotEmpty) _miniPill(_text(question['subtopic_name']), AppColors.muted),
-            ],
+            ),
           ),
         ],
       ),
