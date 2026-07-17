@@ -204,7 +204,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
             ),
             Text(
               _levelLabel(nodeType).toUpperCase(),
-              style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.muted, fontSize: 10, letterSpacing: 0.6),
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.muted, fontSize: 10, letterSpacing: 0.6),
             ),
           ],
         ),
@@ -274,7 +274,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
                       _levelLabel(nodeType).toUpperCase(),
                       style: GoogleFonts.inter(
                         fontSize: 10,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white.withOpacity(0.9),
                         letterSpacing: 0.6,
                       ),
@@ -289,7 +289,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
             title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, height: 1.15),
+            style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white, height: 1.15),
           ),
           const SizedBox(height: 6),
           Text(
@@ -335,7 +335,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
         const SizedBox(height: 3),
         Text(
           label.toUpperCase(),
-          style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white.withOpacity(0.55), letterSpacing: 0.4),
+          style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.55), letterSpacing: 0.4),
         ),
       ],
     );
@@ -411,11 +411,11 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
         children: [
           Icon(icon, color: color, size: 16),
           const SizedBox(height: 6),
-          Text(value.toString(), style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+          Text(value.toString(), style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: color)),
           const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
-            style: GoogleFonts.inter(fontSize: 8.5, fontWeight: FontWeight.w700, color: color.withOpacity(0.85), letterSpacing: 0.3),
+            style: GoogleFonts.inter(fontSize: 8.5, fontWeight: FontWeight.w600, color: color.withOpacity(0.85), letterSpacing: 0.3),
           ),
         ],
       ),
@@ -524,7 +524,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.ink),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink),
                   ),
                   Text(
                     subtitle,
@@ -541,7 +541,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
               ),
               child: Text(
                 items.length.toString(),
-                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: headerColor),
+                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: headerColor),
               ),
             ),
           ],
@@ -597,7 +597,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
                             _text(child['name']),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink),
+                            style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.ink),
                           ),
                         ),
                         if (nodeType.isNotEmpty) ...[
@@ -611,7 +611,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
                             ),
                             child: Text(
                               _levelLabel(nodeType).toUpperCase(),
-                              style: GoogleFonts.inter(fontSize: 7.5, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.3),
+                              style: GoogleFonts.inter(fontSize: 7.5, fontWeight: FontWeight.w600, color: AppColors.muted, letterSpacing: 0.3),
                             ),
                           ),
                         ],
@@ -641,7 +641,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
               if (hasData)
                 Text(
                   _formatScorePercent(scorePercent),
-                  style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: color),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: color),
                 ),
               const SizedBox(width: 4),
               Icon(Icons.chevron_right_rounded, color: AppColors.muted.withOpacity(0.6), size: 18),
@@ -713,10 +713,10 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
                             _text(attempt['test_title'], 'Test'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink),
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.ink),
                           ),
                         ),
-                        Text(_formatScorePercent(scorePercent), style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: color)),
+                        Text(_formatScorePercent(scorePercent), style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: color)),
                       ],
                     ),
                     const SizedBox(height: 7),
@@ -761,7 +761,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
               const SizedBox(width: 8),
               Text(
                 "IMPROVEMENT FOCUS",
-                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.civic, letterSpacing: 0.6),
+                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.civic, letterSpacing: 0.6),
               ),
             ],
           ),
@@ -874,7 +874,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
               ),
               Text(
                 outcome.toUpperCase(),
-                style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w700, color: color),
+                style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w600, color: color),
               ),
             ],
           ),
@@ -883,7 +883,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
             _text(question['question_statement'], 'Question'),
             maxLines: 4,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink, height: 1.35),
+            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink, height: 1.35),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -909,7 +909,7 @@ class _CategoryPerformanceDetailScreenState extends State<CategoryPerformanceDet
       children: [
         Text(
           title,
-          style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w800, color: AppColors.ink),
+          style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.ink),
         ),
         const SizedBox(height: 2),
         Text(
