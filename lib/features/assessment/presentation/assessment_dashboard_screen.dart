@@ -38,7 +38,6 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
   List<Map<String, dynamic>> _rawTaxonomyNodes = [];
   List<Map<String, dynamic>> _rawStudentTopicMetrics = [];
   int? _selectedExamId;
-  final Set<int> _expandedDashboardNodes = {};
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -475,15 +474,16 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             ),
             const SizedBox(height: 20),
             // The category table students actually asked for: every subject
-            // down to every topic, ranked by marks percentage, click any row
-            // for its own detailed performance page. Kept high on the page —
-            // this is the primary way in, not a buried afterthought.
+            // down to every topic, ranked by marks percentage, grouped by
+            // level, click any row for its own detailed performance page.
+            // Kept high on the page — this is the primary way in, not a
+            // buried afterthought.
             _buildSectionHeader(
-              "Category Performance Table",
+              "Category Performance",
               subtitle:
-                  "$attemptedNodes of $totalNodes nodes have attempt data. Tap a row to expand, or its View chip to open that category's page.",
+                  "$attemptedNodes of $totalNodes nodes have attempt data, grouped by level. Tap any row to open its page.",
             ),
-            _buildPerformanceTreeView(contentType, roots: roots),
+            _buildCategoryPerformanceSections(insights, contentType),
             const SizedBox(height: 20),
             if (db.trend.isNotEmpty) ...[
               _buildSectionHeader("Score Trend"),
@@ -1517,23 +1517,6 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     return count;
   }
 
-  List<int> _expandableAttemptedNodeIds(List<_PerformanceTreeNode> nodes) {
-    final ids = <int>[];
-    void visit(_PerformanceTreeNode node) {
-      if (node.children.isNotEmpty && node.totalQuestions > 0) {
-        ids.add(node.id);
-      }
-      for (final child in node.children) {
-        visit(child);
-      }
-    }
-
-    for (final node in nodes) {
-      visit(node);
-    }
-    return ids;
-  }
-
   List<_TopicInsight> _topicInsightsFromRoots(
     List<_PerformanceTreeNode> roots,
   ) {
@@ -2232,228 +2215,13 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
 
 
 
-  Widget _buildPerformanceNode(int depth, _PerformanceTreeNode node, String contentType) {
-    if (_searchQuery.isNotEmpty && !node.matchesSearch(_searchQuery)) {
-      return const SizedBox.shrink();
-    }
-
-    final isExpanded = _searchQuery.isNotEmpty
-        ? node.children.any((c) => c.matchesSearch(_searchQuery))
-        : _expandedDashboardNodes.contains(node.id);
-    final hasChildren = node.children.isNotEmpty;
-    final hasAnsweredData = node.attemptedQuestions > 0;
-    final hasQuestionData = node.totalQuestions > 0;
-    final scoreColor = _scorePercentColor(
-      node.scorePercent,
-      hasData: hasAnsweredData,
-    );
-    final indent = depth * 14.0;
-    final typeLabel = _nodeTypeLabel(node.nodeType);
-    final icon = node.nodeType == 'subject'
-        ? Icons.folder_open_rounded
-        : (node.nodeType == 'topic'
-              ? Icons.bookmark_border_rounded
-              : Icons.radio_button_unchecked_rounded);
-    // Leaf nodes have nothing to expand into, so the whole row opens the
-    // category's own performance page directly. Nodes with children still
-    // toggle expand/collapse on row tap (that's how you browse the tree),
-    // but get an explicit "View" action so you don't have to drill all the
-    // way to a leaf just to see a subject/book/chapter's own rolled-up page.
-    final rowOpensPerformance = !hasChildren && hasQuestionData;
-
-    final row = Container(
-      margin: EdgeInsets.only(
-        left: depth == 0 ? 0 : 8,
-        right: 0,
-        top: 5,
-        bottom: 5,
-      ),
-      padding: EdgeInsets.fromLTRB(12 + indent, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: depth == 0 ? Colors.white : AppColors.paper.withOpacity(0.45),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isExpanded
-              ? AppColors.civic.withOpacity(0.28)
-              : AppColors.line,
-          width: isExpanded ? 1.4 : 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          if (hasChildren)
-            Icon(
-              isExpanded
-                  ? Icons.keyboard_arrow_down_rounded
-                  : Icons.keyboard_arrow_right_rounded,
-              size: 19,
-              color: AppColors.muted,
-            )
-          else
-            const SizedBox(width: 19),
-          const SizedBox(width: 5),
-          Icon(
-            icon,
-            size: depth == 0 ? 17 : 14,
-            color: depth == 0 ? AppColors.civic : AppColors.muted,
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        node.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: depth == 0 ? 13 : 12,
-                          fontWeight: depth == 0
-                              ? FontWeight.w700
-                              : FontWeight.w600,
-                          color: AppColors.ink,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 7),
-                    _buildTypeBadge(typeLabel),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  hasQuestionData
-                      ? "${node.totalQuestions} questions | ${node.correctCount} correct | ${node.unattemptedCount} skipped"
-                      : "No attempts yet",
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.muted,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    minHeight: 5,
-                    value: hasAnsweredData
-                        ? (node.scorePercent / 100).clamp(0.0, 1.0).toDouble()
-                        : 0,
-                    backgroundColor: AppColors.line.withOpacity(0.45),
-                    valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 58,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  hasAnsweredData
-                      ? _formatScorePercent(node.scorePercent)
-                      : (hasQuestionData ? "Skip" : "--"),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: scoreColor,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  hasAnsweredData ? "${node.attemptedQuestions} ans" : "",
-                  style: GoogleFonts.inter(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (hasQuestionData) ...[
-            const SizedBox(width: 6),
-            if (hasChildren)
-              // Parent nodes still need an explicit action, since row-tap is
-              // reserved for expand/collapse here — this is a separate tap
-              // target from the row so both gestures stay unambiguous.
-              InkWell(
-                onTap: () => _openCategoryPerformance(node.id, node.name, contentType),
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.civic.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: AppColors.civic.withOpacity(0.18)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "View",
-                        style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.civic),
-                      ),
-                      const SizedBox(width: 2),
-                      const Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.civic),
-                    ],
-                  ),
-                ),
-              )
-            else
-              // Leaf rows open on tap already, so this is just an affordance,
-              // not a separate tap target.
-              Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted.withOpacity(0.6)),
-          ],
-        ],
-      ),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: hasChildren
-              ? () {
-                  setState(() {
-                    if (isExpanded) {
-                      _expandedDashboardNodes.remove(node.id);
-                    } else {
-                      _expandedDashboardNodes.add(node.id);
-                    }
-                  });
-                }
-              : (rowOpensPerformance ? () => _openCategoryPerformance(node.id, node.name, contentType) : null),
-          borderRadius: BorderRadius.circular(14),
-          child: row,
-        ),
-        if (hasChildren && isExpanded)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 3),
-            child: Column(
-              children: node.children
-                  .map((child) => _buildPerformanceNode(depth + 1, child, contentType))
-                  .toList(),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildPerformanceTreeView(
-    String contentType, {
-    List<_PerformanceTreeNode>? roots,
-  }) {
-    final treeRoots = roots ?? _buildTree(contentType);
-
-    if (treeRoots.isEmpty) {
+  /// Level-grouped sections (Subjects / Books / Chapters / Topics), each a
+  /// flat weakest-first list — replaces an earlier nested expandable tree,
+  /// which tested poorly: tapping a leaf row did nothing without noticing a
+  /// tiny trailing icon, and nesting made a person's own weak subject harder
+  /// to spot than a plain per-level ranking does.
+  Widget _buildCategoryPerformanceSections(List<_TopicInsight> insights, String contentType) {
+    if (insights.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -2467,29 +2235,33 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       );
     }
 
+    final query = _searchQuery.trim().toLowerCase();
+    final filtered = query.isEmpty
+        ? insights
+        : insights.where((i) => i.name.toLowerCase().contains(query)).toList();
+
+    const sectionOrder = ['subject', 'source_bucket', 'topic', 'subtopic'];
+    const sectionLabels = {
+      'subject': 'Subjects',
+      'source_bucket': 'Books',
+      'topic': 'Chapters',
+      'subtopic': 'Topics',
+    };
+    final groups = {for (final key in sectionOrder) key: <_TopicInsight>[]};
+    for (final insight in filtered) {
+      (groups[insight.nodeType] ?? groups['subtopic']!).add(insight);
+    }
+    for (final list in groups.values) {
+      list.sort((a, b) {
+        final cmp = a.scorePercent.compareTo(b.scorePercent);
+        if (cmp != 0) return cmp;
+        return b.totalQuestions.compareTo(a.totalQuestions);
+      });
+    }
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            color: AppColors.civic.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.touch_app_rounded, size: 14, color: AppColors.civic),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  "Tap a subject/book/chapter to expand it, or its View chip for that level's own performance page. Tap a topic to open its page directly.",
-                  style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.civic, height: 1.4),
-                ),
-              ),
-            ],
-          ),
-        ),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -2500,7 +2272,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             controller: _searchController,
             style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
             decoration: InputDecoration(
-              hintText: "Search subject, topic, or subtopic...",
+              hintText: "Search subject, book, chapter, or topic...",
               hintStyle: GoogleFonts.inter(
                 color: AppColors.muted.withOpacity(0.6),
                 fontSize: 13,
@@ -2530,54 +2302,106 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _expandedDashboardNodes.addAll(
-                      _expandableAttemptedNodeIds(treeRoots),
-                    );
-                  });
-                },
-                icon: const Icon(Icons.unfold_more_rounded, size: 16),
-                label: const Text("Expand attempted"),
+        const SizedBox(height: 16),
+        if (filtered.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            decoration: BoxDecoration(
+              color: AppColors.paper.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(
+                "No categories match \"${_searchQuery.trim()}\".",
+                style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _expandedDashboardNodes.clear();
-                  });
-                },
-                icon: const Icon(Icons.unfold_less_rounded, size: 16),
-                label: const Text("Collapse"),
+          )
+        else
+          for (final key in sectionOrder)
+            if (groups[key]!.isNotEmpty) ...[
+              _buildCategoryGroupSection(sectionLabels[key]!, groups[key]!, contentType),
+              const SizedBox(height: 18),
+            ],
+      ],
+    );
+  }
+
+  Widget _buildCategoryGroupSection(String label, List<_TopicInsight> items, String contentType) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.8),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(999)),
+              child: Text(
+                items.length.toString(),
+                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w600, color: AppColors.muted),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        const SizedBox(height: 8),
+        ...items.map((insight) => _buildCategoryRow(insight, contentType)),
+      ],
+    );
+  }
+
+  Widget _buildCategoryRow(_TopicInsight insight, String contentType) {
+    final hasData = insight.attemptedQuestions > 0;
+    final color = _scorePercentColor(insight.scorePercent, hasData: hasData);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => _openCategoryPerformance(insight.id, insight.name, contentType),
+        borderRadius: BorderRadius.circular(13),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
           decoration: BoxDecoration(
-            color: AppColors.paper.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.line, width: 1),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: AppColors.line),
           ),
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: treeRoots.length,
-            itemBuilder: (context, index) {
-              return _buildPerformanceNode(0, treeRoots[index], contentType);
-            },
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      insight.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.ink),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "${insight.totalQuestions} question${insight.totalQuestions == 1 ? '' : 's'}",
+                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                hasData ? _formatScorePercent(insight.scorePercent) : "--",
+                style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: color),
+              ),
+              const SizedBox(width: 2),
+              Icon(Icons.chevron_right_rounded, size: 17, color: AppColors.muted.withOpacity(0.6)),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
