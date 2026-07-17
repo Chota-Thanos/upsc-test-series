@@ -443,32 +443,36 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     final displayIncorrect = db.attemptsCount > 0 || results.isEmpty
         ? db.totalIncorrect
         : results.fold<int>(0, (sum, r) => sum + r.incorrectCount);
-    final displayUnattempted = db.attemptsCount > 0 || results.isEmpty
-        ? db.totalUnattempted
-        : results.fold<int>(0, (sum, r) => sum + r.unattemptedCount);
 
-    final totalQuestions = displayCorrect + displayIncorrect + displayUnattempted;
     final totalQuestionsAttempted = displayCorrect + displayIncorrect;
-    final pctCorrect = totalQuestions > 0 ? (displayCorrect / totalQuestions) * 100 : 0.0;
-    final pctIncorrect = totalQuestions > 0 ? (displayIncorrect / totalQuestions) * 100 : 0.0;
-    final pctUnattempted = totalQuestions > 0 ? (displayUnattempted / totalQuestions) * 100 : 0.0;
 
     final attemptedInsights = insights.where((i) => i.attemptedQuestions > 0).toList();
-    final sortedHighest = [...attemptedInsights]..sort((a, b) {
-      final cmp = b.accuracy.compareTo(a.accuracy);
+    // Ranked by marks percentage, ascending. Split into disjoint halves before
+    // taking the top/bottom 3 each, so a category can never show up in both
+    // "highest" and "lowest" — with only a handful of attempted categories,
+    // taking 3-from-each-end of the *same* short list previously showed the
+    // identical set in both groups.
+    final sortedByScore = [...attemptedInsights]..sort((a, b) {
+      final cmp = a.scorePercent.compareTo(b.scorePercent);
       if (cmp != 0) return cmp;
       return b.totalQuestions.compareTo(a.totalQuestions);
     });
-    final sortedLowest = [...attemptedInsights]..sort((a, b) {
-      final cmp = a.accuracy.compareTo(b.accuracy);
-      if (cmp != 0) return cmp;
-      return b.totalQuestions.compareTo(a.totalQuestions);
-    });
-    final highestExtremes = sortedHighest.take(3).toList();
-    final lowestExtremes = sortedLowest.take(3).toList();
+    final hasVariance = sortedByScore.length > 1 &&
+        sortedByScore.first.scorePercent != sortedByScore.last.scorePercent;
+    final splitPoint = (sortedByScore.length / 2).ceil();
+    final lowestExtremes = sortedByScore.take(min(3, splitPoint)).toList();
+    final highestExtremes = hasVariance
+        ? sortedByScore.reversed.take(min(3, sortedByScore.length - splitPoint)).toList()
+        : <_TopicInsight>[];
 
     final attemptedNodes = insights.length;
     final totalNodes = _countTreeNodes(roots);
+    // Sum of root-level (subject) score/maxScore — roots already carry the
+    // fully rolled-up subtree totals, so this is the true overall marks
+    // percentage across everything attempted, not an average-of-averages.
+    final overallScore = roots.fold<double>(0, (sum, r) => sum + r.score);
+    final overallMaxScore = roots.fold<double>(0, (sum, r) => sum + r.maxScore);
+    final overallScorePercent = overallMaxScore > 0 ? (overallScore / overallMaxScore) * 100 : 0.0;
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -484,16 +488,25 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               contentType: contentType,
               attempts: displayAttempts,
               accuracy: displayAccuracy,
+              scorePercent: overallScorePercent,
               weakCount: weakInsights.length,
               strongCount: strongInsights.length,
               attemptedNodes: attemptedNodes,
               totalNodes: totalNodes,
               totalQuestionsAttempted: totalQuestionsAttempted,
-              pctCorrect: pctCorrect,
-              pctIncorrect: pctIncorrect,
-              pctUnattempted: pctUnattempted,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            // The category table students actually asked for: every subject
+            // down to every topic, ranked by marks percentage, click any row
+            // for its own detailed performance page. Kept high on the page —
+            // this is the primary way in, not a buried afterthought.
+            _buildSectionHeader(
+              "Category Performance Table",
+              subtitle:
+                  "$attemptedNodes of $totalNodes nodes have attempt data. Tap a row to expand, or its View chip to open that category's page.",
+            ),
+            _buildPerformanceTreeView(contentType, roots: roots),
+            const SizedBox(height: 20),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -538,7 +551,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             ],
             _buildInsightSection(
               title: "Priority Revision",
-              subtitle: "Lowest accuracy nodes from the full syllabus tree",
+              subtitle: "Lowest marks-percentage nodes from the full syllabus tree",
               insights: weakInsights,
               emptyMessage:
                   "No weak subject, topic, or subtopic identified yet.",
@@ -556,13 +569,6 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               icon: Icons.verified_rounded,
               contentType: contentType,
             ),
-            const SizedBox(height: 24),
-            _buildSectionHeader(
-              "Full Syllabus Performance",
-              subtitle:
-                  "$attemptedNodes of $totalNodes nodes have attempt data. Expand any level to inspect subjects, topics, and subtopics.",
-            ),
-            _buildPerformanceTreeView(contentType, roots: roots),
             const SizedBox(height: 16),
           ],
         ),
@@ -1501,6 +1507,21 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
 
   String _formatPercent(double value) => "${(value * 100).round()}%";
 
+  /// Formats an already-percent-scale value (e.g. scorePercent, which can be
+  /// negative once negative marking outweighs correct answers) with an
+  /// explicit sign, unlike _formatPercent which expects a 0..1 ratio.
+  String _formatScorePercent(double value) {
+    final rounded = value.round();
+    return rounded > 0 ? "+$rounded%" : "$rounded%";
+  }
+
+  Color _scorePercentColor(double value, {bool hasData = true}) {
+    if (!hasData) return AppColors.muted;
+    if (value >= 60) return AppColors.emerald;
+    if (value >= 40) return AppColors.saffron;
+    return AppColors.berry;
+  }
+
   void _openCategoryPerformance(int taxonomyNodeId, String title, String contentType) {
     Navigator.push(
       context,
@@ -1509,6 +1530,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           nodeId: taxonomyNodeId,
           nodeName: title,
           contentType: contentType,
+          initialTabIndex: 1,
         ),
       ),
     );
@@ -1596,6 +1618,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             incorrectCount: node.incorrectCount,
             unattemptedCount: node.unattemptedCount,
             accuracy: node.accuracy,
+            scorePercent: node.scorePercent,
           ),
         );
       }
@@ -1611,13 +1634,16 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
   }
 
   List<_TopicInsight> _weakInsights(List<_TopicInsight> insights) {
+    // Ranked by marks percentage (score / maxScore * 100), not raw accuracy —
+    // negative marking means a node with 50% accuracy can still net a
+    // negative score, which accuracy alone can't surface.
     final weak =
         insights
-            .where((item) => item.attemptedQuestions > 0 && item.accuracy < 0.5)
+            .where((item) => item.attemptedQuestions > 0 && item.scorePercent < 40)
             .toList()
           ..sort((a, b) {
-            final accuracyCompare = a.accuracy.compareTo(b.accuracy);
-            if (accuracyCompare != 0) return accuracyCompare;
+            final scoreCompare = a.scorePercent.compareTo(b.scorePercent);
+            if (scoreCompare != 0) return scoreCompare;
             return b.totalQuestions.compareTo(a.totalQuestions);
           });
     return _dedupeInsights(weak).take(6).toList();
@@ -1633,13 +1659,13 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             .where(
               (item) =>
                   item.attemptedQuestions > 0 &&
-                  item.accuracy >= 0.7 &&
+                  item.scorePercent >= 60 &&
                   !weakKeys.contains(item.identityKey),
             )
             .toList()
           ..sort((a, b) {
-            final accuracyCompare = b.accuracy.compareTo(a.accuracy);
-            if (accuracyCompare != 0) return accuracyCompare;
+            final scoreCompare = b.scorePercent.compareTo(a.scorePercent);
+            if (scoreCompare != 0) return scoreCompare;
             return b.totalQuestions.compareTo(a.totalQuestions);
           });
     return _dedupeInsights(strong).take(6).toList();
@@ -1658,136 +1684,90 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     required String contentType,
     required int attempts,
     required double accuracy,
+    required double scorePercent,
     required int weakCount,
     required int strongCount,
     required int attemptedNodes,
     required int totalNodes,
     required int totalQuestionsAttempted,
-    required double pctCorrect,
-    required double pctIncorrect,
-    required double pctUnattempted,
   }) {
     final coverage = totalNodes == 0
         ? 0.0
         : (attemptedNodes / totalNodes).clamp(0.0, 1.0);
+    final hasData = totalQuestionsAttempted > 0;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        gradient: AppColors.heroGradient,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Color(0x2A0F172A), offset: Offset(0, 10), blurRadius: 26),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.civic.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.civic.withOpacity(0.18)),
-                ),
-                child: const Icon(
-                  Icons.radar_rounded,
-                  color: AppColors.civic,
-                  size: 21,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "${_sectionLabel(contentType)} Performance",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      "Every attempted subject, topic, and subtopic is rolled into one view.",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.muted,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.paper.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.line),
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.white.withOpacity(0.16)),
             ),
-            child: Column(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Expanded(child: _buildHeroMetric("Total Attempts", attempts.toString())),
-                    Container(width: 1, height: 32, color: AppColors.line),
-                    Expanded(child: _buildHeroMetric("Qs Attempted", totalQuestionsAttempted.toString())),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Divider(color: AppColors.line, height: 0.5),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _buildHeroMetric("% Correct", "${pctCorrect.toStringAsFixed(0)}%")),
-                    Container(width: 1, height: 32, color: AppColors.line),
-                    Expanded(child: _buildHeroMetric("% Incorrect", "${pctIncorrect.toStringAsFixed(0)}%")),
-                    Container(width: 1, height: 32, color: AppColors.line),
-                    Expanded(child: _buildHeroMetric("% Unattempted", "${pctUnattempted.toStringAsFixed(0)}%")),
-                  ],
+                Icon(Icons.radar_rounded, size: 13, color: Colors.white.withOpacity(0.85)),
+                const SizedBox(width: 6),
+                Text(
+                  _sectionLabel(contentType).toUpperCase(),
+                  style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white.withOpacity(0.9), letterSpacing: 0.6),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+          Text(
+            "${_sectionLabel(contentType)} Performance",
+            style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "Every attempted subject, book, chapter, and topic rolled into one view.",
+            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white.withOpacity(0.65), height: 1.4),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _buildHeroMetric("Score %", hasData ? _formatScorePercent(scorePercent) : "--")),
+              Container(width: 1, height: 34, color: Colors.white.withOpacity(0.12)),
+              Expanded(child: _buildHeroMetric("Accuracy", hasData ? _formatPercent(accuracy) : "--")),
+              Container(width: 1, height: 34, color: Colors.white.withOpacity(0.12)),
+              Expanded(child: _buildHeroMetric("Attempts", attempts.toString())),
+              Container(width: 1, height: 34, color: Colors.white.withOpacity(0.12)),
+              Expanded(child: _buildHeroMetric("Qs Attempted", totalQuestionsAttempted.toString())),
+            ],
+          ),
+          const SizedBox(height: 18),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
-              minHeight: 7,
-              value: coverage,
-              backgroundColor: AppColors.line.withOpacity(0.4),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.emerald,
-              ),
+              minHeight: 8,
+              value: hasData ? (scorePercent / 100).clamp(0.0, 1.0) : 0,
+              backgroundColor: Colors.white.withOpacity(0.12),
+              valueColor: AlwaysStoppedAnimation<Color>(hasData ? _scorePercentColor(scorePercent) : Colors.white24),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               _buildHeroChip("$weakCount weak", AppColors.berry),
               _buildHeroChip("$strongCount strong", AppColors.emerald),
-              _buildHeroChip(
-                "${(coverage * 100).round()}% mapped",
-                AppColors.brand,
-              ),
+              _buildHeroChip("${(coverage * 100).round()}% syllabus mapped", AppColors.brand),
             ],
           ),
         ],
@@ -1802,19 +1782,19 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         Text(
           value,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.ink,
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
           label.toUpperCase(),
           style: GoogleFonts.inter(
             fontSize: 8,
-            fontWeight: FontWeight.w600,
-            color: AppColors.muted,
-            letterSpacing: 0.5,
+            fontWeight: FontWeight.w700,
+            color: Colors.white.withOpacity(0.55),
+            letterSpacing: 0.4,
           ),
         ),
       ],
@@ -1825,17 +1805,24 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.18)),
+        border: Border.all(color: Colors.white.withOpacity(0.16)),
       ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: Colors.white.withOpacity(0.85),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2083,8 +2070,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
   }
 
   Widget _buildInsightCard(_TopicInsight insight, Color accent, int rank, String contentType) {
-    final accuracy = insight.accuracy.clamp(0.0, 1.0).toDouble();
-    final color = _accuracyColor(accuracy);
+    final barValue = (insight.scorePercent / 100).clamp(0.0, 1.0).toDouble();
+    final color = _scorePercentColor(insight.scorePercent);
     return InkWell(
       onTap: () => _openCategoryPerformance(insight.id, insight.name, contentType),
       borderRadius: BorderRadius.circular(16),
@@ -2150,14 +2137,14 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                     borderRadius: BorderRadius.circular(999),
                     child: LinearProgressIndicator(
                       minHeight: 6,
-                      value: accuracy,
+                      value: barValue,
                       backgroundColor: AppColors.line.withOpacity(0.45),
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "${insight.correctCount}/${insight.totalQuestions} correct-ready questions, ${insight.unattemptedCount} skipped",
+                    "${insight.correctCount}/${insight.totalQuestions} correct, ${_formatPercent(insight.accuracy)} accuracy, ${insight.unattemptedCount} skipped",
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -2172,7 +2159,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  _formatPercent(accuracy),
+                  _formatScorePercent(insight.scorePercent),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -2253,6 +2240,12 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         node.ownTotalQuestions =
             node.ownTotalQuestions +
             (int.tryParse(metricJson['question_count']?.toString() ?? '') ?? 0);
+        node.ownScore =
+            node.ownScore +
+            (double.tryParse(metricJson['total_score']?.toString() ?? '') ?? 0);
+        node.ownMaxScore =
+            node.ownMaxScore +
+            (double.tryParse(metricJson['total_max_score']?.toString() ?? '') ?? 0);
       }
     }
 
@@ -2281,8 +2274,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         if (a.totalQuestions > 0 && b.totalQuestions == 0) return -1;
         if (a.totalQuestions == 0 && b.totalQuestions > 0) return 1;
         if (a.totalQuestions > 0 && b.totalQuestions > 0) {
-          final accuracyCompare = a.accuracy.compareTo(b.accuracy);
-          if (accuracyCompare != 0) return accuracyCompare;
+          final scoreCompare = a.scorePercent.compareTo(b.scorePercent);
+          if (scoreCompare != 0) return scoreCompare;
         }
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
@@ -2316,8 +2309,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     final hasChildren = node.children.isNotEmpty;
     final hasAnsweredData = node.attemptedQuestions > 0;
     final hasQuestionData = node.totalQuestions > 0;
-    final accuracyColor = _accuracyColor(
-      node.accuracy,
+    final scoreColor = _scorePercentColor(
+      node.scorePercent,
       hasData: hasAnsweredData,
     );
     final indent = depth * 14.0;
@@ -2327,6 +2320,12 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         : (node.nodeType == 'topic'
               ? Icons.bookmark_border_rounded
               : Icons.radio_button_unchecked_rounded);
+    // Leaf nodes have nothing to expand into, so the whole row opens the
+    // category's own performance page directly. Nodes with children still
+    // toggle expand/collapse on row tap (that's how you browse the tree),
+    // but get an explicit "View" action so you don't have to drill all the
+    // way to a leaf just to see a subject/book/chapter's own rolled-up page.
+    final rowOpensPerformance = !hasChildren && hasQuestionData;
 
     final row = Container(
       margin: EdgeInsets.only(
@@ -2408,10 +2407,10 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                   child: LinearProgressIndicator(
                     minHeight: 5,
                     value: hasAnsweredData
-                        ? node.accuracy.clamp(0.0, 1.0).toDouble()
+                        ? (node.scorePercent / 100).clamp(0.0, 1.0).toDouble()
                         : 0,
                     backgroundColor: AppColors.line.withOpacity(0.45),
-                    valueColor: AlwaysStoppedAnimation<Color>(accuracyColor),
+                    valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
                   ),
                 ),
               ],
@@ -2419,18 +2418,18 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           ),
           const SizedBox(width: 10),
           SizedBox(
-            width: 52,
+            width: 58,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   hasAnsweredData
-                      ? _formatPercent(node.accuracy)
+                      ? _formatScorePercent(node.scorePercent)
                       : (hasQuestionData ? "Skip" : "--"),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
-                    color: accuracyColor,
+                    color: scoreColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -2446,17 +2445,38 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             ),
           ),
           if (hasQuestionData) ...[
-            const SizedBox(width: 4),
-            IconButton(
-              onPressed: () => _openCategoryPerformance(node.id, node.name, contentType),
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(
-                Icons.open_in_new_rounded,
-                size: 17,
-                color: AppColors.civic,
-              ),
-              tooltip: "Open category",
-            ),
+            const SizedBox(width: 6),
+            if (hasChildren)
+              // Parent nodes still need an explicit action, since row-tap is
+              // reserved for expand/collapse here — this is a separate tap
+              // target from the row so both gestures stay unambiguous.
+              InkWell(
+                onTap: () => _openCategoryPerformance(node.id, node.name, contentType),
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.civic.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: AppColors.civic.withOpacity(0.18)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "View",
+                        style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.civic),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.civic),
+                    ],
+                  ),
+                ),
+              )
+            else
+              // Leaf rows open on tap already, so this is just an affordance,
+              // not a separate tap target.
+              Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted.withOpacity(0.6)),
           ],
         ],
       ),
@@ -2476,7 +2496,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                     }
                   });
                 }
-              : null,
+              : (rowOpensPerformance ? () => _openCategoryPerformance(node.id, node.name, contentType) : null),
           borderRadius: BorderRadius.circular(14),
           child: row,
         ),
@@ -2515,6 +2535,27 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
 
     return Column(
       children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: AppColors.civic.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.touch_app_rounded, size: 14, color: AppColors.civic),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Tap a subject/book/chapter to expand it, or its View chip for that level's own performance page. Tap a topic to open its page directly.",
+                  style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.civic, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -2615,142 +2656,98 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       return const SizedBox.shrink();
     }
 
+    final title = highest.isNotEmpty ? "Top & Bottom Performers" : "Categories Attempted So Far";
+    final subtitle = highest.isNotEmpty
+        ? "Ranked by marks percentage — tap any card to open its own performance page"
+        : "Not enough spread yet to call out a top performer — ranked by marks percentage";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader("Category Level Extremes", subtitle: "Lowest and highest performing syllabus nodes"),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: AppTheme.cardDecoration,
-          child: Table(
-            columnWidths: const {
-              0: FlexColumnWidth(1.2), // Performance tag
-              1: FlexColumnWidth(2.5), // Category name
-              2: FlexColumnWidth(1.5), // Level
-              3: FlexColumnWidth(1.2), // Accuracy
-            },
-            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-            children: [
-              // Table Header
-              TableRow(
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: AppColors.line, width: 1.5)),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                       "PERFORMANCE",
-                      style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: AppColors.muted),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      "CATEGORY / TOPIC",
-                      style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: AppColors.muted),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      "LEVEL",
-                      style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: AppColors.muted),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      "ACCURACY",
-                      textAlign: TextAlign.right,
-                      style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: AppColors.muted),
-                    ),
-                  ),
-                ],
-              ),
-              // Highest Performers
-              ...highest.map((insight) => _buildExtremeTableRow(insight, true, contentType)),
-              // Lowest Performers
-              ...lowest.map((insight) => _buildExtremeTableRow(insight, false, contentType)),
-            ],
-          ),
-        ),
+        _buildSectionHeader(title, subtitle: subtitle),
+        const SizedBox(height: 12),
+        if (highest.isNotEmpty) ...[
+          ...highest.map((insight) => _buildExtremeCard(insight, true, contentType)),
+          if (lowest.isNotEmpty) const SizedBox(height: 6),
+        ],
+        ...lowest.map((insight) => _buildExtremeCard(insight, false, contentType)),
       ],
     );
   }
 
-  TableRow _buildExtremeTableRow(_TopicInsight insight, bool isHighest, String contentType) {
-    final Color badgeBg = isHighest 
-        ? AppColors.emerald.withOpacity(0.08) 
-        : AppColors.berry.withOpacity(0.08);
-    final Color badgeText = isHighest ? AppColors.emerald : AppColors.berry;
-    
-    return TableRow(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.line, width: 0.8)),
-      ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                isHighest ? "HIGHEST" : "LOWEST",
-                style: GoogleFonts.inter(
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                  color: badgeText,
+  Widget _buildExtremeCard(_TopicInsight insight, bool isHighest, String contentType) {
+    final color = isHighest ? AppColors.emerald : AppColors.berry;
+    // Progress bar only reads positive share — a negative scorePercent (more
+    // wrong than right after negative marking) still renders as an empty bar
+    // rather than something visually broken.
+    final barValue = (insight.scorePercent / 100).clamp(0.0, 1.0).toDouble();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => _openCategoryPerformance(insight.id, insight.name, contentType),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Icon(
+                  isHighest ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                  size: 14,
+                  color: color,
                 ),
               ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: InkWell(
-            onTap: () => _openCategoryPerformance(insight.id, insight.name, contentType),
-            child: Text(
-              insight.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.ink,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            insight.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        _buildTypeBadge(insight.typeLabel),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        minHeight: 4,
+                        value: barValue,
+                        backgroundColor: AppColors.line.withOpacity(0.5),
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Text(_formatScorePercent(insight.scorePercent), style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
+              const SizedBox(width: 2),
+              Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted.withOpacity(0.6)),
+            ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: Text(
-            insight.typeLabel.toUpperCase(),
-            style: GoogleFonts.inter(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: AppColors.muted,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: Text(
-            _formatPercent(insight.accuracy),
-            textAlign: TextAlign.right,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: badgeText,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -2767,12 +2764,16 @@ class _PerformanceTreeNode {
   int ownIncorrectCount = 0;
   int ownUnattemptedCount = 0;
   int ownTotalQuestions = 0;
+  double ownScore = 0;
+  double ownMaxScore = 0;
 
   int attemptCount = 0;
   int correctCount = 0;
   int incorrectCount = 0;
   int unattemptedCount = 0;
   int totalQuestions = 0;
+  double score = 0;
+  double maxScore = 0;
 
   final List<_PerformanceTreeNode> children = [];
 
@@ -2789,6 +2790,14 @@ class _PerformanceTreeNode {
   double get accuracy {
     if (attemptedQuestions == 0) return 0.0;
     return correctCount / attemptedQuestions;
+  }
+
+  /// score / maxScore * 100 — the primary ranking/display metric. Unlike
+  /// accuracy (a correct-vs-incorrect ratio), this reflects negative marking
+  /// and so can go below 0 once wrong answers outweigh right ones.
+  double get scorePercent {
+    if (maxScore <= 0) return 0.0;
+    return (score / maxScore) * 100;
   }
 
   bool matchesSearch(String query) {
@@ -2809,6 +2818,8 @@ class _PerformanceTreeNode {
     incorrectCount = ownIncorrectCount;
     unattemptedCount = ownUnattemptedCount;
     totalQuestions = ownTotalQuestions;
+    score = ownScore;
+    maxScore = ownMaxScore;
 
     for (var child in children) {
       child.calculateCumulativeMetrics();
@@ -2817,6 +2828,8 @@ class _PerformanceTreeNode {
       incorrectCount = incorrectCount + child.incorrectCount;
       unattemptedCount = unattemptedCount + child.unattemptedCount;
       totalQuestions = totalQuestions + child.totalQuestions;
+      score = score + child.score;
+      maxScore = maxScore + child.maxScore;
     }
   }
 }
@@ -2831,6 +2844,10 @@ class _TopicInsight {
   final int incorrectCount;
   final int unattemptedCount;
   final double accuracy;
+  /// score / maxScore * 100 — can be negative once negative marking outweighs
+  /// correct answers. This is the primary ranking metric for weak/strong/
+  /// extremes, since accuracy alone can't express that.
+  final double scorePercent;
 
   const _TopicInsight({
     required this.id,
@@ -2842,6 +2859,7 @@ class _TopicInsight {
     required this.incorrectCount,
     required this.unattemptedCount,
     required this.accuracy,
+    required this.scorePercent,
   });
 
   int get attemptedQuestions => correctCount + incorrectCount;

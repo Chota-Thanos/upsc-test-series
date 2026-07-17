@@ -8,11 +8,16 @@ class CategoryDetailScreen extends StatefulWidget {
   final int nodeId;
   final String nodeName;
   final String contentType;
+  /// Which tab to land on (0 = Create Test, 1 = Performance, 2 = Revision).
+  /// Callers reached from a performance page should pass 1 so drilling into
+  /// a category doesn't dump the student onto Create Test every time.
+  final int initialTabIndex;
   const CategoryDetailScreen({
     super.key,
     required this.nodeId,
     required this.nodeName,
     required this.contentType,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -26,7 +31,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
   }
 
   @override
