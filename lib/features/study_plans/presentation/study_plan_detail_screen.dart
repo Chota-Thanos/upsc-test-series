@@ -253,6 +253,20 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     return "$symbol${amount.toStringAsFixed(amount % 1 == 0 ? 0 : 2)}";
   }
 
+  /// "PRELIMS · POLITY" style header pill -- null (hidden entirely) when the
+  /// plan has neither a level label nor a linked subject to show.
+  String? _levelPillText(StudyPlanDetail plan) {
+    final level = plan.summary.levelLabel?.trim();
+    final subject = plan.summary.subjectName?.trim();
+    final hasLevel = level != null && level.isNotEmpty;
+    final hasSubject = subject != null && subject.isNotEmpty;
+    if (hasLevel && hasSubject)
+      return "${level.toUpperCase()} · ${subject.toUpperCase()}";
+    if (hasLevel) return level.toUpperCase();
+    if (hasSubject) return subject.toUpperCase();
+    return null;
+  }
+
   String _formatScheduledTime(String isoString) {
     final dt = DateTime.tryParse(isoString)?.toLocal();
     if (dt == null) return 'Scheduled';
@@ -362,6 +376,28 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (_levelPillText(plan) != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.civic.withOpacity(0.14),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              _levelPillText(plan)!,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                                color: AppColors.civic,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                        ],
                         Text(
                           plan.summary.title,
                           style: GoogleFonts.plusJakartaSans(
@@ -423,7 +459,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                "${plan.items.length} sessions across ${sortedWeeks.length} weeks",
+                                "${plan.items.length} ${plan.items.length == 1 ? 'session' : 'sessions'} across ${sortedWeeks.length} ${sortedWeeks.length == 1 ? 'week' : 'weeks'}",
                                 style: GoogleFonts.inter(
                                   fontSize: 11,
                                   color: AppColors.muted,
