@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
@@ -436,9 +435,8 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
+              style: AppTypography.cardTitle.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w700,
                 fontSize: 16,
               ),
             ),
@@ -446,7 +444,10 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              style: AppTypography.body.copyWith(
+                color: Colors.white70,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 20),
             TextButton(
@@ -580,7 +581,10 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
               const SizedBox(height: 16),
               Text(
                 'Waiting for the host to start video…',
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+                style: AppTypography.body.copyWith(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -618,9 +622,8 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
           const SizedBox(width: 5),
           Text(
             'LIVE',
-            style: GoogleFonts.plusJakartaSans(
+            style: AppTypography.eyebrowSmall.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w800,
               fontSize: 11,
             ),
           ),
@@ -644,7 +647,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
           const SizedBox(width: 4),
           Text(
             '$count',
-            style: GoogleFonts.inter(
+            style: AppTypography.caption.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 11.5,
@@ -669,9 +672,8 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
           Expanded(
             child: Text(
               "You're live — go ahead and ask your question",
-              style: GoogleFonts.plusJakartaSans(
+              style: AppTypography.cardTitle.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w700,
                 fontSize: 12,
               ),
             ),
@@ -684,9 +686,8 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
             ),
             child: Text(
               'Done',
-              style: GoogleFonts.plusJakartaSans(
+              style: AppTypography.button.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w800,
                 fontSize: 12,
               ),
             ),
@@ -732,7 +733,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
               child: Text(
                 '$badgeCount',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: AppTypography.caption.copyWith(
                   color: Colors.white,
                   fontSize: 9.5,
                   fontWeight: FontWeight.w800,
@@ -845,7 +846,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                 ? Center(
                     child: Text(
                       'No messages yet — say hello.',
-                      style: GoogleFonts.inter(
+                      style: AppTypography.body.copyWith(
                         color: Colors.white38,
                         fontSize: 12.5,
                       ),
@@ -871,10 +872,13 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                 Expanded(
                   child: TextField(
                     controller: _chatInputController,
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+                    style: AppTypography.body.copyWith(
+                      color: Colors.white,
+                      fontSize: 13,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Ask a question…',
-                      hintStyle: GoogleFonts.inter(
+                      hintStyle: AppTypography.body.copyWith(
                         color: Colors.white38,
                         fontSize: 13,
                       ),
@@ -917,10 +921,9 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
         children: [
           Text(
             message.isMe ? 'You' : message.name,
-            style: GoogleFonts.plusJakartaSans(
+            style: AppTypography.cardTitle.copyWith(
               color: Colors.white54,
               fontSize: 10,
-              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 2),
@@ -933,7 +936,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
             ),
             child: Text(
               message.text,
-              style: GoogleFonts.inter(
+              style: AppTypography.body.copyWith(
                 color: Colors.white,
                 fontSize: 13,
                 height: 1.3,
@@ -964,10 +967,8 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                 children: [
                   Text(
                     'Raised hands',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: AppTypography.statValue.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -976,7 +977,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Text(
                         'No pending requests.',
-                        style: GoogleFonts.inter(
+                        style: AppTypography.body.copyWith(
                           color: Colors.white54,
                           fontSize: 13,
                         ),
@@ -991,7 +992,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                             Expanded(
                               child: Text(
                                 entry.value,
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   color: Colors.white,
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
@@ -1008,10 +1009,9 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                               },
                               child: Text(
                                 'Deny',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: AppTypography.button.copyWith(
                                   color: Colors.white54,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 12.5,
                                 ),
                               ),
                             ),
@@ -1029,13 +1029,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                                     sheetContext.mounted)
                                   Navigator.of(sheetContext).pop();
                               },
-                              child: Text(
-                                'Allow',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 12.5,
-                                ),
-                              ),
+                              child: Text('Allow', style: AppTypography.button),
                             ),
                           ],
                         ),

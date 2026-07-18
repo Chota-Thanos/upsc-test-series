@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -84,11 +83,18 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.berry,
+                  size: 44,
+                ),
                 const SizedBox(height: 16),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _loadPlans, child: const Text("RETRY")),
+                ElevatedButton(
+                  onPressed: _loadPlans,
+                  child: const Text("RETRY"),
+                ),
               ],
             ),
           ),
@@ -103,7 +109,7 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
         elevation: 0,
         title: Text(
           "Study Plans",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 20, color: AppColors.ink),
+          style: AppTypography.title.copyWith(fontSize: 20),
         ),
       ),
       body: _plans.isEmpty
@@ -111,11 +117,17 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.calendar_month_outlined, color: AppColors.muted, size: 44),
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    color: AppColors.muted,
+                    size: 44,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     "No study plans published yet.",
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.muted),
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -144,14 +156,17 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
       'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=400&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=400&auto=format&fit=crop',
     ];
-    final String fallbackUrl = coverFallbacks[plan.id.abs() % coverFallbacks.length];
+    final String fallbackUrl =
+        coverFallbacks[plan.id.abs() % coverFallbacks.length];
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => StudyPlanDetailScreen(planId: plan.id)),
+          MaterialPageRoute(
+            builder: (_) => StudyPlanDetailScreen(planId: plan.id),
+          ),
         );
       },
       child: Container(
@@ -169,21 +184,28 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
                   child: Image.network(
                     resolvedCover ?? fallbackUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Image.network(fallbackUrl, fit: BoxFit.cover),
+                    errorBuilder: (_, __, ___) =>
+                        Image.network(fallbackUrl, fit: BoxFit.cover),
                   ),
                 ),
                 Positioned(
                   top: 7,
                   left: 7,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.92),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       plan.levelLabel?.toUpperCase() ?? "PRELIMS",
-                      style: GoogleFonts.inter(fontSize: 8.5, fontWeight: FontWeight.w800, color: AppColors.civic),
+                      style: AppTypography.eyebrowSmall.copyWith(
+                        fontSize: 8.5,
+                        color: AppColors.civic,
+                      ),
                     ),
                   ),
                 ),
@@ -192,7 +214,10 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
                     top: 7,
                     right: 7,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.55),
                         borderRadius: BorderRadius.circular(999),
@@ -200,11 +225,18 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star_rounded, color: AppColors.saffron, size: 11),
+                          const Icon(
+                            Icons.star_rounded,
+                            color: AppColors.saffron,
+                            size: 11,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             plan.averageRating.toStringAsFixed(1),
-                            style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white),
+                            style: AppTypography.eyebrowSmall.copyWith(
+                              fontSize: 9.5,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -224,20 +256,21 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
                       plan.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink, height: 1.25),
+                      style: AppTypography.cardTitle.copyWith(height: 1.25),
                     ),
                     const SizedBox(height: 5),
                     Text(
                       "${plan.durationWeeks} weeks · ${plan.testCount ?? 0} tests",
-                      style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w500),
+                      style: AppTypography.caption.copyWith(fontSize: 10.5),
                     ),
                     const Spacer(),
                     Text(
                       priceStr,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: AppTypography.statValue.copyWith(
                         fontSize: 13.5,
-                        fontWeight: FontWeight.w800,
-                        color: plan.isFree ? AppColors.emerald : AppColors.civic,
+                        color: plan.isFree
+                            ? AppColors.emerald
+                            : AppColors.civic,
                       ),
                     ),
                   ],
@@ -250,4 +283,3 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
     );
   }
 }
-

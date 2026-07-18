@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -329,11 +328,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       appBar: AppBar(
         title: Text(
           "Study Schedule",
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w800,
-            color: AppColors.ink,
-            fontSize: 18,
-          ),
+          style: AppTypography.title.copyWith(fontSize: 18),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -388,35 +383,20 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                             ),
                             child: Text(
                               _levelPillText(plan)!,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: AppTypography.eyebrowLarge.copyWith(
                                 fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
                                 letterSpacing: 0.4,
-                                color: AppColors.civic,
                               ),
                             ),
                           ),
                           const SizedBox(height: 9),
                         ],
-                        Text(
-                          plan.summary.title,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.ink,
-                            height: 1.25,
-                          ),
-                        ),
+                        Text(plan.summary.title, style: AppTypography.title),
                         if (plan.summary.subtitle != null) ...[
                           const SizedBox(height: 8),
                           Text(
                             plan.summary.subtitle!,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.muted,
-                              height: 1.5,
-                            ),
+                            style: AppTypography.body,
                           ),
                         ],
                         if (plan.reviewsSummary.totalReviews > 0) ...[
@@ -438,10 +418,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                               const SizedBox(width: 6),
                               Text(
                                 "${plan.reviewsSummary.averageRating.toStringAsFixed(1)} (${plan.reviewsSummary.totalReviews} reviews)",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.muted,
                                 ),
                               ),
                             ],
@@ -460,11 +439,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                               const SizedBox(width: 6),
                               Text(
                                 "${plan.items.length} ${plan.items.length == 1 ? 'session' : 'sessions'} across ${sortedWeeks.length} ${sortedWeeks.length == 1 ? 'week' : 'weeks'}",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  color: AppColors.muted,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: AppTypography.caption,
                               ),
                             ],
                           ),
@@ -476,17 +451,14 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                             children: [
                               Text(
                                 "Your Progress",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.muted,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                               Text(
                                 "$progress%",
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
+                                style: AppTypography.sectionHeader.copyWith(
                                   color: AppColors.civic,
                                 ),
                               ),
@@ -507,10 +479,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           const SizedBox(height: 6),
                           Text(
                             "$completed of $total items done",
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: AppColors.muted,
-                              fontWeight: FontWeight.bold,
+                            style: AppTypography.caption.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -526,11 +496,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     ),
                     child: Text(
                       "Course Schedule",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.ink,
-                      ),
+                      style: AppTypography.sectionHeader,
                     ),
                   ),
                   Padding(
@@ -573,11 +539,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           Expanded(
             child: Text(
               "Try the free preview sessions below — no purchase needed",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.civic,
-              ),
+              style: AppTypography.cardTitle.copyWith(color: AppColors.civic),
             ),
           ),
         ],
@@ -611,21 +573,12 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                   plan.summary.priceAmountMinor > 0
                       ? "FULL ACCESS"
                       : "FREE PLAN",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9,
+                  style: AppTypography.eyebrowSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: AppColors.muted,
                   ),
                 ),
-                Text(
-                  priceStr,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.ink,
-                  ),
-                ),
+                Text(priceStr, style: AppTypography.statValue),
               ],
             ),
             ElevatedButton(
@@ -649,11 +602,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                 plan.summary.priceAmountMinor > 0
                     ? "Unlock Plan"
                     : "Unlock Free",
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
-                ),
+                style: AppTypography.button,
               ),
             ),
           ],
@@ -683,8 +632,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                   "body": Style(
                     margin: Margins.zero,
                     padding: HtmlPaddings.zero,
-                    fontFamily: GoogleFonts.inter().fontFamily,
-                    fontSize: FontSize(12),
+                    fontFamily: AppTypography.body.fontFamily,
+                    fontSize: FontSize(AppTypography.body.fontSize!),
                     color: AppColors.muted,
                     lineHeight: const LineHeight(1.5),
                   ),
@@ -702,9 +651,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
               setState(() => _descriptionExpanded = !_descriptionExpanded),
           child: Text(
             _descriptionExpanded ? "Show less" : "Read more",
-            style: GoogleFonts.plusJakartaSans(
+            style: AppTypography.button.copyWith(
               fontSize: 12,
-              fontWeight: FontWeight.w800,
               color: AppColors.civic,
             ),
           ),
@@ -775,10 +723,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                             children: [
                               Text(
                                 "WEEK $week${allDone ? ' · COMPLETE' : (locked ? ' · LOCKED' : '')}",
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.6,
+                                style: AppTypography.eyebrowLarge.copyWith(
                                   color: allDone
                                       ? AppColors.emerald
                                       : (locked
@@ -789,10 +734,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 weekTitle,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
+                                style: AppTypography.sectionHeader.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.ink,
                                 ),
                               ),
                             ],
@@ -922,19 +865,12 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                 children: [
                   Text(
                     "DAY ${item.dayNo} · ${item.itemType.replaceAll('_', ' ').toUpperCase()}",
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.muted,
-                      letterSpacing: 0.6,
-                    ),
+                    style: AppTypography.eyebrowSmall,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     item.title,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.cardTitle.copyWith(
                       decoration: done ? TextDecoration.lineThrough : null,
                       decorationColor: AppColors.muted,
                       color: done ? AppColors.muted : AppColors.ink,
@@ -945,9 +881,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     const SizedBox(height: 3),
                     Text(
                       item.description!,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.muted,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w400,
                         height: 1.3,
                       ),
                     ),
@@ -975,10 +910,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           ),
                           child: Text(
                             "FREE",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9,
+                            style: AppTypography.eyebrowSmall.copyWith(
                               color: Colors.white,
-                              fontWeight: FontWeight.w800,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -1029,9 +962,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
         const SizedBox(width: 3),
         Text(
           text,
-          style: GoogleFonts.inter(
+          style: AppTypography.caption.copyWith(
             fontSize: 10,
-            color: AppColors.muted,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1059,9 +991,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
               onPressed: onTap,
               child: Text(
                 label,
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.button.copyWith(
                   fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
                   letterSpacing: 0.4,
                 ),
               ),
@@ -1077,10 +1008,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
               onPressed: onTap,
               child: Text(
                 label,
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.button.copyWith(
                   fontSize: 10.5,
                   color: AppColors.civic,
-                  fontWeight: FontWeight.w800,
                   letterSpacing: 0.4,
                 ),
               ),
@@ -1109,9 +1039,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           const SizedBox(width: 4),
           Text(
             "LIVE NOW",
-            style: GoogleFonts.plusJakartaSans(
+            style: AppTypography.eyebrowSmall.copyWith(
               fontSize: 9.5,
-              fontWeight: FontWeight.w800,
               color: AppColors.berry,
             ),
           ),
@@ -1121,9 +1050,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     if (liveClass.hasEnded) {
       return Text(
         "Session ended",
-        style: GoogleFonts.inter(
+        style: AppTypography.caption.copyWith(
           fontSize: 10,
-          color: AppColors.muted,
           fontWeight: FontWeight.w600,
         ),
       );
