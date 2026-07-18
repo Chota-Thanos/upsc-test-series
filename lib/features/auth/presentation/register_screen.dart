@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -71,7 +70,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.ink,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -82,11 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           gradient: RadialGradient(
             center: Alignment(0, -0.6),
             radius: 1.2,
-            colors: [
-              Color(0x154285F4),
-              Color(0x02A855F7),
-              AppColors.paper,
-            ],
+            colors: [Color(0x154285F4), Color(0x02A855F7), AppColors.paper],
             stops: [0.0, 0.4, 1.0],
           ),
         ),
@@ -100,13 +99,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text(
                     "Join UPSC Series",
-                    style: Theme.of(context).textTheme.displayMedium,
+                    style: AppTypography.title.copyWith(fontSize: 20),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 6),
                   Text(
                     "Create a student profile to track tests & analytics",
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: AppTypography.body,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
@@ -126,18 +125,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               decoration: BoxDecoration(
                                 color: AppColors.berry.withOpacity(0.06),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.berry.withOpacity(0.15)),
+                                border: Border.all(
+                                  color: AppColors.berry.withOpacity(0.15),
+                                ),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 18),
+                                  const Icon(
+                                    Icons.error_outline_rounded,
+                                    color: AppColors.berry,
+                                    size: 18,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       _errorMessage!,
-                                      style: GoogleFonts.inter(
+                                      style: AppTypography.body.copyWith(
                                         color: AppColors.berry,
-                                        fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -151,10 +155,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Username Field
                           Text(
                             "USERNAME",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowSmall.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -165,11 +167,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
                               hintText: "Choose a username",
-                              prefixIcon: Icon(Icons.person_outline_rounded, size: 20),
+                              prefixIcon: Icon(
+                                Icons.person_outline_rounded,
+                                size: 20,
+                              ),
                             ),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return "Username is required";
-                              if (val.trim().length < 3) return "Username must be at least 3 characters";
+                              if (val == null || val.trim().isEmpty)
+                                return "Username is required";
+                              if (val.trim().length < 3)
+                                return "Username must be at least 3 characters";
                               return null;
                             },
                           ),
@@ -178,10 +185,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Email Field
                           Text(
                             "EMAIL ADDRESS",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowSmall.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -192,11 +197,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
                               hintText: "Enter your email address",
-                              prefixIcon: Icon(Icons.mail_outline_rounded, size: 20),
+                              prefixIcon: Icon(
+                                Icons.mail_outline_rounded,
+                                size: 20,
+                              ),
                             ),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return "Email is required";
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val.trim())) {
+                              if (val == null || val.trim().isEmpty)
+                                return "Email is required";
+                              if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(val.trim())) {
                                 return "Enter a valid email address";
                               }
                               return null;
@@ -207,10 +218,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Password Field
                           Text(
                             "PASSWORD",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowSmall.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -221,10 +230,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: InputDecoration(
                               hintText: "Choose password",
-                              prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                                size: 20,
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
                                   size: 20,
                                 ),
                                 onPressed: () {
@@ -235,8 +249,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                             validator: (val) {
-                              if (val == null || val.isEmpty) return "Password is required";
-                              if (val.length < 6) return "Password must be at least 6 characters";
+                              if (val == null || val.isEmpty)
+                                return "Password is required";
+                              if (val.length < 6)
+                                return "Password must be at least 6 characters";
                               return null;
                             },
                           ),
@@ -245,10 +261,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Confirm Password Field
                           Text(
                             "CONFIRM PASSWORD",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowSmall.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -260,11 +274,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             onFieldSubmitted: (_) => _submit(),
                             decoration: const InputDecoration(
                               hintText: "Re-enter password",
-                              prefixIcon: Icon(Icons.lock_outline_rounded, size: 20),
+                              prefixIcon: Icon(
+                                Icons.lock_outline_rounded,
+                                size: 20,
+                              ),
                             ),
                             validator: (val) {
-                              if (val == null || val.isEmpty) return "Confirm password is required";
-                              if (val != _passwordController.text) return "Passwords do not match";
+                              if (val == null || val.isEmpty)
+                                return "Confirm password is required";
+                              if (val != _passwordController.text)
+                                return "Passwords do not match";
                               return null;
                             },
                           ),
@@ -277,7 +296,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ? const SizedBox(
                                     height: 18,
                                     width: 18,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
                                   )
                                 : const Text("CREATE ACCOUNT"),
                           ),

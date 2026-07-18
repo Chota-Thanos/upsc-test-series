@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../assessment/presentation/tests_hub_screen.dart';
@@ -41,7 +40,8 @@ class _NavigationHomeState extends State<NavigationHome> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => TestDetailScreen(testTemplateId: diagnosticTestId),
+              builder: (_) =>
+                  TestDetailScreen(testTemplateId: diagnosticTestId),
             ),
           );
         }
@@ -77,9 +77,16 @@ class _NavigationHomeState extends State<NavigationHome> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Sign Out", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-          content: const Text("Are you sure you want to sign out of UPSC Test Series?"),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            "Sign Out",
+            style: AppTypography.cardTitle.copyWith(fontSize: 16),
+          ),
+          content: const Text(
+            "Are you sure you want to sign out of UPSC Test Series?",
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -90,7 +97,10 @@ class _NavigationHomeState extends State<NavigationHome> {
                 Navigator.pop(context);
                 apiClient.logout();
               },
-              child: const Text("Sign Out", style: TextStyle(color: AppColors.berry)),
+              child: const Text(
+                "Sign Out",
+                style: TextStyle(color: AppColors.berry),
+              ),
             ),
           ],
         );
@@ -107,9 +117,11 @@ class _NavigationHomeState extends State<NavigationHome> {
     final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
     final screens = [
-      HomeScreen(onTabSelected: (index, {int subIndex = 0, int subSubIndex = 0}) {
-        _onTabSelected(index, subIndex: subIndex, subSubIndex: subSubIndex);
-      }),
+      HomeScreen(
+        onTabSelected: (index, {int subIndex = 0, int subSubIndex = 0}) {
+          _onTabSelected(index, subIndex: subIndex, subSubIndex: subSubIndex);
+        },
+      ),
       const AssessmentDashboardScreen(),
       TestsHubScreen(
         key: ValueKey('tests_hub_${_testsSubIndex}_$_testsSubSubIndex'),
@@ -156,26 +168,23 @@ class _NavigationHomeState extends State<NavigationHome> {
                         child: Text(
                           "Coaching Hub",
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.ink,
-                          ),
+                          style: AppTypography.title.copyWith(fontSize: 16),
                         ),
                       ),
                       if (hasPremium) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF10B981).withOpacity(0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             "PRO",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                            style: AppTypography.eyebrowSmall.copyWith(
                               color: const Color(0xFF10B981),
                             ),
                           ),
@@ -183,14 +192,7 @@ class _NavigationHomeState extends State<NavigationHome> {
                       ],
                     ],
                   ),
-                  Text(
-                    "UPSC Test Series",
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.muted,
-                    ),
-                  ),
+                  Text("UPSC Test Series", style: AppTypography.caption),
                 ],
               ),
             ),
@@ -207,7 +209,10 @@ class _NavigationHomeState extends State<NavigationHome> {
                     ),
                     child: Text(
                       "Sign In",
-                      style: GoogleFonts.inter(color: AppColors.civic, fontWeight: FontWeight.w700, fontSize: 13),
+                      style: AppTypography.button.copyWith(
+                        fontSize: 13,
+                        color: AppColors.civic,
+                      ),
                     ),
                   ),
                 ),
@@ -222,150 +227,189 @@ class _NavigationHomeState extends State<NavigationHome> {
                       backgroundColor: AppColors.civic,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: Text(
                       "Register",
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12),
+                      style: AppTypography.button.copyWith(fontSize: 12),
                     ),
                   ),
                 ),
               ]
             : [
-          PopupMenuButton<String>(
-            offset: const Offset(0, 50),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            onSelected: (value) {
-              if (value == 'bookings') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MyBookingsScreen()),
-                );
-              } else if (value == 'logout') {
-                _showLogoutDialog(context, apiClient);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                enabled: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      username,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    if (email.isNotEmpty)
-                      Text(
-                        email,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: AppColors.muted,
+                PopupMenuButton<String>(
+                  offset: const Offset(0, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  onSelected: (value) {
+                    if (value == 'bookings') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyBookingsScreen(),
                         ),
-                      ),
-                    const Divider(height: 16),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'bookings',
-                child: Row(
-                  children: [
-                    const Icon(Icons.book_online_rounded, color: AppColors.civic, size: 20),
-                    const SizedBox(width: 10),
-                    Text(
-                      "My Mentor Bookings",
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    const Icon(Icons.logout_rounded, color: AppColors.berry, size: 20),
-                    const SizedBox(width: 10),
-                    Text(
-                      "Sign Out",
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.berry),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.paper,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      radius: 12,
-                      backgroundColor: hasPremium ? const Color(0xFFF59E0B).withOpacity(0.2) : AppColors.civic.withOpacity(0.2),
-                      child: hasPremium
-                          ? const Icon(Icons.workspace_premium_rounded, color: Color(0xFFF59E0B), size: 12)
-                          : Text(
-                              username.isNotEmpty ? username[0].toUpperCase() : 'S',
-                              style: const TextStyle(color: AppColors.civic, fontWeight: FontWeight.bold, fontSize: 10),
+                      );
+                    } else if (value == 'logout') {
+                      _showLogoutDialog(context, apiClient);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      enabled: false,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            username,
+                            style: AppTypography.cardTitle.copyWith(
+                              fontSize: 14,
                             ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              username,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.ink,
-                              ),
-                            ),
-                            if (hasPremium) ...[
-                              const SizedBox(width: 3),
-                              const Icon(Icons.star_rounded, size: 10, color: Color(0xFFF59E0B)),
-                            ],
-                            const SizedBox(width: 2),
-                            const Icon(Icons.arrow_drop_down, size: 14, color: AppColors.muted),
-                          ],
-                        ),
-                        Text(
-                          hasPremium ? "Premium" : "Free",
-                          style: GoogleFonts.inter(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            color: hasPremium ? const Color(0xFF10B981) : AppColors.muted,
                           ),
-                        ),
-                      ],
+                          if (email.isNotEmpty)
+                            Text(email, style: AppTypography.caption),
+                          const Divider(height: 16),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'bookings',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.book_online_rounded,
+                            color: AppColors.civic,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "My Mentor Bookings",
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.logout_rounded,
+                            color: AppColors.berry,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Sign Out",
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.berry,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.paper,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor: hasPremium
+                                ? const Color(0xFFF59E0B).withOpacity(0.2)
+                                : AppColors.civic.withOpacity(0.2),
+                            child: hasPremium
+                                ? const Icon(
+                                    Icons.workspace_premium_rounded,
+                                    color: Color(0xFFF59E0B),
+                                    size: 12,
+                                  )
+                                : Text(
+                                    username.isNotEmpty
+                                        ? username[0].toUpperCase()
+                                        : 'S',
+                                    style: AppTypography.eyebrowSmall.copyWith(
+                                      color: AppColors.civic,
+                                      fontSize: 10,
+                                      letterSpacing: 0,
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    username,
+                                    style: AppTypography.caption.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.ink,
+                                    ),
+                                  ),
+                                  if (hasPremium) ...[
+                                    const SizedBox(width: 3),
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      size: 10,
+                                      color: Color(0xFFF59E0B),
+                                    ),
+                                  ],
+                                  const SizedBox(width: 2),
+                                  const Icon(
+                                    Icons.arrow_drop_down,
+                                    size: 14,
+                                    color: AppColors.muted,
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                hasPremium ? "Premium" : "Free",
+                                style: AppTypography.eyebrowSmall.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0,
+                                  color: hasPremium
+                                      ? const Color(0xFF10B981)
+                                      : AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
-        ],
+              ],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           boxShadow: [
@@ -389,28 +433,58 @@ class _NavigationHomeState extends State<NavigationHome> {
           },
           destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined, color: _currentIndex == 0 ? AppColors.civic : AppColors.muted),
-              selectedIcon: const Icon(Icons.home_rounded, color: AppColors.civic),
+              icon: Icon(
+                Icons.home_outlined,
+                color: _currentIndex == 0 ? AppColors.civic : AppColors.muted,
+              ),
+              selectedIcon: const Icon(
+                Icons.home_rounded,
+                color: AppColors.civic,
+              ),
               label: "Home",
             ),
             NavigationDestination(
-              icon: Icon(Icons.bar_chart_outlined, color: _currentIndex == 1 ? AppColors.civic : AppColors.muted),
-              selectedIcon: const Icon(Icons.bar_chart_rounded, color: AppColors.civic),
+              icon: Icon(
+                Icons.bar_chart_outlined,
+                color: _currentIndex == 1 ? AppColors.civic : AppColors.muted,
+              ),
+              selectedIcon: const Icon(
+                Icons.bar_chart_rounded,
+                color: AppColors.civic,
+              ),
               label: "Performance",
             ),
             NavigationDestination(
-              icon: Icon(Icons.quiz_outlined, color: _currentIndex == 2 ? AppColors.civic : AppColors.muted),
-              selectedIcon: const Icon(Icons.quiz_rounded, color: AppColors.civic),
+              icon: Icon(
+                Icons.quiz_outlined,
+                color: _currentIndex == 2 ? AppColors.civic : AppColors.muted,
+              ),
+              selectedIcon: const Icon(
+                Icons.quiz_rounded,
+                color: AppColors.civic,
+              ),
               label: "Tests",
             ),
             NavigationDestination(
-              icon: Icon(Icons.calendar_month_outlined, color: _currentIndex == 3 ? AppColors.civic : AppColors.muted),
-              selectedIcon: const Icon(Icons.calendar_month_rounded, color: AppColors.civic),
+              icon: Icon(
+                Icons.calendar_month_outlined,
+                color: _currentIndex == 3 ? AppColors.civic : AppColors.muted,
+              ),
+              selectedIcon: const Icon(
+                Icons.calendar_month_rounded,
+                color: AppColors.civic,
+              ),
               label: "Study Plans",
             ),
             NavigationDestination(
-              icon: Icon(Icons.people_outline_rounded, color: _currentIndex == 4 ? AppColors.civic : AppColors.muted),
-              selectedIcon: const Icon(Icons.people_rounded, color: AppColors.civic),
+              icon: Icon(
+                Icons.people_outline_rounded,
+                color: _currentIndex == 4 ? AppColors.civic : AppColors.muted,
+              ),
+              selectedIcon: const Icon(
+                Icons.people_rounded,
+                color: AppColors.civic,
+              ),
               label: "Mentors",
             ),
           ],

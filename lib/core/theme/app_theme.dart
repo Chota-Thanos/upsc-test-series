@@ -44,6 +44,16 @@ class AppColors {
 /// `.copyWith(color: ...)` only when a specific context genuinely needs a
 /// different color (e.g. "locked" or "done" states).
 class AppTypography {
+  /// Hero/marketing headline -- bigger than [title]. Study Plan screens never
+  /// needed this (no marketing hero), but the welcome screen and dashboard
+  /// splash numbers do. Used sparingly, one per screen at most.
+  static final TextStyle display = GoogleFonts.plusJakartaSans(
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+    color: AppColors.ink,
+    height: 1.15,
+  );
+
   /// Plan/page-level heading. E.g. a study plan's title on its detail page.
   static final TextStyle title = GoogleFonts.plusJakartaSans(
     fontSize: 19,

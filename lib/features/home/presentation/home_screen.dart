@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -14,6 +13,7 @@ import '../../study_plans/presentation/study_plan_detail_screen.dart';
 import '../../mentors/data/mentor_service.dart';
 import '../../mentors/models/mentor_models.dart';
 import '../../mentors/presentation/mentor_detail_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   final Function(int, {int subIndex, int subSubIndex}) onTabSelected;
   const HomeScreen({super.key, required this.onTabSelected});
@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _assessmentService = AssessmentService(apiClient: apiClient);
     _studyPlanService = StudyPlanService(apiClient: apiClient);
     _mentorService = MentorService(apiClient: apiClient);
-    
+
     _loadAllData();
   }
 
@@ -148,7 +148,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final apiClient = Provider.of<ApiClient>(context);
     final isGuest = apiClient.isGuestMode;
-    final username = isGuest ? 'Guest' : (apiClient.user?['username'] ?? 'Student');
+    final username = isGuest
+        ? 'Guest'
+        : (apiClient.user?['username'] ?? 'Student');
     final hasPremium = apiClient.hasEntitlement('assessment.premium_tests');
 
     return Scaffold(
@@ -162,660 +164,806 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-              // Premium Welcome Banner with Image Background
-              Stack(
-                children: [
-                  Container(
-                    height: 135,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(
-                          'https://images.unsplash.com/photo-1513258496099-48168024aec0?q=80&w=600&auto=format&fit=crop',
-                        ),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    height: 135,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.civic.withOpacity(0.95),
-                          AppColors.civic.withOpacity(0.75),
-                          Colors.transparent,
-                        ],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 12,
-                    left: 20,
-                    right: 20,
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.white,
-                          radius: 20,
-                          child: Text(
-                            username.isNotEmpty ? username[0].toUpperCase() : 'S',
-                            style: const TextStyle(
-                              color: AppColors.civic,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                  // Premium Welcome Banner with Image Background
+                  Stack(
+                    children: [
+                      Container(
+                        height: 135,
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          image: DecorationImage(
+                            image: NetworkImage(
+                              'https://images.unsplash.com/photo-1513258496099-48168024aec0?q=80&w=600&auto=format&fit=crop',
                             ),
+                            fit: BoxFit.cover,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                      ),
+                      Container(
+                        height: 135,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.civic.withOpacity(0.95),
+                              AppColors.civic.withOpacity(0.75),
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 12,
+                        left: 20,
+                        right: 20,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              radius: 20,
+                              child: Text(
+                                username.isNotEmpty
+                                    ? username[0].toUpperCase()
+                                    : 'S',
+                                style: AppTypography.cardTitle.copyWith(
+                                  color: AppColors.civic,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "Namaste, $username! 👋",
+                                        style: AppTypography.title.copyWith(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black.withOpacity(
+                                                0.3,
+                                              ),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isGuest
+                                              ? Colors.white.withOpacity(0.25)
+                                              : (hasPremium
+                                                    ? const Color(0xFF10B981)
+                                                    : Colors.amber.shade700),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          isGuest
+                                              ? "GUEST"
+                                              : (hasPremium ? "PRO" : "FREE"),
+                                          style: AppTypography.eyebrowSmall
+                                              .copyWith(
+                                                color: Colors.white,
+                                                fontSize: 8.5,
+                                                letterSpacing: 0.3,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
                                   Text(
-                                    "Namaste, $username! 👋",
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black.withOpacity(0.3),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
+                                    isGuest
+                                        ? "Sign in to save your progress and unlock analytics."
+                                        : "Accelerate your UPSC preparation journey.",
+                                    style: AppTypography.caption.copyWith(
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // TEMP — dev-only button to replay the guided tour for testing.
+                  // Remove once the tour has been verified.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.06),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.4),
+                          style: BorderStyle.solid,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.bug_report_outlined,
+                            color: Colors.orange,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "DEV: Replay guided tour",
+                              style: AppTypography.body.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.orange.shade800,
+                              ),
+                            ),
+                          ),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.orange.shade400),
+                              foregroundColor: Colors.orange.shade800,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () async {
+                              await AppTourService.resetAllTours();
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Tours reset — switching to Tests tab",
+                                  ),
+                                ),
+                              );
+                              widget.onTabSelected(2);
+                            },
+                            child: const Text("Reset & Go"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (_activeAttempts.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "In-Progress Attempts",
+                            style: AppTypography.sectionHeader.copyWith(
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ..._activeAttempts.map((attempt) {
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                border: Border.all(
+                                  color: AppColors.line,
+                                  width: 1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.03),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.civic.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.timer_outlined,
+                                      color: AppColors.civic,
+                                      size: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          attempt.testTemplate.title,
+                                          style: AppTypography.cardTitle
+                                              .copyWith(fontSize: 13),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          "Started on ${attempt.startedAt.split('T').first}. You left this test in between.",
+                                          style: AppTypography.caption.copyWith(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w400,
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: isGuest ? Colors.white.withOpacity(0.25) : (hasPremium ? const Color(0xFF10B981) : Colors.amber.shade700),
-                                      borderRadius: BorderRadius.circular(8),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.civic,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                     ),
+                                    onPressed: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => AttemptEngineScreen(
+                                            attemptId: attempt.id,
+                                          ),
+                                        ),
+                                      );
+                                      _loadAllData(); // reload on return
+                                    },
                                     child: Text(
-                                      isGuest ? "GUEST" : (hasPremium ? "PRO" : "FREE"),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 0.3,
+                                      "RESUME",
+                                      style: AppTypography.button.copyWith(
+                                        fontSize: 10,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                isGuest ? "Sign in to save your progress and unlock analytics." : "Accelerate your UPSC preparation journey.",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // TEMP — dev-only button to replay the guided tour for testing.
-              // Remove once the tour has been verified.
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.06),
-                    border: Border.all(color: Colors.orange.withOpacity(0.4), style: BorderStyle.solid),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.bug_report_outlined, color: Colors.orange, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          "DEV: Replay guided tour",
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.orange.shade800),
-                        ),
-                      ),
-                      OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.orange.shade400),
-                          foregroundColor: Colors.orange.shade800,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        onPressed: () async {
-                          await AppTourService.resetAllTours();
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Tours reset — switching to Tests tab")),
-                          );
-                          widget.onTabSelected(2);
-                        },
-                        child: const Text("Reset & Go"),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              if (_activeAttempts.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "In-Progress Attempts",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.ink,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ..._activeAttempts.map((attempt) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            border: Border.all(color: AppColors.line, width: 1),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 4,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.civic.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.timer_outlined,
-                                  color: AppColors.civic,
-                                  size: 16,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      attempt.testTemplate.title,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.ink,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "Started on ${attempt.startedAt.split('T').first}. You left this test in between.",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 10,
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.civic,
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                onPressed: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => AttemptEngineScreen(attemptId: attempt.id),
-                                    ),
-                                  );
-                                  _loadAllData(); // reload on return
-                                },
-                                child: Text(
-                                  "RESUME",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Glimpse 1: Performance Summary Metric Panel
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Your Performance Radar",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
+                            );
+                          }).toList(),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () => widget.onTabSelected(1), // Switch to Dashboard Tab
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x06000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Glimpse 1: Performance Summary Metric Panel
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Your Performance Radar",
+                          style: AppTypography.sectionHeader.copyWith(
+                            fontSize: 15,
+                          ),
                         ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.bar_chart_rounded, color: AppColors.civic, size: 22),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "Scorecard Analytics",
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13,
-                                        color: AppColors.ink,
-                                      ),
-                                    ),
-                                  ],
+                        const SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: () => widget.onTabSelected(
+                            1,
+                          ), // Switch to Dashboard Tab
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x06000000),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
                                 ),
-                                const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: 20),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            apiClient.isGuestMode
-                                ? _buildGuestStatsPlaceholder(context, apiClient)
-                                : _loadingStats || _stats == null
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.bar_chart_rounded,
+                                          color: AppColors.civic,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          "Scorecard Analytics",
+                                          style: AppTypography.cardTitle
+                                              .copyWith(fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                    const Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: AppColors.muted,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                apiClient.isGuestMode
+                                    ? _buildGuestStatsPlaceholder(
+                                        context,
+                                        apiClient,
+                                      )
+                                    : _loadingStats || _stats == null
                                     ? const Center(
                                         child: SizedBox(
                                           height: 20,
                                           width: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.civic),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.civic,
+                                          ),
                                         ),
                                       )
-                                : Builder(
-                                    builder: (context) {
-                                      final gk = _stats!.gk;
-                                      final gkTotal = gk.totalCorrect + gk.totalIncorrect + gk.totalUnattempted;
-                                      final gkPctCorrect = gkTotal > 0 ? (gk.totalCorrect / gkTotal) * 100 : 0.0;
-                                      final gkPctIncorrect = gkTotal > 0 ? (gk.totalIncorrect / gkTotal) * 100 : 0.0;
-                                      final gkPctUnattempted = gkTotal > 0 ? (gk.totalUnattempted / gkTotal) * 100 : 0.0;
+                                    : Builder(
+                                        builder: (context) {
+                                          final gk = _stats!.gk;
+                                          final gkTotal =
+                                              gk.totalCorrect +
+                                              gk.totalIncorrect +
+                                              gk.totalUnattempted;
+                                          final gkPctCorrect = gkTotal > 0
+                                              ? (gk.totalCorrect / gkTotal) *
+                                                    100
+                                              : 0.0;
+                                          final gkPctIncorrect = gkTotal > 0
+                                              ? (gk.totalIncorrect / gkTotal) *
+                                                    100
+                                              : 0.0;
+                                          final gkPctUnattempted = gkTotal > 0
+                                              ? (gk.totalUnattempted /
+                                                        gkTotal) *
+                                                    100
+                                              : 0.0;
 
-                                      final csat = _stats!.aptitude;
-                                      final csatTotal = csat.totalCorrect + csat.totalIncorrect + csat.totalUnattempted;
-                                      final csatPctCorrect = csatTotal > 0 ? (csat.totalCorrect / csatTotal) * 100 : 0.0;
-                                      final csatPctIncorrect = csatTotal > 0 ? (csat.totalIncorrect / csatTotal) * 100 : 0.0;
-                                      final csatPctUnattempted = csatTotal > 0 ? (csat.totalUnattempted / csatTotal) * 100 : 0.0;
+                                          final csat = _stats!.aptitude;
+                                          final csatTotal =
+                                              csat.totalCorrect +
+                                              csat.totalIncorrect +
+                                              csat.totalUnattempted;
+                                          final csatPctCorrect = csatTotal > 0
+                                              ? (csat.totalCorrect /
+                                                        csatTotal) *
+                                                    100
+                                              : 0.0;
+                                          final csatPctIncorrect = csatTotal > 0
+                                              ? (csat.totalIncorrect /
+                                                        csatTotal) *
+                                                    100
+                                              : 0.0;
+                                          final csatPctUnattempted =
+                                              csatTotal > 0
+                                              ? (csat.totalUnattempted /
+                                                        csatTotal) *
+                                                    100
+                                              : 0.0;
 
-                                      final mains = _stats!.mains;
+                                          final mains = _stats!.mains;
 
-                                      return Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              // Column 1: Labels
-                                              Expanded(
-                                                flex: 12,
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    const SizedBox(height: 38), // Space matching header row
-                                                    _buildTableSidebarCell("Correct", AppColors.emerald),
-                                                    _buildTableSidebarCell("Incorrect", AppColors.berry),
-                                                    _buildTableSidebarCell("Unattempted", AppColors.muted),
-                                                  ],
+                                              Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  // Column 1: Labels
+                                                  Expanded(
+                                                    flex: 12,
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const SizedBox(
+                                                          height: 38,
+                                                        ), // Space matching header row
+                                                        _buildTableSidebarCell(
+                                                          "Correct",
+                                                          AppColors.emerald,
+                                                        ),
+                                                        _buildTableSidebarCell(
+                                                          "Incorrect",
+                                                          AppColors.berry,
+                                                        ),
+                                                        _buildTableSidebarCell(
+                                                          "Unattempted",
+                                                          AppColors.muted,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  // Column 2: GK
+                                                  Expanded(
+                                                    flex: 10,
+                                                    child: Column(
+                                                      children: [
+                                                        _buildTableHeaderCell(
+                                                          "GK",
+                                                          AppColors.civic,
+                                                        ),
+                                                        _buildColumnContent(
+                                                          true,
+                                                          gkTotal,
+                                                          gkPctCorrect,
+                                                          gkPctIncorrect,
+                                                          gkPctUnattempted,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  // Column 3: CSAT
+                                                  Expanded(
+                                                    flex: 10,
+                                                    child: Column(
+                                                      children: [
+                                                        _buildTableHeaderCell(
+                                                          "CSAT",
+                                                          AppColors.saffron,
+                                                        ),
+                                                        _buildColumnContent(
+                                                          false,
+                                                          csatTotal,
+                                                          csatPctCorrect,
+                                                          csatPctIncorrect,
+                                                          csatPctUnattempted,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 16.0,
+                                                ),
+                                                child: Divider(
+                                                  color: AppColors.line,
+                                                  height: 1,
                                                 ),
                                               ),
-                                              const SizedBox(width: 8),
-                                              // Column 2: GK
-                                              Expanded(
-                                                flex: 10,
-                                                child: Column(
-                                                  children: [
-                                                    _buildTableHeaderCell("GK", AppColors.civic),
-                                                    _buildColumnContent(true, gkTotal, gkPctCorrect, gkPctIncorrect, gkPctUnattempted),
-                                                  ],
-                                                ),
+                                              Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.border_color_rounded,
+                                                    color: Colors.purple,
+                                                    size: 16,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    "MAINS WRITING",
+                                                    style: AppTypography
+                                                        .eyebrowLarge
+                                                        .copyWith(
+                                                          fontSize: 11,
+                                                          color: Colors.purple,
+                                                          letterSpacing: 0.5,
+                                                        ),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 8),
-                                              // Column 3: CSAT
-                                              Expanded(
-                                                flex: 10,
-                                                child: Column(
-                                                  children: [
-                                                    _buildTableHeaderCell("CSAT", AppColors.saffron),
-                                                    _buildColumnContent(false, csatTotal, csatPctCorrect, csatPctIncorrect, csatPctUnattempted),
-                                                  ],
-                                                ),
+                                              const SizedBox(height: 12),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: _buildMainsMetricCard(
+                                                      "Questions",
+                                                      mains.attemptsCount
+                                                          .toString(),
+                                                      Icons
+                                                          .description_outlined,
+                                                      AppColors.civic,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: _buildMainsMetricCard(
+                                                      "Evaluated",
+                                                      mains.evaluatedCount
+                                                          .toString(),
+                                                      Icons
+                                                          .assignment_turned_in_outlined,
+                                                      AppColors.brand,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: _buildMainsMetricCard(
+                                                      "Total Score",
+                                                      mains.totalMaxScore
+                                                          .toStringAsFixed(0),
+                                                      Icons
+                                                          .military_tech_outlined,
+                                                      AppColors.emerald,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child:
+                                                        _buildMainsMetricCard(
+                                                          "Your Score",
+                                                          mains.totalScore
+                                                              .toStringAsFixed(
+                                                                1,
+                                                              ),
+                                                          Icons
+                                                              .insights_rounded,
+                                                          AppColors.saffron,
+                                                        ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
-                                          ),
-                                          const Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 16.0),
-                                            child: Divider(color: AppColors.line, height: 1),
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Icon(Icons.border_color_rounded, color: Colors.purple, size: 16),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                "MAINS WRITING",
-                                                style: GoogleFonts.plusJakartaSans(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Colors.purple,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 12),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: _buildMainsMetricCard(
-                                                  "Questions",
-                                                  mains.attemptsCount.toString(),
-                                                  Icons.description_outlined,
-                                                  AppColors.civic,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: _buildMainsMetricCard(
-                                                  "Evaluated",
-                                                  mains.evaluatedCount.toString(),
-                                                  Icons.assignment_turned_in_outlined,
-                                                  AppColors.brand,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: _buildMainsMetricCard(
-                                                  "Total Score",
-                                                  mains.totalMaxScore.toStringAsFixed(0),
-                                                  Icons.military_tech_outlined,
-                                                  AppColors.emerald,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: _buildMainsMetricCard(
-                                                  "Your Score",
-                                                  mains.totalScore.toStringAsFixed(1),
-                                                  Icons.insights_rounded,
-                                                  AppColors.saffron,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
+                                          );
+                                        },
+                                      ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Glimpse 2: Self Test Builder Scopes
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Self Test Builder",
+                          style: AppTypography.sectionHeader.copyWith(
+                            fontSize: 15,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => widget.onTabSelected(
+                            2,
+                          ), // Switch to Tests Tab (default to GK)
+                          child: Text(
+                            "Explore Hub →",
+                            style: AppTypography.button.copyWith(
+                              fontSize: 12,
+                              color: AppColors.civic,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildPracticeCard(
+                                label: "GS Prelims",
+                                subtitle: "General Studies",
+                                icon: Icons.public_rounded,
+                                color: const Color(0xFFE8F2FF),
+                                iconColor: const Color(0xFF0F75FC),
+                                onTap: () =>
+                                    widget.onTabSelected(2, subIndex: 0),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildPracticeCard(
+                                label: "CSAT Drill",
+                                subtitle: "Aptitude Tests",
+                                icon: Icons.calculate_rounded,
+                                color: const Color(0xFFFFF2E6),
+                                iconColor: const Color(0xFFFF8800),
+                                onTap: () =>
+                                    widget.onTabSelected(2, subIndex: 1),
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Glimpse 2: Self Test Builder Scopes
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Self Test Builder",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => widget.onTabSelected(2), // Switch to Tests Tab (default to GK)
-                      child: Text(
-                        "Explore Hub →",
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.civic,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildPracticeCard(
+                                label: "Mains Hub",
+                                subtitle: "Subjective essays",
+                                icon: Icons.border_color_rounded,
+                                color: const Color(0xFFF3E5F5),
+                                iconColor: Colors.purple,
+                                onTap: () =>
+                                    widget.onTabSelected(2, subIndex: 2),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildPracticeCard(
+                                label: "Bookmarks & Revision",
+                                subtitle: "Category revision",
+                                icon: Icons.bookmark_rounded,
+                                color: const Color(0xFFFFEBEE),
+                                iconColor: AppColors.berry,
+                                onTap: () => widget.onTabSelected(
+                                  2,
+                                  subIndex: 0,
+                                  subSubIndex: 2,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    Row(
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Glimpse 3: Active Study Plans (horizontal scroll with real data & images)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: _buildPracticeCard(
-                            label: "GS Prelims",
-                            subtitle: "General Studies",
-                            icon: Icons.public_rounded,
-                            color: const Color(0xFFE8F2FF),
-                            iconColor: const Color(0xFF0F75FC),
-                            onTap: () => widget.onTabSelected(2, subIndex: 0),
+                        Text(
+                          "Structured Study Plans",
+                          style: AppTypography.sectionHeader.copyWith(
+                            fontSize: 15,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildPracticeCard(
-                            label: "CSAT Drill",
-                            subtitle: "Aptitude Tests",
-                            icon: Icons.calculate_rounded,
-                            color: const Color(0xFFFFF2E6),
-                            iconColor: const Color(0xFFFF8800),
-                            onTap: () => widget.onTabSelected(2, subIndex: 1),
+                        GestureDetector(
+                          onTap: () => widget.onTabSelected(3),
+                          child: Text(
+                            "All Plans",
+                            style: AppTypography.button.copyWith(
+                              fontSize: 12,
+                              color: AppColors.civic,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildPracticeCard(
-                            label: "Mains Hub",
-                            subtitle: "Subjective essays",
-                            icon: Icons.border_color_rounded,
-                            color: const Color(0xFFF3E5F5),
-                            iconColor: Colors.purple,
-                            onTap: () => widget.onTabSelected(2, subIndex: 2),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildPracticeCard(
-                            label: "Bookmarks & Revision",
-                            subtitle: "Category revision",
-                            icon: Icons.bookmark_rounded,
-                            color: const Color(0xFFFFEBEE),
-                            iconColor: AppColors.berry,
-                            onTap: () => widget.onTabSelected(2, subIndex: 0, subSubIndex: 2),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Glimpse 3: Active Study Plans (horizontal scroll with real data & images)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Structured Study Plans",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => widget.onTabSelected(3),
-                      child: Text(
-                        "All Plans",
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.civic,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                height: 205,
-                child: _loadingPlans
-                    ? const Center(
-                        child: CircularProgressIndicator(color: AppColors.civic),
-                      )
-                    : _plans.isEmpty
-                        ? _buildEmptyStateCard("No study plans available at the moment.")
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 205,
+                    child: _loadingPlans
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.civic,
+                            ),
+                          )
+                        : _plans.isEmpty
+                        ? _buildEmptyStateCard(
+                            "No study plans available at the moment.",
+                          )
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
                             itemCount: _plans.length,
                             itemBuilder: (context, index) {
                               final plan = _plans[index];
                               return _buildStudyPlanCard(plan);
                             },
                           ),
-              ),
-              const SizedBox(height: 24),
+                  ),
+                  const SizedBox(height: 24),
 
-              // Glimpse 4: Available Mentors (horizontal scroll with real topper details & avatars)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Connect with Top Mentors",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => widget.onTabSelected(4),
-                      child: Text(
-                        "All Mentors",
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.civic,
+                  // Glimpse 4: Available Mentors (horizontal scroll with real topper details & avatars)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Connect with Top Mentors",
+                          style: AppTypography.sectionHeader.copyWith(
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
+                        GestureDetector(
+                          onTap: () => widget.onTabSelected(4),
+                          child: Text(
+                            "All Mentors",
+                            style: AppTypography.button.copyWith(
+                              fontSize: 12,
+                              color: AppColors.civic,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                height: 175,
-                child: _loadingMentors
-                    ? const Center(
-                        child: CircularProgressIndicator(color: AppColors.civic),
-                      )
-                    : _mentors.isEmpty
-                        ? _buildEmptyStateCard("No mentors available right now.")
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 175,
+                    child: _loadingMentors
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.civic,
+                            ),
+                          )
+                        : _mentors.isEmpty
+                        ? _buildEmptyStateCard(
+                            "No mentors available right now.",
+                          )
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
                             itemCount: _mentors.length,
                             itemBuilder: (context, index) {
                               final mentor = _mentors[index];
                               return _buildMentorCard(mentor);
                             },
                           ),
+                  ),
+                  const SizedBox(height: 30),
+                ],
               ),
-              const SizedBox(height: 30),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-      ],
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTableHeaderCell(String text, Color color) {
     return Container(
@@ -829,9 +977,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Text(
         text,
-        style: GoogleFonts.plusJakartaSans(
+        style: AppTypography.eyebrowLarge.copyWith(
           fontSize: 11,
-          fontWeight: FontWeight.w800,
           color: color,
           letterSpacing: 0.5,
         ),
@@ -851,19 +998,15 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.inter(
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: AppColors.muted,
               ),
             ),
           ),
@@ -881,18 +1024,17 @@ class _HomeScreenState extends State<HomeScreen> {
         color: AppColors.paper.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        value,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: AppColors.ink,
-        ),
-      ),
+      child: Text(value, style: AppTypography.cardTitle.copyWith(fontSize: 12)),
     );
   }
 
-  Widget _buildColumnContent(bool isGk, int total, double pctCorrect, double pctIncorrect, double pctUnattempted) {
+  Widget _buildColumnContent(
+    bool isGk,
+    int total,
+    double pctCorrect,
+    double pctIncorrect,
+    double pctUnattempted,
+  ) {
     if (total == 0) {
       return Container(
         height: 132, // Height matching 3 rows of cells (3 * 44)
@@ -915,13 +1057,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Icon(Icons.play_arrow_rounded, size: 14),
               const SizedBox(width: 4),
-              Text(
-                "Start",
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text("Start", style: AppTypography.button.copyWith(fontSize: 11)),
             ],
           ),
         ),
@@ -937,7 +1073,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildMainsMetricCard(String label, String value, IconData icon, Color color) {
+  Widget _buildMainsMetricCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -956,20 +1097,12 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.muted,
-                  ),
+                  style: AppTypography.caption.copyWith(fontSize: 10),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.ink,
-                  ),
+                  style: AppTypography.statValue.copyWith(fontSize: 12),
                 ),
               ],
             ),
@@ -1015,21 +1148,13 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(height: 16),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: AppColors.ink,
-              ),
-            ),
+            Text(label, style: AppTypography.cardTitle.copyWith(fontSize: 13)),
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: GoogleFonts.inter(
+              style: AppTypography.caption.copyWith(
                 fontSize: 10,
                 fontWeight: FontWeight.w400,
-                color: AppColors.muted,
               ),
             ),
           ],
@@ -1037,6 +1162,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
   Widget _buildStudyPlanCard(StudyPlanSummary plan) {
     final resolvedCover = _resolveImageUrl(plan.coverImageUrl);
     final List<String> coverFallbacks = [
@@ -1046,7 +1172,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=400&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=400&auto=format&fit=crop',
     ];
-    final String fallbackUrl = coverFallbacks[plan.id.abs() % coverFallbacks.length];
+    final String fallbackUrl =
+        coverFallbacks[plan.id.abs() % coverFallbacks.length];
 
     return GestureDetector(
       onTap: () {
@@ -1076,22 +1203,25 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(15),
+              ),
               child: SizedBox(
                 height: 85,
                 width: double.infinity,
                 child: Image.network(
                   resolvedCover ?? fallbackUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Image.network(
-                    fallbackUrl,
-                    fit: BoxFit.cover,
-                  ),
+                  errorBuilder: (_, __, ___) =>
+                      Image.network(fallbackUrl, fit: BoxFit.cover),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 8.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1099,21 +1229,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     plan.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.ink,
-                    ),
+                    style: AppTypography.cardTitle.copyWith(fontSize: 13),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    plan.subtitle ?? plan.description ?? 'Complete UPSC Preparation Syllabus',
+                    plan.subtitle ??
+                        plan.description ??
+                        'Complete UPSC Preparation Syllabus',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.muted,
                       height: 1.3,
                     ),
                   ),
@@ -1122,14 +1249,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.paper,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           "${plan.durationWeeks} Weeks",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
                             color: AppColors.ink,
@@ -1139,7 +1269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (plan.testCount != null)
                         Text(
                           "${plan.testCount} Practice Tests",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
                             color: AppColors.civic,
@@ -1165,14 +1295,16 @@ class _HomeScreenState extends State<HomeScreen> {
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
     ];
-    final String fallbackUrl = avatarFallbacks[mentor.userId.abs() % avatarFallbacks.length];
+    final String fallbackUrl =
+        avatarFallbacks[mentor.userId.abs() % avatarFallbacks.length];
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => MentorDetailScreen(mentorUserId: mentor.userId),
+            builder: (context) =>
+                MentorDetailScreen(mentorUserId: mentor.userId),
           ),
         );
       },
@@ -1210,21 +1342,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         mentor.displayName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.ink,
-                        ),
+                        style: AppTypography.cardTitle.copyWith(fontSize: 13),
                       ),
                       const SizedBox(height: 2),
                       Row(
                         children: [
                           if (mentor.isVerified)
-                            const Icon(Icons.verified_rounded, color: Colors.blue, size: 10),
+                            const Icon(
+                              Icons.verified_rounded,
+                              color: Colors.blue,
+                              size: 10,
+                            ),
                           const SizedBox(width: 3),
                           Text(
-                            mentor.yearsExperience > 0 ? "${mentor.yearsExperience} yrs exp" : "Top Expert",
-                            style: GoogleFonts.inter(fontSize: 9, color: AppColors.muted, fontWeight: FontWeight.bold),
+                            mentor.yearsExperience > 0
+                                ? "${mentor.yearsExperience} yrs exp"
+                                : "Top Expert",
+                            style: AppTypography.caption.copyWith(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -1239,12 +1376,7 @@ class _HomeScreenState extends State<HomeScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: AppColors.muted,
-                height: 1.3,
-              ),
+              style: AppTypography.caption.copyWith(fontSize: 10, height: 1.3),
             ),
             const Spacer(),
             Container(
@@ -1257,9 +1389,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 "Book 1:1 Session",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: AppTypography.button.copyWith(
                   fontSize: 10,
-                  fontWeight: FontWeight.w700,
                   color: AppColors.civic,
                 ),
               ),
@@ -1284,19 +1415,16 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Text(
           message,
           textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.muted,
-          ),
+          style: AppTypography.body.copyWith(fontWeight: FontWeight.w500),
         ),
       ),
     );
   }
 
-
-
-  Widget _buildGuestStatsPlaceholder(BuildContext context, ApiClient apiClient) {
+  Widget _buildGuestStatsPlaceholder(
+    BuildContext context,
+    ApiClient apiClient,
+  ) {
     final hasResultWaiting = apiClient.hasPendingGuestClaim;
     return Container(
       width: double.infinity,
@@ -1308,15 +1436,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         children: [
-          Text(hasResultWaiting ? "🎉" : "📊", style: const TextStyle(fontSize: 32)),
+          Text(
+            hasResultWaiting ? "🎉" : "📊",
+            style: const TextStyle(fontSize: 32),
+          ),
           const SizedBox(height: 12),
           Text(
-            hasResultWaiting ? "Your result is ready" : "Unlock Performance Analytics",
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
-            ),
+            hasResultWaiting
+                ? "Your result is ready"
+                : "Unlock Performance Analytics",
+            style: AppTypography.sectionHeader.copyWith(fontSize: 14),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
@@ -1324,11 +1453,7 @@ class _HomeScreenState extends State<HomeScreen> {
             hasResultWaiting
                 ? "Create a free account to unlock your score, topic-wise breakdown, and save it to your dashboard for good."
                 : "Take a free diagnostic test as a guest, then sign in to unlock your score and save your progress forever.",
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              color: AppColors.muted,
-              height: 1.4,
-            ),
+            style: AppTypography.caption.copyWith(height: 1.4),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -1338,14 +1463,18 @@ class _HomeScreenState extends State<HomeScreen> {
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: hasResultWaiting
                 ? () => apiClient.setGuestMode(false)
                 : () => widget.onTabSelected(2),
             child: Text(
-              hasResultWaiting ? "Sign In / Register" : "Take the Diagnostic Test",
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              hasResultWaiting
+                  ? "Sign In / Register"
+                  : "Take the Diagnostic Test",
+              style: AppTypography.button.copyWith(fontSize: 12),
             ),
           ),
         ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -65,13 +64,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email'],
-      );
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
 
       final GoogleSignInAccount? account = await googleSignIn.signIn();
       if (account == null) {
-        setState(() { _loading = false; });
+        setState(() {
+          _loading = false;
+        });
         return;
       }
 
@@ -79,7 +78,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final String? idToken = auth.idToken;
 
       if (idToken == null) {
-        throw Exception("Could not retrieve Google ID Token. Ensure configuration files are correctly added.");
+        throw Exception(
+          "Could not retrieve Google ID Token. Ensure configuration files are correctly added.",
+        );
       }
 
       final apiClient = Provider.of<ApiClient>(context, listen: false);
@@ -87,7 +88,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
       setState(() {
-        _errorMessage = "Google login failed: ${e.toString().replaceFirst('Exception: ', '')}\n\nMake sure Google OAuth client credentials (google-services.json/Info.plist) are correctly configured.";
+        _errorMessage =
+            "Google login failed: ${e.toString().replaceFirst('Exception: ', '')}\n\nMake sure Google OAuth client credentials (google-services.json/Info.plist) are correctly configured.";
       });
     } finally {
       if (mounted) {
@@ -134,13 +136,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
                   Text(
                     "UPSC Test Series",
-                    style: Theme.of(context).textTheme.displayMedium,
+                    style: AppTypography.title.copyWith(fontSize: 20),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 6),
                   Text(
                     "Sign in to start mock tests and sync study plans",
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: AppTypography.body,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 36),
@@ -160,18 +162,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: BoxDecoration(
                                 color: AppColors.berry.withOpacity(0.06),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.berry.withOpacity(0.15)),
+                                border: Border.all(
+                                  color: AppColors.berry.withOpacity(0.15),
+                                ),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 18),
+                                  const Icon(
+                                    Icons.error_outline_rounded,
+                                    color: AppColors.berry,
+                                    size: 18,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       _errorMessage!,
-                                      style: GoogleFonts.inter(
+                                      style: AppTypography.body.copyWith(
                                         color: AppColors.berry,
-                                        fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -185,10 +192,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Email field
                           Text(
                             "EMAIL ADDRESS",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowSmall.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -199,11 +204,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
                               hintText: "Enter your email address",
-                              prefixIcon: Icon(Icons.mail_outline_rounded, size: 20),
+                              prefixIcon: Icon(
+                                Icons.mail_outline_rounded,
+                                size: 20,
+                              ),
                             ),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return "Email is required";
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val.trim())) {
+                              if (val == null || val.trim().isEmpty)
+                                return "Email is required";
+                              if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(val.trim())) {
                                 return "Enter a valid email address";
                               }
                               return null;
@@ -214,10 +225,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Password field
                           Text(
                             "PASSWORD",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowSmall.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -229,10 +238,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             onFieldSubmitted: (_) => _submit(),
                             decoration: InputDecoration(
                               hintText: "Enter password",
-                              prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                                size: 20,
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
                                   size: 20,
                                 ),
                                 onPressed: () {
@@ -243,7 +257,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             validator: (val) {
-                              if (val == null || val.isEmpty) return "Password is required";
+                              if (val == null || val.isEmpty)
+                                return "Password is required";
                               return null;
                             },
                           ),
@@ -256,7 +271,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? const SizedBox(
                                     height: 18,
                                     width: 18,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
                                   )
                                 : const Text("SIGN IN"),
                           ),
@@ -265,13 +283,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               const Expanded(child: Divider(thickness: 0.5)),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 child: Text(
                                   "OR CONTINUE WITH",
-                                  style: GoogleFonts.inter(
+                                  style: AppTypography.eyebrowSmall.copyWith(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.muted,
                                   ),
                                 ),
                               ),
@@ -286,12 +305,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 18,
                               width: 18,
                               errorBuilder: (context, error, stackTrace) {
-                                return const Icon(Icons.g_mobiledata_rounded, color: AppColors.civic, size: 22);
+                                return const Icon(
+                                  Icons.g_mobiledata_rounded,
+                                  color: AppColors.civic,
+                                  size: 22,
+                                );
                               },
                             ),
                             label: const Text("SIGN IN WITH GOOGLE"),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: AppColors.muted.withOpacity(0.3)),
+                              side: BorderSide(
+                                color: AppColors.muted.withOpacity(0.3),
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -307,23 +332,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        "New to WayToIAS? ",
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      Text("New to WayToIAS? ", style: AppTypography.body),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
                           );
                         },
                         child: Text(
                           "Create an account",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.button.copyWith(
                             fontSize: 14,
                             color: AppColors.civic,
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),

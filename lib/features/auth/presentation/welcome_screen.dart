@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'login_screen.dart';
@@ -112,7 +111,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
               child: Row(
                 children: [
-                  Image.asset('assets/images/logo.png', height: 30, fit: BoxFit.contain),
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 30,
+                    fit: BoxFit.contain,
+                  ),
                   const Spacer(),
                   TextButton(
                     onPressed: () => Navigator.push(
@@ -121,7 +124,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                     child: Text(
                       "Sign In",
-                      style: GoogleFonts.inter(color: AppColors.civic, fontWeight: FontWeight.w700, fontSize: 13),
+                      style: AppTypography.button.copyWith(
+                        fontSize: 13,
+                        color: AppColors.civic,
+                      ),
                     ),
                   ),
                 ],
@@ -138,17 +144,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     // Hero text
                     Text(
                       "Prepare smarter.\nClear UPSC.",
-                      style: GoogleFonts.plusJakartaSans(
-                        color: AppColors.ink,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                      ),
+                      style: AppTypography.display,
                     ),
                     const SizedBox(height: 10),
                     Text(
                       "Custom practice tests · Expert mentorship · Structured study plans.",
-                      style: GoogleFonts.inter(color: AppColors.muted, fontSize: 13, height: 1.5),
+                      style: AppTypography.body.copyWith(fontSize: 13),
                     ),
                     const SizedBox(height: 28),
 
@@ -156,30 +157,64 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     if (_fetchingTest)
                       ElevatedButton.icon(
                         onPressed: null,
-                        icon: const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70)),
-                        label: const Text("Loading…", overflow: TextOverflow.ellipsis, softWrap: false),
+                        icon: const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        label: const Text(
+                          "Loading…",
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: false,
+                        ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.civic.withValues(alpha: 0.6),
+                          backgroundColor: AppColors.civic.withValues(
+                            alpha: 0.6,
+                          ),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 15),
-                          textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          textStyle: AppTypography.button.copyWith(
+                            fontSize: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           elevation: 0,
                         ),
                       )
                     else if (_diagnosticTestId != null)
                       ElevatedButton.icon(
-                        onPressed: _loadingDiagnostic ? null : _onTakeDiagnosticTest,
+                        onPressed: _loadingDiagnostic
+                            ? null
+                            : _onTakeDiagnosticTest,
                         icon: _loadingDiagnostic
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : const Icon(Icons.flash_on_rounded, size: 18),
-                        label: const Text("Take a Free Diagnostic Test", overflow: TextOverflow.ellipsis, softWrap: false),
+                        label: const Text(
+                          "Take a Free Diagnostic Test",
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: false,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.civic,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 15),
-                          textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          textStyle: AppTypography.button.copyWith(
+                            fontSize: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           elevation: 0,
                         ),
                       ),
@@ -189,15 +224,31 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     OutlinedButton.icon(
                       onPressed: _loadingCustom ? null : _onBuildCustomTest,
                       icon: _loadingCustom
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.civic))
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.civic,
+                              ),
+                            )
                           : const Icon(Icons.tune_rounded, size: 18),
-                      label: const Text("Build a Custom Test", overflow: TextOverflow.ellipsis, softWrap: false),
+                      label: const Text(
+                        "Build a Custom Test",
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                      ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.civic, width: 1.5),
+                        side: const BorderSide(
+                          color: AppColors.civic,
+                          width: 1.5,
+                        ),
                         foregroundColor: AppColors.civic,
                         padding: const EdgeInsets.symmetric(vertical: 15),
-                        textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        textStyle: AppTypography.button.copyWith(fontSize: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
 
@@ -205,16 +256,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     OutlinedButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppColors.line),
                         foregroundColor: AppColors.ink,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        textStyle: AppTypography.button.copyWith(fontSize: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      child: const Text("Create Free Account", overflow: TextOverflow.ellipsis, softWrap: false),
+                      child: const Text(
+                        "Create Free Account",
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                      ),
                     ),
 
                     if (_diagnosticTestId != null) ...[
@@ -222,7 +281,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       Center(
                         child: Text(
                           "No account needed for the diagnostic test",
-                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w500),
+                          style: AppTypography.caption,
                         ),
                       ),
                     ],
@@ -235,9 +294,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         return Expanded(
                           child: Column(
                             children: [
-                              Text(s.$1, style: GoogleFonts.plusJakartaSans(color: AppColors.ink, fontSize: 17, fontWeight: FontWeight.w800)),
+                              Text(
+                                s.$1,
+                                style: AppTypography.statValue.copyWith(
+                                  fontSize: 17,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text(s.$2, style: GoogleFonts.inter(color: AppColors.muted, fontSize: 10, fontWeight: FontWeight.w600)),
+                              Text(
+                                s.$2,
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -251,7 +321,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     // Features
                     Text(
                       "What's inside",
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.ink),
+                      style: AppTypography.sectionHeader.copyWith(fontSize: 15),
                     ),
                     const SizedBox(height: 14),
                     ..._features.map((f) {
@@ -275,9 +345,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(title, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.ink)),
+                                  Text(
+                                    title,
+                                    style: AppTypography.cardTitle.copyWith(
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                   const SizedBox(height: 2),
-                                  Text(desc, style: GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4)),
+                                  Text(
+                                    desc,
+                                    style: AppTypography.body.copyWith(
+                                      fontSize: 11.5,
+                                      height: 1.4,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -289,10 +370,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     const SizedBox(height: 16),
                     Center(
                       child: TextButton(
-                        onPressed: () => Provider.of<ApiClient>(context, listen: false).setGuestMode(true),
+                        onPressed: () => Provider.of<ApiClient>(
+                          context,
+                          listen: false,
+                        ).setGuestMode(true),
                         child: Text(
                           "Explore without an account →",
-                          style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600),
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
