@@ -646,34 +646,35 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           _expandedWeeks.add(week);
                         }
                       }),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "WEEK $week${allDone ? ' · COMPLETE' : (locked ? ' · LOCKED' : '')}",
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.6,
-                                color: allDone
-                                    ? AppColors.emerald
-                                    : (locked
-                                          ? AppColors.muted
-                                          : AppColors.civic),
+                      child: Opacity(
+                        opacity: locked ? 0.5 : 1.0,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "WEEK $week${allDone ? ' · COMPLETE' : (locked ? ' · LOCKED' : '')}",
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.6,
+                                  color: allDone
+                                      ? AppColors.emerald
+                                      : AppColors.civic,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              weekTitle,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w700,
-                                color: locked ? AppColors.muted : AppColors.ink,
+                              const SizedBox(height: 2),
+                              Text(
+                                weekTitle,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.ink,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -761,131 +762,123 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     final isLive = item.itemType == 'live_lecture';
     final resourceUrl = item.lectureUrl ?? item.resourceUrl;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.line),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Icon(
-              done
-                  ? Icons.check_circle_rounded
-                  : (locked
-                        ? Icons.lock_outline_rounded
-                        : _itemIcon(item.itemType)),
-              color: done
-                  ? AppColors.emerald
-                  : (locked ? AppColors.muted : AppColors.civic),
-              size: 17,
+    return Opacity(
+      opacity: locked ? 0.5 : 1.0,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppColors.line),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                done
+                    ? Icons.check_circle_rounded
+                    : (locked
+                          ? Icons.lock_outline_rounded
+                          : _itemIcon(item.itemType)),
+                color: done ? AppColors.emerald : AppColors.civic,
+                size: 17,
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "DAY ${item.dayNo} · ${item.itemType.replaceAll('_', ' ').toUpperCase()}",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.muted,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    decoration: done ? TextDecoration.lineThrough : null,
-                    decorationColor: AppColors.muted,
-                    color: done
-                        ? AppColors.muted
-                        : (locked ? AppColors.muted : AppColors.ink),
-                  ),
-                ),
-                if (item.description != null &&
-                    item.description!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 3),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    item.description!,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
+                    "DAY ${item.dayNo} · ${item.itemType.replaceAll('_', ' ').toUpperCase()}",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.muted,
-                      height: 1.3,
+                      letterSpacing: 0.6,
                     ),
                   ),
-                ],
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    if (item.estimatedMinutes != null)
-                      _metaChip(
-                        Icons.timer_outlined,
-                        "${item.estimatedMinutes} mins",
+                  const SizedBox(height: 2),
+                  Text(
+                    item.title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                      decorationColor: AppColors.muted,
+                      color: done ? AppColors.muted : AppColors.ink,
+                    ),
+                  ),
+                  if (item.description != null &&
+                      item.description!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      item.description!,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                        height: 1.3,
                       ),
-                    if (item.isPreview && !planHasAccess)
-                      Text(
-                        "FREE PREVIEW",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9.5,
-                          color: AppColors.civic,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    if (isLive && item.liveClass != null)
-                      _buildLiveClassStatusText(item.liveClass!),
+                    ),
                   ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (locked)
-            const Padding(
-              padding: EdgeInsets.only(top: 2),
-              child: Icon(
-                Icons.lock_outline_rounded,
-                color: AppColors.muted,
-                size: 16,
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (item.estimatedMinutes != null)
+                        _metaChip(
+                          Icons.timer_outlined,
+                          "${item.estimatedMinutes} mins",
+                        ),
+                      if (item.isPreview && !planHasAccess)
+                        Text(
+                          "FREE PREVIEW",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9.5,
+                            color: AppColors.civic,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      if (isLive && item.liveClass != null)
+                        _buildLiveClassStatusText(item.liveClass!),
+                    ],
+                  ),
+                ],
               ),
-            )
-          else if (isLive && item.liveClass != null)
-            _buildLiveClassAction(item.liveClass!, item.title)
-          else if (isTest)
-            _actionButton(
-              done ? "RETAKE" : "ATTEMPT",
-              filled: true,
-              onTap: _processing ? null : () => _startTest(item),
-            )
-          else if (resourceUrl != null)
-            _actionButton(
-              "OPEN",
-              filled: false,
-              onTap: () => _openResourceUrl(resourceUrl),
-            )
-          else if (!done)
-            _actionButton(
-              "MARK DONE",
-              filled: false,
-              onTap: _processing
-                  ? null
-                  : () => _updateProgress(item, 'completed'),
             ),
-        ],
+            const SizedBox(width: 8),
+            if (locked)
+              const SizedBox.shrink()
+            else if (isLive && item.liveClass != null)
+              _buildLiveClassAction(item.liveClass!, item.title)
+            else if (isTest)
+              _actionButton(
+                done ? "RETAKE" : "ATTEMPT",
+                filled: true,
+                onTap: _processing ? null : () => _startTest(item),
+              )
+            else if (resourceUrl != null)
+              _actionButton(
+                "OPEN",
+                filled: false,
+                onTap: () => _openResourceUrl(resourceUrl),
+              )
+            else if (!done)
+              _actionButton(
+                "MARK DONE",
+                filled: false,
+                onTap: _processing
+                    ? null
+                    : () => _updateProgress(item, 'completed'),
+              ),
+          ],
+        ),
       ),
     );
   }
