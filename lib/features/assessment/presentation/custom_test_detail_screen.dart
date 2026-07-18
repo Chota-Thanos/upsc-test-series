@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../data/assessment_service.dart';
@@ -134,14 +133,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: Text(
-          "Test Detailed View",
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.ink,
-          ),
-        ),
+        title: Text("Test Detailed View", style: AppTypography.title.copyWith(fontSize: 18)),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -166,20 +158,10 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    test.title,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.ink,
-                    ),
-                  ),
+                  Text(test.title, style: AppTypography.title.copyWith(fontSize: 20)),
                   if (test.description != null && test.description!.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    Text(
-                      test.description!,
-                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
-                    ),
+                    Text(test.description!, style: AppTypography.body.copyWith(fontSize: 13)),
                   ],
                   const SizedBox(height: 20),
                   Row(
@@ -198,11 +180,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
             // Category breakdown
             Text(
               "Category Breakdown",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 12),
             if (categoryBreakdown.isEmpty)
@@ -216,7 +194,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                 ),
                 child: Text(
                   "No categories added yet. Click 'Add Questions' below to add topics.",
-                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontStyle: FontStyle.italic),
+                  style: AppTypography.body.copyWith(fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),
               )
@@ -243,7 +221,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                           Expanded(
                             child: Text(
                               key,
-                              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink),
+                              style: AppTypography.cardTitle.copyWith(fontSize: 13),
                             ),
                           ),
                           Container(
@@ -254,7 +232,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                             ),
                             child: Text(
                               "$val Questions",
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.civic),
+                              style: AppTypography.eyebrowLarge.copyWith(fontSize: 11, letterSpacing: 0),
                             ),
                           ),
                         ],
@@ -269,11 +247,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
             // Question list
             Text(
               "Questions List (${test.questionCount ?? questions.length})",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 12),
             if (questions.isEmpty)
@@ -291,12 +265,12 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                     const SizedBox(height: 12),
                     Text(
                       "This test template is empty.",
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.ink),
+                      style: AppTypography.cardTitle.copyWith(fontSize: 13),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       "Add questions from the syllabus categories to start attempting.",
-                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                      style: AppTypography.caption,
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -330,7 +304,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                           children: [
                             Text(
                               "Question ${idx + 1}",
-                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.muted),
+                              style: AppTypography.caption.copyWith(fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -340,7 +314,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                               ),
                               child: Text(
                                 "$difficulty • ${marks.round()} Marks",
-                                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.ink.withOpacity(0.6)),
+                                style: AppTypography.eyebrowSmall.copyWith(color: AppColors.ink.withOpacity(0.6), letterSpacing: 0),
                               ),
                             ),
                           ],
@@ -348,7 +322,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                         const SizedBox(height: 8),
                         Text(
                           cleanText,
-                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink, height: 1.4),
+                          style: AppTypography.body.copyWith(fontSize: 13, color: AppColors.ink, height: 1.4),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -446,7 +420,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                   label: Text(
                     isCompleted ? "View Result" :
                     hasAttempt ? "Resume Test" : "Start Test",
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+                    style: AppTypography.button.copyWith(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.civic,
@@ -466,23 +440,9 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
   Widget _buildSummaryItem(String label, String value) {
     return Column(
       children: [
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: AppColors.civic,
-          ),
-        ),
+        Text(value, style: AppTypography.statValue.copyWith(fontSize: 16, color: AppColors.civic)),
         const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            color: AppColors.muted,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(label, style: AppTypography.caption),
       ],
     );
   }

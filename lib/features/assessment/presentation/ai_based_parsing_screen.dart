@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -15,7 +14,12 @@ class AiBasedParsingScreen extends StatefulWidget {
   final int? testTemplateId;
   final String? contentType;
   final int? categoryNodeId;
-  const AiBasedParsingScreen({super.key, this.testTemplateId, this.contentType, this.categoryNodeId});
+  const AiBasedParsingScreen({
+    super.key,
+    this.testTemplateId,
+    this.contentType,
+    this.categoryNodeId,
+  });
 
   @override
   State<AiBasedParsingScreen> createState() => _AiBasedParsingScreenState();
@@ -224,7 +228,9 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
   void _prefillCategory() {
     if (widget.categoryNodeId == null || _nodes.isEmpty) return;
 
-    final nodeMap = {for (var n in _nodes) int.tryParse(n['id']?.toString() ?? '') ?? 0: n};
+    final nodeMap = {
+      for (var n in _nodes) int.tryParse(n['id']?.toString() ?? '') ?? 0: n,
+    };
     final targetNode = nodeMap[widget.categoryNodeId];
     if (targetNode != null) {
       int subjectId = targetNode['id'] as int;
@@ -251,7 +257,13 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
   void _filterSubjects() {
     final subs = _contentType == 'mains'
         ? _nodes.where((n) => n['node_type'] == 'paper').toList()
-        : _nodes.where((n) => n['node_type'] == 'subject' && n['content_type'] == _contentType).toList();
+        : _nodes
+              .where(
+                (n) =>
+                    n['node_type'] == 'subject' &&
+                    n['content_type'] == _contentType,
+              )
+              .toList();
 
     setState(() {
       _subjects = subs;
@@ -277,7 +289,13 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
 
     final tops = _contentType == 'mains'
         ? _nodes.where((n) => n['parent_id'] == _selectedSubjectId).toList()
-        : _nodes.where((n) => n['node_type'] == 'topic' && n['parent_id'] == _selectedSubjectId).toList();
+        : _nodes
+              .where(
+                (n) =>
+                    n['node_type'] == 'topic' &&
+                    n['parent_id'] == _selectedSubjectId,
+              )
+              .toList();
 
     setState(() {
       _topics = tops;
@@ -383,7 +401,8 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           throw Exception("Could not read file data. Try another file.");
         }
 
-        final mimeType = lookupMimeType(_selectedFile!.name) ?? 'application/pdf';
+        final mimeType =
+            lookupMimeType(_selectedFile!.name) ?? 'application/pdf';
         final base64String = "data:$mimeType;base64,${base64Encode(bytes)}";
 
         result = await _service.aiParseFile(
@@ -402,7 +421,8 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
 
       if (result.questions.isEmpty) {
         setState(() {
-          _error = "AI did not extract any questions. Try copying cleaner text.";
+          _error =
+              "AI did not extract any questions. Try copying cleaner text.";
         });
       }
     } catch (e) {
@@ -414,7 +434,11 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
   }
 
   Future<void> _handleSaveQuestions() async {
-    if (_parsedResult == null || _selectedExamId == null || _selectedLevelId == null || _selectedSubjectId == null) return;
+    if (_parsedResult == null ||
+        _selectedExamId == null ||
+        _selectedLevelId == null ||
+        _selectedSubjectId == null)
+      return;
 
     setState(() {
       _saving = true;
@@ -454,7 +478,8 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
 
       setState(() {
         _saving = false;
-        _successMessage = "Successfully saved ${_parsedResult!.questions.length} questions to library!";
+        _successMessage =
+            "Successfully saved ${_parsedResult!.questions.length} questions to library!";
       });
 
       Future.delayed(const Duration(milliseconds: 1500), () {
@@ -477,11 +502,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
       appBar: AppBar(
         title: Text(
           "AI Test Parser",
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.ink,
-          ),
+          style: AppTypography.title.copyWith(fontSize: 18),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -491,7 +512,9 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
         ),
       ),
       body: _loadingExams
-          ? const Center(child: CircularProgressIndicator(color: AppColors.civic))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.civic),
+            )
           : Column(
               children: [
                 if (_error != null)
@@ -501,7 +524,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     color: AppColors.berry.withOpacity(0.1),
                     child: Text(
                       _error!,
-                      style: GoogleFonts.inter(
+                      style: AppTypography.body.copyWith(
                         color: AppColors.berry,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
@@ -515,12 +538,16 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     color: AppColors.emerald.withOpacity(0.1),
                     child: Row(
                       children: [
-                        const Icon(Icons.check_circle_rounded, color: AppColors.emerald, size: 20),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.emerald,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _successMessage!,
-                            style: GoogleFonts.inter(
+                            style: AppTypography.body.copyWith(
                               color: AppColors.emerald,
                               fontWeight: FontWeight.w700,
                               fontSize: 13,
@@ -551,7 +578,12 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                 ),
                 if (_parsedResult != null) ...[
                   Container(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 12),
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      top: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       boxShadow: [
@@ -593,15 +625,15 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.settings_suggest_rounded, color: AppColors.civic, size: 20),
+              const Icon(
+                Icons.settings_suggest_rounded,
+                color: AppColors.civic,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 "Syllabus Mapping",
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.ink,
-                ),
+                style: AppTypography.sectionHeader.copyWith(fontSize: 14),
               ),
             ],
           ),
@@ -655,11 +687,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           // Exam Profile Dropdown
           Text(
             "Exam Profile",
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
-            ),
+            style: AppTypography.sectionHeader.copyWith(fontSize: 12),
           ),
           const SizedBox(height: 6),
           Container(
@@ -678,7 +706,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     value: exam.id,
                     child: Text(
                       exam.name,
-                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                      style: AppTypography.body.copyWith(
+                        fontSize: 13,
+                        color: AppColors.ink,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -699,11 +730,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           if (_levels.isNotEmpty) ...[
             Text(
               "Exam level",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 12),
             ),
             const SizedBox(height: 6),
             Container(
@@ -722,7 +749,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       value: lvl.id,
                       child: Text(
                         lvl.name,
-                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 13,
+                          color: AppColors.ink,
+                        ),
                       ),
                     );
                   }).toList(),
@@ -742,11 +772,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           // Subject Dropdown
           Text(
             "Subject Category",
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
-            ),
+            style: AppTypography.sectionHeader.copyWith(fontSize: 12),
           ),
           const SizedBox(height: 6),
           Container(
@@ -760,13 +786,22 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               child: DropdownButton<int>(
                 value: _selectedSubjectId,
                 isExpanded: true,
-                hint: Text("Select Subject", style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                hint: Text(
+                  "Select Subject",
+                  style: AppTypography.body.copyWith(
+                    fontSize: 13,
+                    color: AppColors.muted,
+                  ),
+                ),
                 items: _subjects.map((sub) {
                   return DropdownMenuItem<int>(
                     value: sub['id'] as int,
                     child: Text(
                       sub['name'] as String,
-                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                      style: AppTypography.body.copyWith(
+                        fontSize: 13,
+                        color: AppColors.ink,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -787,11 +822,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           if (_selectedSubjectId != null && _topics.isNotEmpty) ...[
             Text(
               "Topic (Optional)",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 12),
             ),
             const SizedBox(height: 6),
             Container(
@@ -810,7 +841,11 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       value: null,
                       child: Text(
                         "None (Keep at Subject level)",
-                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, fontStyle: FontStyle.italic),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 13,
+                          color: AppColors.muted,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
                     ..._topics.map((top) {
@@ -818,7 +853,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                         value: top['id'] as int,
                         child: Text(
                           top['name'] as String,
-                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                          style: AppTypography.body.copyWith(
+                            fontSize: 13,
+                            color: AppColors.ink,
+                          ),
                         ),
                       );
                     }),
@@ -834,22 +872,23 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           ],
           if (_loadingTemplates) ...[
             const SizedBox(height: 12),
-            const Center(child: CircularProgressIndicator(color: AppColors.civic)),
+            const Center(
+              child: CircularProgressIndicator(color: AppColors.civic),
+            ),
           ] else ...[
             const Divider(height: 24),
             Text(
               "Target Custom Test",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 12),
             ),
             const SizedBox(height: 6),
             if (_isTemplateLocked)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.civic.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
@@ -857,12 +896,17 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.lock_outline_rounded, color: AppColors.civic, size: 16),
+                    const Icon(
+                      Icons.lock_outline_rounded,
+                      color: AppColors.civic,
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _lockedTemplateTitle ?? "Loading test template title...",
-                        style: GoogleFonts.inter(
+                        _lockedTemplateTitle ??
+                            "Loading test template title...",
+                        style: AppTypography.body.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: AppColors.civic,
@@ -889,7 +933,11 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                         value: null,
                         child: Text(
                           "— Create New Custom Test —",
-                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.civic, fontWeight: FontWeight.bold),
+                          style: AppTypography.body.copyWith(
+                            fontSize: 13,
+                            color: AppColors.civic,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       ..._privateTemplates.map((temp) {
@@ -897,7 +945,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                           value: temp.id,
                           child: Text(
                             temp.title,
-                            style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              color: AppColors.ink,
+                            ),
                           ),
                         );
                       }),
@@ -916,10 +967,16 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                   controller: _newTestTitleController,
                   decoration: InputDecoration(
                     hintText: "Enter New Test Name",
-                    hintStyle: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
+                    hintStyle: AppTypography.body.copyWith(
+                      color: AppColors.muted,
+                      fontSize: 13,
+                    ),
                     fillColor: Colors.white,
                     filled: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: AppColors.line),
@@ -930,10 +987,16 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.civic, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: AppColors.civic,
+                        width: 1.5,
+                      ),
                     ),
                   ),
-                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                  style: AppTypography.body.copyWith(
+                    fontSize: 13,
+                    color: AppColors.ink,
+                  ),
                 ),
               ],
             ],
@@ -966,7 +1029,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: GoogleFonts.inter(
+            style: AppTypography.caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.bold,
               color: isSelected ? AppColors.civic : AppColors.muted,
@@ -992,11 +1055,21 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             children: [
               Expanded(
                 child: ChoiceChip(
-                  label: Text("Document", style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                  label: Text(
+                    "Document",
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   selected: _parseMode == 'file',
                   selectedColor: AppColors.civic.withOpacity(0.15),
                   checkmarkColor: AppColors.civic,
-                  labelStyle: TextStyle(color: _parseMode == 'file' ? AppColors.civic : AppColors.muted),
+                  labelStyle: TextStyle(
+                    color: _parseMode == 'file'
+                        ? AppColors.civic
+                        : AppColors.muted,
+                  ),
                   onSelected: (val) {
                     if (val) setState(() => _parseMode = 'file');
                   },
@@ -1005,11 +1078,21 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               const SizedBox(width: 4),
               Expanded(
                 child: ChoiceChip(
-                  label: Text("OCR Photos", style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                  label: Text(
+                    "OCR Photos",
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   selected: _parseMode == 'images',
                   selectedColor: AppColors.civic.withOpacity(0.15),
                   checkmarkColor: AppColors.civic,
-                  labelStyle: TextStyle(color: _parseMode == 'images' ? AppColors.civic : AppColors.muted),
+                  labelStyle: TextStyle(
+                    color: _parseMode == 'images'
+                        ? AppColors.civic
+                        : AppColors.muted,
+                  ),
                   onSelected: (val) {
                     if (val) setState(() => _parseMode = 'images');
                   },
@@ -1018,11 +1101,21 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               const SizedBox(width: 4),
               Expanded(
                 child: ChoiceChip(
-                  label: Text("Paste Text", style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                  label: Text(
+                    "Paste Text",
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   selected: _parseMode == 'text',
                   selectedColor: AppColors.civic.withOpacity(0.15),
                   checkmarkColor: AppColors.civic,
-                  labelStyle: TextStyle(color: _parseMode == 'text' ? AppColors.civic : AppColors.muted),
+                  labelStyle: TextStyle(
+                    color: _parseMode == 'text'
+                        ? AppColors.civic
+                        : AppColors.muted,
+                  ),
                   onSelected: (val) {
                     if (val) setState(() => _parseMode = 'text');
                   },
@@ -1035,11 +1128,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           if (_parseMode == 'file') ...[
             Text(
               "PDF or Text Document",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 12),
             ),
             const SizedBox(height: 8),
             InkWell(
@@ -1047,22 +1136,36 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 32,
+                  horizontal: 16,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.paper.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.line, style: BorderStyle.solid),
+                  border: Border.all(
+                    color: AppColors.line,
+                    style: BorderStyle.solid,
+                  ),
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.cloud_upload_outlined, size: 36, color: AppColors.civic),
+                    const Icon(
+                      Icons.cloud_upload_outlined,
+                      size: 36,
+                      color: AppColors.civic,
+                    ),
                     const SizedBox(height: 10),
                     Text(
-                      _selectedFile != null ? _selectedFile!.name : "Select PDF / TXT Document",
-                      style: GoogleFonts.inter(
+                      _selectedFile != null
+                          ? _selectedFile!.name
+                          : "Select PDF / TXT Document",
+                      style: AppTypography.body.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: _selectedFile != null ? AppColors.ink : AppColors.muted,
+                        color: _selectedFile != null
+                            ? AppColors.ink
+                            : AppColors.muted,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1070,7 +1173,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       const SizedBox(height: 6),
                       Text(
                         "${(_selectedFile!.size / 1024).toStringAsFixed(1)} KB",
-                        style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                        style: AppTypography.caption.copyWith(
+                          fontSize: 11,
+                          color: AppColors.muted,
+                        ),
                       ),
                     ],
                   ],
@@ -1080,11 +1186,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           ] else if (_parseMode == 'images') ...[
             Text(
               "OCR Photo Pages (Reorderable)",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 12),
             ),
             const SizedBox(height: 8),
             Container(
@@ -1101,16 +1203,26 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.photo_library_outlined, size: 36, color: AppColors.muted),
+                          const Icon(
+                            Icons.photo_library_outlined,
+                            size: 36,
+                            color: AppColors.muted,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             "No images selected",
-                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                            style: AppTypography.caption.copyWith(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton.icon(
                             onPressed: _pickImages,
-                            icon: const Icon(Icons.add_a_photo_outlined, size: 14),
+                            icon: const Icon(
+                              Icons.add_a_photo_outlined,
+                              size: 14,
+                            ),
                             label: const Text("Capture/Select Photos"),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.civic,
@@ -1126,7 +1238,8 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _selectedImages.length,
-                      separatorBuilder: (_, __) => const Divider(height: 12, color: AppColors.line),
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 12, color: AppColors.line),
                       itemBuilder: (context, index) {
                         final file = _selectedImages[index];
                         return Row(
@@ -1141,14 +1254,25 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                               child: file.bytes != null
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.memory(file.bytes!, fit: BoxFit.cover),
+                                      child: Image.memory(
+                                        file.bytes!,
+                                        fit: BoxFit.cover,
+                                      ),
                                     )
                                   : (file.path != null
-                                      ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.file(io.File(file.path!), fit: BoxFit.cover),
-                                        )
-                                      : const Icon(Icons.image, color: AppColors.muted)),
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            child: Image.file(
+                                              io.File(file.path!),
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.image,
+                                            color: AppColors.muted,
+                                          )),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -1159,7 +1283,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                                     file.name,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
+                                    style: AppTypography.caption.copyWith(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.ink,
@@ -1167,21 +1291,40 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                                   ),
                                   Text(
                                     "${(file.size / 1024).toStringAsFixed(1)} KB",
-                                    style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted),
+                                    style: AppTypography.caption.copyWith(
+                                      fontSize: 10,
+                                      color: AppColors.muted,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.arrow_upward_rounded, size: 16, color: AppColors.civic),
-                              onPressed: index > 0 ? () => _moveImageUp(index) : null,
+                              icon: const Icon(
+                                Icons.arrow_upward_rounded,
+                                size: 16,
+                                color: AppColors.civic,
+                              ),
+                              onPressed: index > 0
+                                  ? () => _moveImageUp(index)
+                                  : null,
                             ),
                             IconButton(
-                              icon: const Icon(Icons.arrow_downward_rounded, size: 16, color: AppColors.civic),
-                              onPressed: index < _selectedImages.length - 1 ? () => _moveImageDown(index) : null,
+                              icon: const Icon(
+                                Icons.arrow_downward_rounded,
+                                size: 16,
+                                color: AppColors.civic,
+                              ),
+                              onPressed: index < _selectedImages.length - 1
+                                  ? () => _moveImageDown(index)
+                                  : null,
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.berry),
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 16,
+                                color: AppColors.berry,
+                              ),
                               onPressed: () => _removeImage(index),
                             ),
                           ],
@@ -1191,8 +1334,18 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     const SizedBox(height: 12),
                     TextButton.icon(
                       onPressed: _pickImages,
-                      icon: const Icon(Icons.add_photo_alternate_outlined, size: 16, color: AppColors.civic),
-                      label: const Text("Add More Photos", style: TextStyle(color: AppColors.civic, fontWeight: FontWeight.bold)),
+                      icon: const Icon(
+                        Icons.add_photo_alternate_outlined,
+                        size: 16,
+                        color: AppColors.civic,
+                      ),
+                      label: const Text(
+                        "Add More Photos",
+                        style: TextStyle(
+                          color: AppColors.civic,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ],
@@ -1201,11 +1354,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           ] else ...[
             Text(
               "Raw Content text",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 12),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -1213,7 +1362,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               maxLines: 8,
               decoration: InputDecoration(
                 hintText: "Paste questions, passages, or quiz notes here...",
-                hintStyle: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
+                hintStyle: AppTypography.body.copyWith(
+                  color: AppColors.muted,
+                  fontSize: 13,
+                ),
                 fillColor: Colors.white,
                 filled: true,
                 border: OutlineInputBorder(
@@ -1221,7 +1373,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                   borderSide: const BorderSide(color: AppColors.line),
                 ),
               ),
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+              style: AppTypography.body.copyWith(
+                fontSize: 13,
+                color: AppColors.ink,
+              ),
             ),
           ],
           const SizedBox(height: 16),
@@ -1229,19 +1384,19 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           // Instructions input
           Text(
             "Instructions for AI Generator (Optional)",
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
-            ),
+            style: AppTypography.sectionHeader.copyWith(fontSize: 12),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _instructionsController,
             maxLines: 2,
             decoration: InputDecoration(
-              hintText: "e.g. Focus on climate changes, align with UPSC structure...",
-              hintStyle: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
+              hintText:
+                  "e.g. Focus on climate changes, align with UPSC structure...",
+              hintStyle: AppTypography.body.copyWith(
+                color: AppColors.muted,
+                fontSize: 13,
+              ),
               fillColor: Colors.white,
               filled: true,
               border: OutlineInputBorder(
@@ -1249,7 +1404,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                 borderSide: const BorderSide(color: AppColors.line),
               ),
             ),
-            style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+            style: AppTypography.body.copyWith(
+              fontSize: 13,
+              color: AppColors.ink,
+            ),
           ),
         ],
       ),
@@ -1264,7 +1422,9 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.civic,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 0,
         ),
         onPressed: _parsing ? null : _handleParse,
@@ -1272,7 +1432,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1281,7 +1444,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                   const SizedBox(width: 8),
                   Text(
                     "Parse Document",
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: AppTypography.button.copyWith(
+                      fontSize: 13,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -1296,15 +1462,15 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.rate_review_rounded, color: AppColors.emerald, size: 20),
+            const Icon(
+              Icons.rate_review_rounded,
+              color: AppColors.emerald,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
               "Parsed Preview (${result.questions.length} questions)",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.sectionHeader.copyWith(fontSize: 14),
             ),
           ],
         ),
@@ -1323,13 +1489,20 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               children: [
                 Text(
                   result.passageTitle!,
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.brand),
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: AppColors.brand,
+                  ),
                 ),
                 if (result.passageText != null) ...[
                   const SizedBox(height: 6),
                   Text(
                     result.passageText!,
-                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink),
+                    style: AppTypography.body.copyWith(
+                      fontSize: 12,
+                      color: AppColors.ink,
+                    ),
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1358,14 +1531,22 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                 children: [
                   Text(
                     "Question ${idx + 1}",
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 12, color: AppColors.muted),
+                    style: AppTypography.sectionHeader.copyWith(
+                      fontSize: 12,
+                      color: AppColors.muted,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     q.questionStatement,
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13.5, color: AppColors.ink),
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                      color: AppColors.ink,
+                    ),
                   ),
-                  if (q.suppQuestionStatement != null && q.suppQuestionStatement!.trim().isNotEmpty) ...[
+                  if (q.suppQuestionStatement != null &&
+                      q.suppQuestionStatement!.trim().isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
@@ -1377,12 +1558,18 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       child: MarkdownBody(
                         data: q.suppQuestionStatement!,
                         styleSheet: MarkdownStyleSheet(
-                          p: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, height: 1.4, fontStyle: FontStyle.italic),
+                          p: AppTypography.body.copyWith(
+                            fontSize: 13,
+                            color: AppColors.muted,
+                            height: 1.4,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                     ),
                   ],
-                  if (q.questionPrompt != null && q.questionPrompt!.trim().isNotEmpty) ...[
+                  if (q.questionPrompt != null &&
+                      q.questionPrompt!.trim().isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
@@ -1390,11 +1577,17 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.civic.withOpacity(0.04),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.civic.withOpacity(0.1)),
+                        border: Border.all(
+                          color: AppColors.civic.withOpacity(0.1),
+                        ),
                       ),
                       child: Text(
                         q.questionPrompt!,
-                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.civic),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.civic,
+                        ),
                       ),
                     ),
                   ],
@@ -1405,7 +1598,8 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     final selectedKey = selectedAnswers[idx];
                     final hasSelected = selectedKey != null;
                     final isSelected = selectedKey == opt.key;
-                    final isCorrect = opt.key.toUpperCase() == q.correctAnswer.toUpperCase();
+                    final isCorrect =
+                        opt.key.toUpperCase() == q.correctAnswer.toUpperCase();
 
                     Color cardBgColor = Colors.white;
                     Color borderColor = AppColors.line;
@@ -1415,11 +1609,19 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       if (isCorrect) {
                         cardBgColor = AppColors.emerald.withOpacity(0.08);
                         borderColor = AppColors.emerald;
-                        trailingIcon = const Icon(Icons.check_circle, color: AppColors.emerald, size: 16);
+                        trailingIcon = const Icon(
+                          Icons.check_circle,
+                          color: AppColors.emerald,
+                          size: 16,
+                        );
                       } else if (isSelected) {
                         cardBgColor = AppColors.berry.withOpacity(0.08);
                         borderColor = AppColors.berry;
-                        trailingIcon = const Icon(Icons.cancel, color: AppColors.berry, size: 16);
+                        trailingIcon = const Icon(
+                          Icons.cancel,
+                          color: AppColors.berry,
+                          size: 16,
+                        );
                       }
                     }
 
@@ -1435,7 +1637,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                         },
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: cardBgColor,
                             borderRadius: BorderRadius.circular(8),
@@ -1451,14 +1656,19 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                                   shape: BoxShape.circle,
                                   color: hasSelected && isCorrect
                                       ? AppColors.emerald
-                                      : (hasSelected && isSelected ? AppColors.berry : AppColors.paper),
+                                      : (hasSelected && isSelected
+                                            ? AppColors.berry
+                                            : AppColors.paper),
                                 ),
                                 child: Text(
                                   opt.key,
-                                  style: GoogleFonts.inter(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    color: hasSelected && (isCorrect || isSelected) ? Colors.white : AppColors.muted,
+                                    color:
+                                        hasSelected && (isCorrect || isSelected)
+                                        ? Colors.white
+                                        : AppColors.muted,
                                   ),
                                 ),
                               ),
@@ -1466,7 +1676,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                               Expanded(
                                 child: Text(
                                   opt.text,
-                                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+                                  style: AppTypography.body.copyWith(
+                                    fontSize: 13,
+                                    color: AppColors.ink,
+                                  ),
                                 ),
                               ),
                               if (trailingIcon != null) trailingIcon,
@@ -1493,7 +1706,9 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.emerald,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 0,
         ),
         onPressed: _saving ? null : _handleSaveQuestions,
@@ -1501,7 +1716,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1510,7 +1728,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                   const SizedBox(width: 8),
                   Text(
                     "Save to Private Library",
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: AppTypography.button.copyWith(
+                      fontSize: 13,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -1525,7 +1746,9 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: AppColors.line),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         onPressed: () {
           setState(() {
@@ -1537,7 +1760,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
         },
         child: Text(
           "Reset Parser",
-          style: GoogleFonts.plusJakartaSans(
+          style: AppTypography.button.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 12.5,
             color: AppColors.muted,
