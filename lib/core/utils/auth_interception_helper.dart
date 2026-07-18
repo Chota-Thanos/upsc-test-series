@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../network/api_client.dart';
 import '../theme/app_theme.dart';
 
@@ -17,35 +16,32 @@ class AuthInterceptionHelper {
         return AlertDialog(
           title: Row(
             children: [
-              const Icon(Icons.lock_outline_rounded, color: AppColors.civic, size: 24),
+              const Icon(
+                Icons.lock_outline_rounded,
+                color: AppColors.civic,
+                size: 24,
+              ),
               const SizedBox(width: 8),
               Text(
                 "Sign In Required",
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  color: AppColors.ink,
-                ),
+                style: AppTypography.title.copyWith(fontSize: 18),
               ),
             ],
           ),
           content: Text(
             "Create a free account or sign in to unlock this feature, build custom mock tests, book topper mentors, and sync your preparation progress across devices.",
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.muted,
-              height: 1.4,
-            ),
+            style: AppTypography.body.copyWith(fontSize: 13, height: 1.4),
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
                 "Cancel",
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.button.copyWith(
                   fontSize: 13,
                   color: AppColors.muted,
                 ),
@@ -59,7 +55,10 @@ class AuthInterceptionHelper {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
               ),
               onPressed: () {
                 Navigator.pop(context);
@@ -68,10 +67,7 @@ class AuthInterceptionHelper {
               },
               child: Text(
                 "Sign In / Register",
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
+                style: AppTypography.button.copyWith(fontSize: 13),
               ),
             ),
           ],

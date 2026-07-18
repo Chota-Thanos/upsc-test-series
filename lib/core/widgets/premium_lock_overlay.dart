@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/constants.dart';
 import '../theme/app_theme.dart';
@@ -62,7 +61,7 @@ class PremiumLockOverlay extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Plan Badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -74,46 +73,40 @@ class PremiumLockOverlay extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star_rounded, color: Colors.indigo, size: 14),
+                  const Icon(
+                    Icons.star_rounded,
+                    color: Colors.indigo,
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     "${planName.toUpperCase()} FEATURE",
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
+                    style: AppTypography.eyebrowSmall.copyWith(
                       fontWeight: FontWeight.w900,
                       color: Colors.indigo,
-                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Title
             Text(
               title,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.title.copyWith(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            
+
             // Description
             Text(
               description,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.muted,
-                height: 1.4,
-              ),
+              style: AppTypography.body.copyWith(fontSize: 13, height: 1.4),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            
+
             // Action button
             SizedBox(
               width: double.infinity,
@@ -130,10 +123,7 @@ class PremiumLockOverlay extends StatelessWidget {
                 onPressed: _launchPricing,
                 child: Text(
                   ctaText,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                  ),
+                  style: AppTypography.button.copyWith(fontSize: 13),
                 ),
               ),
             ),
