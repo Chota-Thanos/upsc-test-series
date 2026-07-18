@@ -619,7 +619,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                 _buildWeekStatusCircle(
                   done: allDone,
                   locked: locked,
-                  isCurrent: isExpanded && !allDone,
+                  isCurrent: isExpanded && !allDone && !locked,
                 ),
                 if (!isLast)
                   Expanded(
@@ -918,6 +918,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       child: filled
           ? ElevatedButton(
               style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.civic,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9),
