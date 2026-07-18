@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'self_test_builder_tab.dart';
 import 'category_performance_detail_screen.dart';
@@ -8,6 +7,7 @@ class CategoryDetailScreen extends StatefulWidget {
   final int nodeId;
   final String nodeName;
   final String contentType;
+
   /// Which tab to land on (0 = Create Test, 1 = Performance, 2 = Revision).
   /// Callers reached from a performance page should pass 1 so drilling into
   /// a category doesn't dump the student onto Create Test every time.
@@ -54,11 +54,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
         scrolledUnderElevation: 1,
         title: Text(
           widget.nodeName,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: AppColors.ink,
-          ),
+          style: AppTypography.title.copyWith(fontSize: 17),
         ),
         iconTheme: const IconThemeData(color: AppColors.ink),
         bottom: TabBar(
@@ -67,8 +63,15 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           unselectedLabelColor: AppColors.muted,
           indicatorColor: AppColors.civic,
           indicatorSize: TabBarIndicatorSize.tab,
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-          unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
+          labelStyle: AppTypography.body.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: AppColors.civic,
+          ),
+          unselectedLabelStyle: AppTypography.body.copyWith(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
           tabs: const [
             Tab(text: 'Create Test'),
             Tab(text: 'Performance'),

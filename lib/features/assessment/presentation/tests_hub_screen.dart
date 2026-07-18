@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/tour/app_tour_service.dart';
@@ -35,7 +34,11 @@ class _TestsHubScreenState extends State<TestsHubScreen>
 
   static const List<_ContentTab> _tabs = [
     _ContentTab(contentType: 'gk', label: 'General Studies', shortLabel: 'GS'),
-    _ContentTab(contentType: 'aptitude', label: 'CSAT / Aptitude', shortLabel: 'CSAT'),
+    _ContentTab(
+      contentType: 'aptitude',
+      label: 'CSAT / Aptitude',
+      shortLabel: 'CSAT',
+    ),
     _ContentTab(contentType: 'mains', label: 'Mains', shortLabel: 'Mains'),
   ];
 
@@ -45,7 +48,8 @@ class _TestsHubScreenState extends State<TestsHubScreen>
     _tabController = TabController(
       length: _tabs.length,
       vsync: this,
-      initialIndex: widget.initialIndex >= 0 && widget.initialIndex < _tabs.length
+      initialIndex:
+          widget.initialIndex >= 0 && widget.initialIndex < _tabs.length
           ? widget.initialIndex
           : 0,
     );
@@ -74,7 +78,10 @@ class _TestsHubScreenState extends State<TestsHubScreen>
 
   Future<void> _maybeAutoStartTour(BuildContext showcaseContext) async {
     if (!widget.isActive) return;
-    if (!await AppTourService.shouldShowTour(AppTourService.contentTypeSelectKey)) return;
+    if (!await AppTourService.shouldShowTour(
+      AppTourService.contentTypeSelectKey,
+    ))
+      return;
     if (!mounted || !showcaseContext.mounted) return;
     // Only mark as seen once we've confirmed the target is actually attached
     // — otherwise a transient miss would silently burn the one-time flag.
@@ -116,7 +123,11 @@ class _TestsHubScreenState extends State<TestsHubScreen>
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: const [
-                        BoxShadow(color: Color(0x10000000), blurRadius: 4, offset: Offset(0, 1)),
+                        BoxShadow(
+                          color: Color(0x10000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
                       ],
                     ),
                     indicatorSize: TabBarIndicatorSize.tab,
@@ -124,8 +135,15 @@ class _TestsHubScreenState extends State<TestsHubScreen>
                     dividerColor: Colors.transparent,
                     labelColor: AppColors.ink,
                     unselectedLabelColor: AppColors.muted,
-                    labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13),
-                    unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13),
+                    labelStyle: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: AppColors.ink,
+                    ),
+                    unselectedLabelStyle: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
                     tabs: _tabs.map((t) => Tab(text: t.shortLabel)).toList(),
                   ),
                 ),
@@ -136,7 +154,9 @@ class _TestsHubScreenState extends State<TestsHubScreen>
                 controller: _tabController,
                 children: _tabs.map((t) {
                   final idx = _tabs.indexOf(t);
-                  final initialSub = idx == widget.initialIndex ? widget.initialSubIndex : 0;
+                  final initialSub = idx == widget.initialIndex
+                      ? widget.initialSubIndex
+                      : 0;
                   return ContentTypeScreen(
                     contentType: t.contentType,
                     label: t.label,
@@ -157,5 +177,9 @@ class _ContentTab {
   final String contentType;
   final String label;
   final String shortLabel;
-  const _ContentTab({required this.contentType, required this.label, required this.shortLabel});
+  const _ContentTab({
+    required this.contentType,
+    required this.label,
+    required this.shortLabel,
+  });
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'self_test_builder_tab.dart';
 import 'my_tests_tab.dart';
@@ -8,10 +7,12 @@ class SelfTestDashboardScreen extends StatefulWidget {
   const SelfTestDashboardScreen({super.key});
 
   @override
-  State<SelfTestDashboardScreen> createState() => _SelfTestDashboardScreenState();
+  State<SelfTestDashboardScreen> createState() =>
+      _SelfTestDashboardScreenState();
 }
 
-class _SelfTestDashboardScreenState extends State<SelfTestDashboardScreen> with SingleTickerProviderStateMixin {
+class _SelfTestDashboardScreenState extends State<SelfTestDashboardScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -40,8 +41,14 @@ class _SelfTestDashboardScreenState extends State<SelfTestDashboardScreen> with 
           unselectedLabelColor: AppColors.muted,
           indicatorColor: AppColors.civic,
           indicatorSize: TabBarIndicatorSize.tab,
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
-          unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+          labelStyle: AppTypography.button.copyWith(
+            fontSize: 14,
+            color: AppColors.civic,
+          ),
+          unselectedLabelStyle: AppTypography.body.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
           tabs: const [
             Tab(text: "Self Test"),
             Tab(text: "My Tests"),
@@ -50,10 +57,7 @@ class _SelfTestDashboardScreenState extends State<SelfTestDashboardScreen> with 
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          SelfTestBuilderTab(),
-          MyTestsTab(),
-        ],
+        children: const [SelfTestBuilderTab(), MyTestsTab()],
       ),
     );
   }

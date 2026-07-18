@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../data/assessment_service.dart';
@@ -70,7 +69,8 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
       }
     } catch (e) {
       setState(() {
-        _error = "Could not start attempt: ${e.toString().replaceFirst('Exception: ', '')}";
+        _error =
+            "Could not start attempt: ${e.toString().replaceFirst('Exception: ', '')}";
         _starting = false;
       });
     }
@@ -93,11 +93,18 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.berry,
+                  size: 44,
+                ),
                 const SizedBox(height: 16),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _loadTestDetails, child: const Text("RETRY")),
+                ElevatedButton(
+                  onPressed: _loadTestDetails,
+                  child: const Text("RETRY"),
+                ),
               ],
             ),
           ),
@@ -113,11 +120,15 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
       appBar: AppBar(
         title: Text(
           "Exam Overview",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
+          style: AppTypography.title.copyWith(fontSize: 18),
         ),
         backgroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.ink,
+            size: 18,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -134,31 +145,31 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.civic.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       type,
-                      style: GoogleFonts.inter(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.eyebrowSmall.copyWith(
                         color: AppColors.civic,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     test.title,
-                    style: Theme.of(context).textTheme.displayMedium,
+                    style: AppTypography.title.copyWith(fontSize: 20),
                   ),
-                  if (test.description != null && test.description!.trim().isNotEmpty) ...[
+                  if (test.description != null &&
+                      test.description!.trim().isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    Text(
-                      test.description!,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                    Text(test.description!, style: AppTypography.body),
                   ],
                   const SizedBox(height: 20),
                   const Divider(color: AppColors.line),
@@ -168,10 +179,19 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildInfoColumn("DURATION", "${test.durationMinutes} Mins"),
-                      _buildInfoColumn("TOTAL MARKS", test.totalMarks.toStringAsFixed(0)),
+                      _buildInfoColumn(
+                        "DURATION",
+                        "${test.durationMinutes} Mins",
+                      ),
+                      _buildInfoColumn(
+                        "TOTAL MARKS",
+                        test.totalMarks.toStringAsFixed(0),
+                      ),
                       if (test.questionCount != null)
-                        _buildInfoColumn("QUESTIONS", test.questionCount.toString()),
+                        _buildInfoColumn(
+                          "QUESTIONS",
+                          test.questionCount.toString(),
+                        ),
                     ],
                   ),
                 ],
@@ -188,7 +208,7 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
                 children: [
                   Text(
                     "Standard Exam Instructions",
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: AppTypography.sectionHeader.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 16),
                   _buildInstructionItem(
@@ -215,7 +235,11 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
             if (_error != null) ...[
               Text(
                 _error!,
-                style: const TextStyle(color: AppColors.berry, fontWeight: FontWeight.bold, fontSize: 13),
+                style: AppTypography.body.copyWith(
+                  color: AppColors.berry,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -226,19 +250,25 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
               onPressed: _starting ? null : _startAttempt,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: _starting
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
                     )
                   : const Text("START TEST ATTEMPT"),
             ),
 
             if (test.createdByUserId != null &&
-                Provider.of<ApiClient>(context, listen: false).user?['id'] == test.createdByUserId) ...[
+                Provider.of<ApiClient>(context, listen: false).user?['id'] ==
+                    test.createdByUserId) ...[
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () {
@@ -247,14 +277,21 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
                     MaterialPageRoute(
                       builder: (context) => AiBasedParsingScreen(
                         testTemplateId: test.id,
-                        contentType: test.testType == 'mains_test' ? 'mains' : (test.testType.contains('aptitude') || test.testType.contains('csat') ? 'aptitude' : 'gk'),
+                        contentType: test.testType == 'mains_test'
+                            ? 'mains'
+                            : (test.testType.contains('aptitude') ||
+                                      test.testType.contains('csat')
+                                  ? 'aptitude'
+                                  : 'gk'),
                       ),
                     ),
                   ).then((_) => _loadTestDetails());
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   side: const BorderSide(color: AppColors.civic, width: 1.5),
                   foregroundColor: AppColors.civic,
                 ),
@@ -265,7 +302,9 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
                     const SizedBox(width: 8),
                     Text(
                       "ADD QUESTIONS WITH AI",
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+                      style: AppTypography.button.copyWith(
+                        color: AppColors.civic,
+                      ),
                     ),
                   ],
                 ),
@@ -282,13 +321,13 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted),
+          style: AppTypography.caption.copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink),
-        ),
+        Text(value, style: AppTypography.statValue.copyWith(fontSize: 16)),
       ],
     );
   }
@@ -304,7 +343,7 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
           Expanded(
             child: Text(
               instruction,
-              style: GoogleFonts.inter(
+              style: AppTypography.body.copyWith(
                 fontSize: 13,
                 height: 1.45,
                 color: AppColors.ink.withOpacity(0.85),

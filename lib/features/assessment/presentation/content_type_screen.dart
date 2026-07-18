@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'self_test_builder_tab.dart';
 import 'my_tests_tab.dart';
@@ -8,7 +7,7 @@ import 'my_tests_tab.dart';
 /// Has 2 tabs: Create Test + Performance
 class ContentTypeScreen extends StatefulWidget {
   final String contentType; // 'gk' | 'aptitude' | 'mains'
-  final String label;       // Display label e.g. 'General Studies'
+  final String label; // Display label e.g. 'General Studies'
   final int initialTabIndex;
   // Whether this content type is the one actually on screen right now (see
   // TestsHubScreen — TabBarView pre-builds neighbouring tabs too).
@@ -63,8 +62,15 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
             unselectedLabelColor: AppColors.muted,
             indicatorColor: AppColors.civic,
             indicatorSize: TabBarIndicatorSize.tab,
-            labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-            unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
+            labelStyle: AppTypography.body.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: AppColors.civic,
+            ),
+            unselectedLabelStyle: AppTypography.body.copyWith(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
             tabs: const [
               Tab(text: 'Create Test'),
               Tab(text: 'My Tests'),
@@ -76,7 +82,10 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
           child: TabBarView(
             controller: _tabController,
             children: [
-              SelfTestBuilderTab(contentType: widget.contentType, isActive: createTestActive),
+              SelfTestBuilderTab(
+                contentType: widget.contentType,
+                isActive: createTestActive,
+              ),
               MyTestsTab(contentType: widget.contentType, onlyInProgress: true),
               SelfTestBuilderTab(
                 contentType: widget.contentType,
