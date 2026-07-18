@@ -348,194 +348,276 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: AppTheme.cardDecoration,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    plan.summary.title,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.ink,
-                      height: 1.2,
-                    ),
-                  ),
-                  if (plan.summary.subtitle != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      plan.summary.subtitle!,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.muted,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                  if (plan.reviewsSummary.totalReviews > 0) ...[
-                    const SizedBox(height: 8),
-                    Row(
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
+                    decoration: AppTheme.cardDecoration,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ...List.generate(5, (i) {
-                          final filled =
-                              i < plan.reviewsSummary.averageRating.round();
-                          return Icon(
-                            filled
-                                ? Icons.star_rounded
-                                : Icons.star_outline_rounded,
-                            color: AppColors.saffron,
-                            size: 15,
-                          );
-                        }),
-                        const SizedBox(width: 6),
                         Text(
-                          "${plan.reviewsSummary.averageRating.toStringAsFixed(1)} (${plan.reviewsSummary.totalReviews} reviews)",
-                          style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.muted,
+                          plan.summary.title,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.ink,
+                            height: 1.2,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                  _buildDescription(plan.summary.description),
-                  const SizedBox(height: 16),
-                  if (!plan.hasAccess)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: AppTheme.innerCardDecoration,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        if (plan.summary.subtitle != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            plan.summary.subtitle!,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.muted,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                        if (plan.reviewsSummary.totalReviews > 0) ...[
+                          const SizedBox(height: 8),
+                          Row(
                             children: [
+                              ...List.generate(5, (i) {
+                                final filled =
+                                    i <
+                                    plan.reviewsSummary.averageRating.round();
+                                return Icon(
+                                  filled
+                                      ? Icons.star_rounded
+                                      : Icons.star_outline_rounded,
+                                  color: AppColors.saffron,
+                                  size: 15,
+                                );
+                              }),
+                              const SizedBox(width: 6),
                               Text(
-                                "PLAN UNLOCK FEE",
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.8,
+                                "${plan.reviewsSummary.averageRating.toStringAsFixed(1)} (${plan.reviewsSummary.totalReviews} reviews)",
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
                                   color: AppColors.muted,
-                                ),
-                              ),
-                              Text(
-                                priceStr,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.ink,
                                 ),
                               ),
                             ],
                           ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        ],
+                        _buildDescription(plan.summary.description),
+                        if (!plan.hasAccess) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.local_library_rounded,
+                                color: AppColors.muted,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "${plan.items.length} sessions across ${sortedWeeks.length} weeks",
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  color: AppColors.muted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (plan.hasAccess) ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Your Progress",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                              Text(
+                                "$progress%",
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.civic,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: progress / 100,
+                              minHeight: 8,
+                              backgroundColor: AppColors.paper,
+                              valueColor: const AlwaysStoppedAnimation(
+                                AppColors.civic,
                               ),
                             ),
-                            onPressed: _processing
-                                ? null
-                                : (plan.summary.priceAmountMinor > 0
-                                      ? _launchWebPurchase
-                                      : _enroll),
-                            child: Text(
-                              plan.summary.priceAmountMinor > 0
-                                  ? "BUY ON WEB"
-                                  : "UNLOCK NOW",
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "$completed of $total items done",
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: AppColors.muted,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
-                      ),
-                    )
-                  else ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Your Progress",
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                        Text(
-                          "$progress%",
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.civic,
-                          ),
-                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: progress / 100,
-                        minHeight: 8,
-                        backgroundColor: AppColors.paper,
-                        valueColor: const AlwaysStoppedAnimation(
-                          AppColors.civic,
-                        ),
+                  ),
+                  if (!plan.hasAccess && plan.items.any((i) => i.isPreview))
+                    _buildFreePreviewBanner(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 8.0,
+                    ),
+                    child: Text(
+                      "Course Schedule",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.ink,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      "$completed of $total items done",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < sortedWeeks.length; i++)
+                          _buildWeekNode(
+                            sortedWeeks[i],
+                            weeksMap[sortedWeeks[i]]!,
+                            plan,
+                            isLast: i == sortedWeeks.length - 1,
+                          ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 8.0,
+          ),
+          if (!plan.hasAccess) _buildStickyUnlockBar(priceStr, plan),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFreePreviewBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.civic.withOpacity(0.06),
+        border: Border.all(color: AppColors.civic.withOpacity(0.25)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.lock_open_rounded, color: AppColors.civic, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              "Try the free preview sessions below — no purchase needed",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.civic,
               ),
-              child: Text(
-                "Course Schedule",
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.ink,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStickyUnlockBar(String priceStr, StudyPlanDetail plan) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: const Border(top: BorderSide(color: AppColors.line)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withOpacity(0.06),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  plan.summary.priceAmountMinor > 0
+                      ? "FULL ACCESS"
+                      : "FREE PLAN",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: AppColors.muted,
+                  ),
+                ),
+                Text(
+                  priceStr,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.civic,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 13,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-              child: Column(
-                children: [
-                  for (int i = 0; i < sortedWeeks.length; i++)
-                    _buildWeekNode(
-                      sortedWeeks[i],
-                      weeksMap[sortedWeeks[i]]!,
-                      plan,
-                      isLast: i == sortedWeeks.length - 1,
-                    ),
-                ],
+              onPressed: _processing
+                  ? null
+                  : (plan.summary.priceAmountMinor > 0
+                        ? _launchWebPurchase
+                        : _enroll),
+              child: Text(
+                plan.summary.priceAmountMinor > 0
+                    ? "Unlock Plan"
+                    : "Unlock Free",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
           ],
@@ -758,6 +840,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
   Widget _buildDayRow(StudyPlanItem item, bool planHasAccess) {
     final done = item.progress?.status == 'completed';
     final locked = !planHasAccess && !item.isPreview;
+    final isFreeSample = item.isPreview && !planHasAccess;
     final isTest = _testItemTypes.contains(item.itemType);
     final isLive = item.itemType == 'live_lecture';
     final resourceUrl = item.lectureUrl ?? item.resourceUrl;
@@ -769,7 +852,10 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border.all(color: AppColors.line),
+          border: Border.all(
+            color: isFreeSample ? AppColors.civic : AppColors.line,
+            width: isFreeSample ? 1.5 : 1,
+          ),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -835,14 +921,24 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           Icons.timer_outlined,
                           "${item.estimatedMinutes} mins",
                         ),
-                      if (item.isPreview && !planHasAccess)
-                        Text(
-                          "FREE PREVIEW",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 9.5,
+                      if (isFreeSample)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
                             color: AppColors.civic,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.3,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            "FREE",
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 9,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                            ),
                           ),
                         ),
                       if (isLive && item.liveClass != null)
