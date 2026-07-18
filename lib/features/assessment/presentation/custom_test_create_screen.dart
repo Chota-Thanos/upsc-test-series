@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -51,7 +50,7 @@ class CustomTestCreateScreen extends StatefulWidget {
 
 class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
   late AssessmentService _service;
-  
+
   // Page Steps: 'name' = step 1 (enter test name), 'build' = step 2 (add questions)
   String _step = 'name';
 
@@ -74,7 +73,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
   final Set<int> _expandedNodes = {};
 
   // Basket for Custom Test
-  final List<Map<String, dynamic>> _addedCategories = []; // List of {'node': node, 'count': count}
+  final List<Map<String, dynamic>> _addedCategories =
+      []; // List of {'node': node, 'count': count}
   final Map<int, int> _selectedQuantities = {};
 
   // Tour
@@ -152,10 +152,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
               contentType: cat['contentType'] as String?,
             );
             final count = cat['count'] as int;
-            _addedCategories.add({
-              'node': node,
-              'count': count,
-            });
+            _addedCategories.add({'node': node, 'count': count});
             _selectedQuantities[node.id] = count;
           }
         });
@@ -180,7 +177,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
       final nodes = _contentType == 'mains'
           ? await _service.getMainsTaxonomyNodes(_selectedExamId!)
           : await _service.getTaxonomyNodes(_selectedExamId!);
-      
+
       setState(() {
         _allNodes = nodes;
         _loadingCategories = false;
@@ -269,9 +266,11 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
     for (var root in roots) {
       _sortChildren(root);
     }
-    roots.sort((a, b) => a.displayOrder.compareTo(b.displayOrder) == 0
-        ? a.name.compareTo(b.name)
-        : a.displayOrder.compareTo(b.displayOrder));
+    roots.sort(
+      (a, b) => a.displayOrder.compareTo(b.displayOrder) == 0
+          ? a.name.compareTo(b.name)
+          : a.displayOrder.compareTo(b.displayOrder),
+    );
 
     setState(() {
       _activeTree = roots;
@@ -282,9 +281,11 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
   void _sortChildren(_TreeNode node) {
     if (node.children.isNotEmpty) {
-      node.children.sort((a, b) => a.displayOrder.compareTo(b.displayOrder) == 0
-          ? a.name.compareTo(b.name)
-          : a.displayOrder.compareTo(b.displayOrder));
+      node.children.sort(
+        (a, b) => a.displayOrder.compareTo(b.displayOrder) == 0
+            ? a.name.compareTo(b.name)
+            : a.displayOrder.compareTo(b.displayOrder),
+      );
       for (var child in node.children) {
         _sortChildren(child);
       }
@@ -303,15 +304,14 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
     if (count <= 0) return;
 
     setState(() {
-      final index = _addedCategories.indexWhere((item) => item['node'].id == node.id);
+      final index = _addedCategories.indexWhere(
+        (item) => item['node'].id == node.id,
+      );
       if (index >= 0) {
         final currentCount = _addedCategories[index]['count'] as int;
         _addedCategories[index]['count'] = min(currentCount + count, available);
       } else {
-        _addedCategories.add({
-          'node': node,
-          'count': count,
-        });
+        _addedCategories.add({'node': node, 'count': count});
       }
     });
 
@@ -330,7 +330,10 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
   }
 
   int _getTotalAddedQuestions() {
-    return _addedCategories.fold(0, (sum, item) => sum + (item['count'] as int));
+    return _addedCategories.fold(
+      0,
+      (sum, item) => sum + (item['count'] as int),
+    );
   }
 
   Future<void> _handleCreateCustomTest() async {
@@ -343,7 +346,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
 
     if (_addedCategories.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add questions from at least one category')),
+        const SnackBar(
+          content: Text('Please add questions from at least one category'),
+        ),
       );
       return;
     }
@@ -448,7 +453,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
   }
 
   void _startBuildStepTour(BuildContext ctx) {
-    ShowCaseWidget.of(ctx).startShowCase([_tourCategoriesKey, _tourBottomBarKey]);
+    ShowCaseWidget.of(
+      ctx,
+    ).startShowCase([_tourCategoriesKey, _tourBottomBarKey]);
   }
 
   Future<void> _maybeAutoStartTour(BuildContext ctx) async {
@@ -472,7 +479,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
         // Build step: check tour first time we arrive here
         if (!_tourChecked) {
           _tourChecked = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoStartTour(ctx));
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _maybeAutoStartTour(ctx),
+          );
         }
 
         return _buildBuildStep(ctx, hasPremium);
@@ -481,7 +490,6 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
   }
 
   Widget _buildBuildStep(BuildContext ctx, bool hasPremium) {
-
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
@@ -489,14 +497,16 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _titleController.text.isEmpty ? "Custom Test" : _titleController.text,
-              style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink),
+              _titleController.text.isEmpty
+                  ? "Custom Test"
+                  : _titleController.text,
+              style: AppTypography.title.copyWith(fontSize: 15),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             Text(
               "Adding questions",
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+              style: AppTypography.caption.copyWith(fontSize: 11),
             ),
           ],
         ),
@@ -508,7 +518,11 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.map_outlined, color: AppColors.civic, size: 20),
+            icon: const Icon(
+              Icons.map_outlined,
+              color: AppColors.civic,
+              size: 20,
+            ),
             tooltip: "App Tour",
             onPressed: () => _startBuildStepTour(ctx),
           ),
@@ -519,7 +533,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CustomTestsListScreen(contentType: _contentType),
+                  builder: (context) =>
+                      CustomTestsListScreen(contentType: _contentType),
                 ),
               );
             },
@@ -527,7 +542,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
         ],
       ),
       body: _loadingExams
-          ? const Center(child: CircularProgressIndicator(color: AppColors.civic))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.civic),
+            )
           : Column(
               children: [
                 if (_error != null)
@@ -537,7 +554,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                     color: AppColors.berry.withOpacity(0.1),
                     child: Text(
                       _error!,
-                      style: GoogleFonts.inter(
+                      style: AppTypography.body.copyWith(
                         color: AppColors.berry,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
@@ -557,16 +574,22 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFF7ED),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFFFD8A8)),
+                              border: Border.all(
+                                color: const Color(0xFFFFD8A8),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.info_outline_rounded, color: Color(0xFFEA580C), size: 20),
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  color: Color(0xFFEA580C),
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     "Free Tier: ${_contentType == 'mains' ? 'Mains' : 'GK/CSAT'} tests are limited to ${_questionCap(false)} questions. Upgrade to Premium for up to ${_questionCap(true)}.",
-                                    style: GoogleFonts.inter(
+                                    style: AppTypography.body.copyWith(
                                       color: const Color(0xFF9A3412),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
@@ -581,24 +604,31 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                         if (_addedCategories.isNotEmpty) ...[
                           // Test name header above the basket
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
                               color: AppColors.civic.withOpacity(0.06),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.civic.withOpacity(0.12)),
+                              border: Border.all(
+                                color: AppColors.civic.withOpacity(0.12),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.bookmark_rounded, size: 14, color: AppColors.civic),
+                                const Icon(
+                                  Icons.bookmark_rounded,
+                                  size: 14,
+                                  color: AppColors.civic,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     _titleController.text,
-                                    style: GoogleFonts.plusJakartaSans(
+                                    style: AppTypography.title.copyWith(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.ink,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -609,9 +639,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           ),
                           Text(
                             "Questions Added",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowLarge.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
                               color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
@@ -636,7 +665,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                                         Expanded(
                                           child: Text(
                                             node.name,
-                                            style: GoogleFonts.inter(
+                                            style: AppTypography.body.copyWith(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600,
                                               color: AppColors.ink,
@@ -645,7 +674,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                                         ),
                                         Text(
                                           "$count Qs",
-                                          style: GoogleFonts.inter(
+                                          style: AppTypography.body.copyWith(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
                                             color: AppColors.civic,
@@ -666,16 +695,19 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                                 }),
                                 const Divider(color: AppColors.line),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       "Total Questions:",
-                                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
+                                      style: AppTypography.body.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                     Text(
                                       "${_getTotalAddedQuestions()}",
-                                      style: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w900,
+                                      style: AppTypography.cardTitle.copyWith(
                                         fontSize: 15,
                                         color: AppColors.civic,
                                       ),
@@ -693,9 +725,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           const SizedBox(height: 4),
                           Text(
                             "Content Type",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowLarge.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
                               color: AppColors.muted,
                               letterSpacing: 0.8,
                             ),
@@ -703,11 +734,38 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Expanded(child: _buildChoiceChip(label: "General Studies", isSelected: _contentType == 'gk', onTap: () { setState(() => _contentType = 'gk'); _fetchCategories(); })),
+                              Expanded(
+                                child: _buildChoiceChip(
+                                  label: "General Studies",
+                                  isSelected: _contentType == 'gk',
+                                  onTap: () {
+                                    setState(() => _contentType = 'gk');
+                                    _fetchCategories();
+                                  },
+                                ),
+                              ),
                               const SizedBox(width: 8),
-                              Expanded(child: _buildChoiceChip(label: "CSAT", isSelected: _contentType == 'aptitude', onTap: () { setState(() => _contentType = 'aptitude'); _fetchCategories(); })),
+                              Expanded(
+                                child: _buildChoiceChip(
+                                  label: "CSAT",
+                                  isSelected: _contentType == 'aptitude',
+                                  onTap: () {
+                                    setState(() => _contentType = 'aptitude');
+                                    _fetchCategories();
+                                  },
+                                ),
+                              ),
                               const SizedBox(width: 8),
-                              Expanded(child: _buildChoiceChip(label: "Mains", isSelected: _contentType == 'mains', onTap: () { setState(() => _contentType = 'mains'); _fetchCategories(); })),
+                              Expanded(
+                                child: _buildChoiceChip(
+                                  label: "Mains",
+                                  isSelected: _contentType == 'mains',
+                                  onTap: () {
+                                    setState(() => _contentType = 'mains');
+                                    _fetchCategories();
+                                  },
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -717,14 +775,13 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                         Showcase(
                           key: _tourCategoriesKey,
                           title: "Browse & Add Questions",
-                          description: "Expand any subject to see its topics, then tap the quantity stepper and 'Add Qs' to include them in your test.",
+                          description:
+                              "Expand any subject to see its topics, then tap the quantity stepper and 'Add Qs' to include them in your test.",
                           targetBorderRadius: BorderRadius.circular(8),
                           child: Text(
                             "Browse & Add Questions",
-                            style: GoogleFonts.plusJakartaSans(
+                            style: AppTypography.sectionHeader.copyWith(
                               fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.ink,
                             ),
                           ),
                         ),
@@ -733,7 +790,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           const Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 40),
-                              child: CircularProgressIndicator(color: AppColors.civic),
+                              child: CircularProgressIndicator(
+                                color: AppColors.civic,
+                              ),
                             ),
                           )
                         else if (_activeTree.isEmpty)
@@ -747,7 +806,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                             ),
                             child: Text(
                               "No syllabus categories available for selected exam.",
-                              style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+                              style: AppTypography.body.copyWith(fontSize: 13),
                               textAlign: TextAlign.center,
                             ),
                           )
@@ -760,7 +819,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                 Showcase(
                   key: _tourBottomBarKey,
                   title: "Create & Start Your Test",
-                  description: "Once you've added questions, tap 'Create & Start' to generate your test and begin immediately.",
+                  description:
+                      "Once you've added questions, tap 'Create & Start' to generate your test and begin immediately.",
                   targetBorderRadius: BorderRadius.circular(16),
                   child: _buildStickyBottomBar(hasPremium),
                 ),
@@ -787,14 +847,17 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                     color: AppColors.civic.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(Icons.edit_note_rounded, color: AppColors.civic, size: 36),
+                  child: const Icon(
+                    Icons.edit_note_rounded,
+                    color: AppColors.civic,
+                    size: 36,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text(
                   "Name your test",
-                  style: GoogleFonts.plusJakartaSans(
+                  style: AppTypography.display.copyWith(
                     fontSize: 26,
-                    fontWeight: FontWeight.w900,
                     color: Colors.white,
                     letterSpacing: -0.5,
                   ),
@@ -803,7 +866,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                 Text(
                   "Give your custom practice test a name.\nYou'll pick topics on the next step.",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTypography.body.copyWith(
                     fontSize: 13,
                     color: const Color(0xFF94A3B8),
                     height: 1.5,
@@ -822,9 +885,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                     children: [
                       Text(
                         "TEST NAME",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.eyebrowLarge.copyWith(
                           fontSize: 10,
-                          fontWeight: FontWeight.w800,
                           color: AppColors.muted,
                           letterSpacing: 1,
                         ),
@@ -841,10 +903,13 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                         },
                         decoration: InputDecoration(
                           hintText: "e.g. Ancient History Focus Test",
-                          hintStyle: GoogleFonts.inter(color: AppColors.muted, fontSize: 14),
+                          hintStyle: AppTypography.body.copyWith(fontSize: 14),
                           fillColor: AppColors.paper,
                           filled: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: const BorderSide(color: AppColors.line),
@@ -855,28 +920,45 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.civic, width: 2),
+                            borderSide: const BorderSide(
+                              color: AppColors.civic,
+                              width: 2,
+                            ),
                           ),
                         ),
-                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton.icon(
-                          onPressed: _titleController.text.trim().isEmpty ? null : () {
-                            setState(() => _step = 'build');
-                          },
-                          icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                          onPressed: _titleController.text.trim().isEmpty
+                              ? null
+                              : () {
+                                  setState(() => _step = 'build');
+                                },
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                          ),
                           label: Text(
                             "Start Building My Test",
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
+                            style: AppTypography.button.copyWith(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.ink,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             elevation: 0,
                           ),
                         ),
@@ -885,7 +967,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                       Center(
                         child: Text(
                           "You can rename it later",
-                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                          style: AppTypography.caption.copyWith(fontSize: 11),
                         ),
                       ),
                     ],
@@ -896,7 +978,11 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: Text(
                     "← Back",
-                    style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w600),
+                    style: AppTypography.body.copyWith(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -930,7 +1016,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: GoogleFonts.inter(
+            style: AppTypography.body.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.bold,
               color: isSelected ? AppColors.civic : AppColors.muted,
@@ -973,7 +1059,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
     required int available,
   }) {
     final currentVal = _getCategoryQuantity(node.id, available);
-    final bool isAdded = _addedCategories.any((item) => item['node'].id == node.id);
+    final bool isAdded = _addedCategories.any(
+      (item) => item['node'].id == node.id,
+    );
 
     return Container(
       margin: EdgeInsets.only(left: depth * 16.0, bottom: 8.0),
@@ -1001,7 +1089,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                       });
                     },
                     child: Icon(
-                      isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
+                      isExpanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_right,
                       color: AppColors.muted,
                       size: 20,
                     ),
@@ -1012,33 +1102,31 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                 Expanded(
                   child: Text(
                     node.name,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: AppColors.ink,
-                    ),
+                    style: AppTypography.cardTitle.copyWith(fontSize: 13),
                   ),
                 ),
                 if (available > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.civic.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       "$available Qs",
-                      style: GoogleFonts.inter(
+                      style: AppTypography.eyebrowLarge.copyWith(
                         fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.civic,
+                        letterSpacing: 0,
                       ),
                     ),
                   )
                 else
                   Text(
                     "No Qs",
-                    style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted),
+                    style: AppTypography.caption.copyWith(fontSize: 10),
                   ),
               ],
             ),
@@ -1057,30 +1145,48 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
                           padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.remove, size: 14, color: AppColors.ink),
+                          icon: const Icon(
+                            Icons.remove,
+                            size: 14,
+                            color: AppColors.ink,
+                          ),
                           onPressed: currentVal > 1
-                              ? () => setState(() => _selectedQuantities[node.id] = currentVal - 1)
+                              ? () => setState(
+                                  () => _selectedQuantities[node.id] =
+                                      currentVal - 1,
+                                )
                               : null,
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Text(
                             "$currentVal",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.cardTitle.copyWith(
                               fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.ink,
                             ),
                           ),
                         ),
                         IconButton(
-                          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
                           padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.add, size: 14, color: AppColors.ink),
+                          icon: const Icon(
+                            Icons.add,
+                            size: 14,
+                            color: AppColors.ink,
+                          ),
                           onPressed: currentVal < available
-                              ? () => setState(() => _selectedQuantities[node.id] = currentVal + 1)
+                              ? () => setState(
+                                  () => _selectedQuantities[node.id] =
+                                      currentVal + 1,
+                                )
                               : null,
                         ),
                       ],
@@ -1089,9 +1195,14 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                   ElevatedButton(
                     onPressed: () => _addQuantityToTest(node, available),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isAdded ? AppColors.line : AppColors.civic,
+                      backgroundColor: isAdded
+                          ? AppColors.line
+                          : AppColors.civic,
                       foregroundColor: isAdded ? AppColors.ink : Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -1099,9 +1210,9 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                     ),
                     child: Text(
                       isAdded ? "Add More" : "Add Qs",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.bold,
+                      style: AppTypography.button.copyWith(
                         fontSize: 11,
+                        color: isAdded ? AppColors.ink : Colors.white,
                       ),
                     ),
                   ),
@@ -1144,18 +1255,19 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
               children: [
                 Text(
                   "$totalQs Selected / $cap Max",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 15,
                     color: totalQs > cap ? AppColors.berry : AppColors.ink,
                   ),
                 ),
                 Text(
                   hasPremium ? "Premium Limit" : "Free Account Limit",
-                  style: GoogleFonts.inter(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11,
                     color: totalQs > cap ? AppColors.berry : AppColors.muted,
-                    fontWeight: totalQs > cap ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: totalQs > cap
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ],
@@ -1173,20 +1285,25 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   elevation: 0,
                 ),
-                onPressed: _submitting || totalQs == 0 ? null : _handleCreateCustomTest,
+                onPressed: _submitting || totalQs == 0
+                    ? null
+                    : _handleCreateCustomTest,
                 child: _submitting
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
                       )
                     : Row(
                         children: [
                           Text(
                             "Create & Start",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.bold,
+                            style: AppTypography.button.copyWith(
                               fontSize: 13,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -1214,14 +1331,16 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
               const Icon(Icons.warning_amber_rounded, color: Colors.orange),
               const SizedBox(width: 10),
               Text(
                 "Limit Exceeded",
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+                style: AppTypography.cardTitle.copyWith(fontSize: 16),
               ),
             ],
           ),
@@ -1229,14 +1348,14 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
             hasPremium
                 ? "$kind tests are limited to a maximum of $cap questions, even on Assessment Premium. Remove a few questions to continue."
                 : "$kind tests for free accounts are limited to a maximum of $cap questions. Upgrade to Assessment Premium for a higher limit ($kind: ${_contentType == 'mains' ? 25 : 100} questions) plus AI subjective grading.",
-            style: GoogleFonts.inter(fontSize: 13, height: 1.4),
+            style: AppTypography.body.copyWith(fontSize: 13, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
                 hasPremium ? "OK" : "Cancel",
-                style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
+                style: AppTypography.button.copyWith(color: Colors.grey),
               ),
             ),
             if (!hasPremium)
@@ -1244,18 +1363,23 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 onPressed: () async {
                   Navigator.pop(context);
                   final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
-                  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                  if (!await launchUrl(
+                    url,
+                    mode: LaunchMode.externalApplication,
+                  )) {
                     debugPrint("Could not launch $url");
                   }
                 },
                 child: Text(
                   "View Plans",
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                  style: AppTypography.button.copyWith(color: Colors.white),
                 ),
               ),
           ],
