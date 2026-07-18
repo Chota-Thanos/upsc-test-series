@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -106,7 +105,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   bool _compiling = false;
   int? _selectedRevisionNodeId;
   bool _isCartExpanded = false;
-  final _customTestNameController = TextEditingController(text: "My Custom Practice Test");
+  final _customTestNameController = TextEditingController(
+    text: "My Custom Practice Test",
+  );
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
@@ -160,7 +161,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         // so a hardcoded id here previously caused a foreign-key error whenever
         // it didn't match the actual row id on the server being hit.
         try {
-          _examLevels = await _service.getAssessmentExamLevels(_selectedExamId!);
+          _examLevels = await _service.getAssessmentExamLevels(
+            _selectedExamId!,
+          );
         } catch (e) {
           debugPrint("Error loading exam levels: $e");
         }
@@ -276,14 +279,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           final parentId = n['parent_id'] != null
               ? int.tryParse(n['parent_id'].toString())
               : null;
-          if (parentId != null && excludedSet.contains(parentId) && !excludedSet.contains(id)) {
+          if (parentId != null &&
+              excludedSet.contains(parentId) &&
+              !excludedSet.contains(id)) {
             excludedSet.add(id);
             changed = true;
           }
         }
       }
       sourceNodes = sourceNodes
-          .where((n) => !excludedSet.contains(int.tryParse(n['id']?.toString() ?? '') ?? 0))
+          .where(
+            (n) => !excludedSet.contains(
+              int.tryParse(n['id']?.toString() ?? '') ?? 0,
+            ),
+          )
           .toList();
     }
 
@@ -360,7 +369,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     }
 
     _expandedNodes.clear(); // Clear old expansion state when tree rebuilds
-    _browseActiveSubjectId = null; // Node ids belong to the old tree — re-pick a tab below
+    _browseActiveSubjectId =
+        null; // Node ids belong to the old tree — re-pick a tab below
     _browseDrillPath = [];
 
     if (widget.rootNodeId != null) {
@@ -435,11 +445,23 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           if (b == null || b is! Map) return false;
           final tax = b['taxonomy'] as Map? ?? {};
           final subNodeVal = tax['subject_node_id'];
-          final subNode = subNodeVal is int ? subNodeVal : (subNodeVal != null ? int.tryParse(subNodeVal.toString()) : null);
+          final subNode = subNodeVal is int
+              ? subNodeVal
+              : (subNodeVal != null
+                    ? int.tryParse(subNodeVal.toString())
+                    : null);
           final topNodeVal = tax['topic_node_id'];
-          final topNode = topNodeVal is int ? topNodeVal : (topNodeVal != null ? int.tryParse(topNodeVal.toString()) : null);
+          final topNode = topNodeVal is int
+              ? topNodeVal
+              : (topNodeVal != null
+                    ? int.tryParse(topNodeVal.toString())
+                    : null);
           final subtNodeVal = tax['subtopic_node_id'];
-          final subtNode = subtNodeVal is int ? subtNodeVal : (subtNodeVal != null ? int.tryParse(subtNodeVal.toString()) : null);
+          final subtNode = subtNodeVal is int
+              ? subtNodeVal
+              : (subtNodeVal != null
+                    ? int.tryParse(subtNodeVal.toString())
+                    : null);
           return subNode == widget.rootNodeId ||
               topNode == widget.rootNodeId ||
               subtNode == widget.rootNodeId;
@@ -450,7 +472,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         for (var b in filteredBookmarks) {
           if (b == null || b is! Map) continue;
           final qIdVal = b['question_id'];
-          final qId = qIdVal is int ? qIdVal : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
+          final qId = qIdVal is int
+              ? qIdVal
+              : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
           if (qId != null) {
             _selectedBookmarkIds.add(qId);
           }
@@ -470,11 +494,17 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       if (b == null || b is! Map) return false;
       final tax = b['taxonomy'] as Map? ?? {};
       final subNodeVal = tax['subject_node_id'];
-      final subNode = subNodeVal is int ? subNodeVal : (subNodeVal != null ? int.tryParse(subNodeVal.toString()) : null);
+      final subNode = subNodeVal is int
+          ? subNodeVal
+          : (subNodeVal != null ? int.tryParse(subNodeVal.toString()) : null);
       final topNodeVal = tax['topic_node_id'];
-      final topNode = topNodeVal is int ? topNodeVal : (topNodeVal != null ? int.tryParse(topNodeVal.toString()) : null);
+      final topNode = topNodeVal is int
+          ? topNodeVal
+          : (topNodeVal != null ? int.tryParse(topNodeVal.toString()) : null);
       final subtNodeVal = tax['subtopic_node_id'];
-      final subtNode = subtNodeVal is int ? subtNodeVal : (subtNodeVal != null ? int.tryParse(subtNodeVal.toString()) : null);
+      final subtNode = subtNodeVal is int
+          ? subtNodeVal
+          : (subtNodeVal != null ? int.tryParse(subtNodeVal.toString()) : null);
       return subNode == nodeId || topNode == nodeId || subtNode == nodeId;
     }).length;
   }
@@ -485,12 +515,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       if (b == null || b is! Map) return false;
       final tax = b['taxonomy'] as Map? ?? {};
       final subNodeVal = tax['subject_node_id'];
-      final subNode = subNodeVal is int ? subNodeVal : (subNodeVal != null ? int.tryParse(subNodeVal.toString()) : null);
+      final subNode = subNodeVal is int
+          ? subNodeVal
+          : (subNodeVal != null ? int.tryParse(subNodeVal.toString()) : null);
       final topNodeVal = tax['topic_node_id'];
-      final topNode = topNodeVal is int ? topNodeVal : (topNodeVal != null ? int.tryParse(topNodeVal.toString()) : null);
+      final topNode = topNodeVal is int
+          ? topNodeVal
+          : (topNodeVal != null ? int.tryParse(topNodeVal.toString()) : null);
       final subtNodeVal = tax['subtopic_node_id'];
-      final subtNode = subtNodeVal is int ? subtNodeVal : (subtNodeVal != null ? int.tryParse(subtNodeVal.toString()) : null);
-      return subNode == _selectedRevisionNodeId || topNode == _selectedRevisionNodeId || subtNode == _selectedRevisionNodeId;
+      final subtNode = subtNodeVal is int
+          ? subtNodeVal
+          : (subtNodeVal != null ? int.tryParse(subtNodeVal.toString()) : null);
+      return subNode == _selectedRevisionNodeId ||
+          topNode == _selectedRevisionNodeId ||
+          subtNode == _selectedRevisionNodeId;
     }).toList();
   }
 
@@ -500,11 +538,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         .map((b) {
           if (b == null || b is! Map) return null;
           final qIdVal = b['question_id'];
-          return qIdVal is int ? qIdVal : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
+          return qIdVal is int
+              ? qIdVal
+              : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
         })
         .whereType<int>()
         .toList();
-    final qIds = _selectedBookmarkIds.where((id) => activeFilteredIds.contains(id)).toList();
+    final qIds = _selectedBookmarkIds
+        .where((id) => activeFilteredIds.contains(id))
+        .toList();
 
     if (qIds.isEmpty || _selectedExamId == null) return;
     setState(() => _compiling = true);
@@ -513,7 +555,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       for (var b in _bookmarks) {
         if (b == null || b is! Map) continue;
         final qIdVal = b['question_id'];
-        final qId = qIdVal is int ? qIdVal : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
+        final qId = qIdVal is int
+            ? qIdVal
+            : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
         if (qIds.contains(qId)) {
           final tax = b['taxonomy'] as Map? ?? {};
           if (tax['content_type'] == 'mains') {
@@ -526,22 +570,22 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       String categoryName = "All Bookmarks";
       if (_selectedRevisionNodeId != null) {
         final allCategoryNodes = [..._objNodesRaw, ..._mainsNodesRaw];
-        final match = allCategoryNodes.firstWhere(
-          (n) {
-            if (n == null) return false;
-            final idVal = n['id'];
-            final id = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) : null);
-            return id == _selectedRevisionNodeId;
-          },
-          orElse: () => {},
-        );
+        final match = allCategoryNodes.firstWhere((n) {
+          if (n == null) return false;
+          final idVal = n['id'];
+          final id = idVal is int
+              ? idVal
+              : (idVal != null ? int.tryParse(idVal.toString()) : null);
+          return id == _selectedRevisionNodeId;
+        }, orElse: () => {});
         if (match.isNotEmpty) {
           categoryName = match['name']?.toString() ?? 'Category';
         }
       }
 
       final customTestId = await _service.createUserCustomTest(
-        title: "Revision: $categoryName - ${DateTime.now().day}/${DateTime.now().month}",
+        title:
+            "Revision: $categoryName - ${DateTime.now().day}/${DateTime.now().month}",
         examId: _selectedExamId!,
         contentType: hasMains ? 'mains' : 'gk',
         questionIds: qIds,
@@ -584,24 +628,21 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.bookmark_border_rounded, size: 48, color: AppColors.muted),
+              const Icon(
+                Icons.bookmark_border_rounded,
+                size: 48,
+                color: AppColors.muted,
+              ),
               const SizedBox(height: 16),
               Text(
                 "No bookmarked questions yet",
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.ink,
-                  fontSize: 14,
-                ),
+                style: AppTypography.cardTitle.copyWith(fontSize: 14),
               ),
               const SizedBox(height: 6),
               Text(
                 "Bookmark questions you got wrong during test reviews to revise them here.",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  color: AppColors.muted,
-                  fontSize: 12,
-                ),
+                style: AppTypography.body.copyWith(fontSize: 12),
               ),
             ],
           ),
@@ -625,13 +666,18 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       allCategoryNodes = [..._objNodesRaw, ..._mainsNodesRaw];
     }
 
-    final isRootSubject = widget.rootNodeId != null && allCategoryNodes.any((n) {
-      if (n == null) return false;
-      final nodeType = n['node_type'];
-      final idVal = n['id'];
-      final id = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) : null);
-      return (nodeType == 'subject' || nodeType == 'paper') && id == widget.rootNodeId;
-    });
+    final isRootSubject =
+        widget.rootNodeId != null &&
+        allCategoryNodes.any((n) {
+          if (n == null) return false;
+          final nodeType = n['node_type'];
+          final idVal = n['id'];
+          final id = idVal is int
+              ? idVal
+              : (idVal != null ? int.tryParse(idVal.toString()) : null);
+          return (nodeType == 'subject' || nodeType == 'paper') &&
+              id == widget.rootNodeId;
+        });
 
     int? selectedSubjectId;
 
@@ -641,7 +687,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         final nodeType = n['node_type'];
         if (nodeType == 'subject' || nodeType == 'paper') {
           final idVal = n['id'];
-          final nodeId = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) ?? 0 : 0);
+          final nodeId = idVal is int
+              ? idVal
+              : (idVal != null ? int.tryParse(idVal.toString()) ?? 0 : 0);
           final count = _getBookmarkCountForNode(nodeId);
           if (count > 0) {
             subjectNodes.add({
@@ -658,24 +706,30 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           if (n == null) return false;
           final nodeType = n['node_type'];
           final idVal = n['id'];
-          final id = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) : null);
-          return (nodeType == 'subject' || nodeType == 'paper') && id == _selectedRevisionNodeId;
+          final id = idVal is int
+              ? idVal
+              : (idVal != null ? int.tryParse(idVal.toString()) : null);
+          return (nodeType == 'subject' || nodeType == 'paper') &&
+              id == _selectedRevisionNodeId;
         });
         if (isSub) {
           selectedSubjectId = _selectedRevisionNodeId;
         } else {
-          final match = allCategoryNodes.firstWhere(
-            (n) {
-              if (n == null) return false;
-              final idVal = n['id'];
-              final id = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) : null);
-              return id == _selectedRevisionNodeId;
-            },
-            orElse: () => {},
-          );
+          final match = allCategoryNodes.firstWhere((n) {
+            if (n == null) return false;
+            final idVal = n['id'];
+            final id = idVal is int
+                ? idVal
+                : (idVal != null ? int.tryParse(idVal.toString()) : null);
+            return id == _selectedRevisionNodeId;
+          }, orElse: () => {});
           if (match.isNotEmpty) {
             final parentIdVal = match['parent_id'];
-            selectedSubjectId = parentIdVal is int ? parentIdVal : (parentIdVal != null ? int.tryParse(parentIdVal.toString()) : null);
+            selectedSubjectId = parentIdVal is int
+                ? parentIdVal
+                : (parentIdVal != null
+                      ? int.tryParse(parentIdVal.toString())
+                      : null);
           }
         }
       }
@@ -683,18 +737,21 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       if (isRootSubject) {
         selectedSubjectId = widget.rootNodeId;
       } else {
-        final match = allCategoryNodes.firstWhere(
-          (n) {
-            if (n == null) return false;
-            final idVal = n['id'];
-            final id = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) : null);
-            return id == widget.rootNodeId;
-          },
-          orElse: () => {},
-        );
+        final match = allCategoryNodes.firstWhere((n) {
+          if (n == null) return false;
+          final idVal = n['id'];
+          final id = idVal is int
+              ? idVal
+              : (idVal != null ? int.tryParse(idVal.toString()) : null);
+          return id == widget.rootNodeId;
+        }, orElse: () => {});
         if (match.isNotEmpty) {
           final parentIdVal = match['parent_id'];
-          selectedSubjectId = parentIdVal is int ? parentIdVal : (parentIdVal != null ? int.tryParse(parentIdVal.toString()) : null);
+          selectedSubjectId = parentIdVal is int
+              ? parentIdVal
+              : (parentIdVal != null
+                    ? int.tryParse(parentIdVal.toString())
+                    : null);
         }
       }
     }
@@ -704,12 +761,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       for (var n in allCategoryNodes) {
         if (n == null) continue;
         final parentIdVal = n['parent_id'];
-        final parentId = parentIdVal is int ? parentIdVal : (parentIdVal != null ? int.tryParse(parentIdVal.toString()) : null);
+        final parentId = parentIdVal is int
+            ? parentIdVal
+            : (parentIdVal != null
+                  ? int.tryParse(parentIdVal.toString())
+                  : null);
         if (parentId == selectedSubjectId) {
           final idVal = n['id'];
-          final nodeId = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) ?? 0 : 0);
+          final nodeId = idVal is int
+              ? idVal
+              : (idVal != null ? int.tryParse(idVal.toString()) ?? 0 : 0);
 
-          if (widget.rootNodeId != null && !isRootSubject && widget.rootNodeId != nodeId) {
+          if (widget.rootNodeId != null &&
+              !isRootSubject &&
+              widget.rootNodeId != nodeId) {
             continue;
           }
 
@@ -730,10 +795,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       for (var n in allCategoryNodes) {
         if (n == null) continue;
         final parentIdVal = n['parent_id'];
-        final parentId = parentIdVal is int ? parentIdVal : (parentIdVal != null ? int.tryParse(parentIdVal.toString()) : null);
+        final parentId = parentIdVal is int
+            ? parentIdVal
+            : (parentIdVal != null
+                  ? int.tryParse(parentIdVal.toString())
+                  : null);
         if (parentId == widget.rootNodeId) {
           final idVal = n['id'];
-          final nodeId = idVal is int ? idVal : (idVal != null ? int.tryParse(idVal.toString()) ?? 0 : 0);
+          final nodeId = idVal is int
+              ? idVal
+              : (idVal != null ? int.tryParse(idVal.toString()) ?? 0 : 0);
           final count = _getBookmarkCountForNode(nodeId);
           if (count > 0) {
             subtopicNodes.add({
@@ -751,12 +822,17 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         .map((b) {
           if (b == null || b is! Map) return null;
           final qIdVal = b['question_id'];
-          return qIdVal is int ? qIdVal : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
+          return qIdVal is int
+              ? qIdVal
+              : (qIdVal != null ? int.tryParse(qIdVal.toString()) : null);
         })
         .whereType<int>()
         .toList();
-    final selectedFilteredCount = _selectedBookmarkIds.where((id) => activeFilteredIds.contains(id)).length;
-    final allSelected = filtered.isNotEmpty && selectedFilteredCount == filtered.length;
+    final selectedFilteredCount = _selectedBookmarkIds
+        .where((id) => activeFilteredIds.contains(id))
+        .length;
+    final allSelected =
+        filtered.isNotEmpty && selectedFilteredCount == filtered.length;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -764,8 +840,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         if (widget.rootNodeId == null) ...[
           Text(
             "Subject Filter",
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w800,
+            style: AppTypography.eyebrowLarge.copyWith(
               fontSize: 11,
               color: AppColors.muted,
               letterSpacing: 0.5,
@@ -813,11 +888,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           const SizedBox(height: 10),
         ],
 
-        if (widget.rootNodeId == null && selectedSubjectId != null && topicNodes.isNotEmpty) ...[
+        if (widget.rootNodeId == null &&
+            selectedSubjectId != null &&
+            topicNodes.isNotEmpty) ...[
           Text(
             "Topic Filter",
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w800,
+            style: AppTypography.eyebrowLarge.copyWith(
               fontSize: 11,
               color: AppColors.muted,
               letterSpacing: 0.5,
@@ -865,11 +941,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           const SizedBox(height: 12),
         ],
 
-        if (widget.rootNodeId != null && isRootSubject && topicNodes.isNotEmpty) ...[
+        if (widget.rootNodeId != null &&
+            isRootSubject &&
+            topicNodes.isNotEmpty) ...[
           Text(
             "Topic Filter",
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w800,
+            style: AppTypography.eyebrowLarge.copyWith(
               fontSize: 11,
               color: AppColors.muted,
               letterSpacing: 0.5,
@@ -881,7 +958,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             child: Row(
               children: [
                 FilterChip(
-                  selected: _selectedRevisionNodeId == null || _selectedRevisionNodeId == widget.rootNodeId,
+                  selected:
+                      _selectedRevisionNodeId == null ||
+                      _selectedRevisionNodeId == widget.rootNodeId,
                   label: Text("All Topic Bookmarks (${_bookmarks.length})"),
                   onSelected: (val) {
                     setState(() {
@@ -917,11 +996,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           const SizedBox(height: 12),
         ],
 
-        if (widget.rootNodeId != null && !isRootSubject && subtopicNodes.isNotEmpty) ...[
+        if (widget.rootNodeId != null &&
+            !isRootSubject &&
+            subtopicNodes.isNotEmpty) ...[
           Text(
             "Subtopic Filter",
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w800,
+            style: AppTypography.eyebrowLarge.copyWith(
               fontSize: 11,
               color: AppColors.muted,
               letterSpacing: 0.5,
@@ -933,7 +1013,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             child: Row(
               children: [
                 FilterChip(
-                  selected: _selectedRevisionNodeId == null || _selectedRevisionNodeId == widget.rootNodeId,
+                  selected:
+                      _selectedRevisionNodeId == null ||
+                      _selectedRevisionNodeId == widget.rootNodeId,
                   label: Text("All Topic Bookmarks (${_bookmarks.length})"),
                   onSelected: (val) {
                     setState(() {
@@ -985,12 +1067,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   setState(() {
                     if (val == true) {
                       for (var b in filtered) {
-                        final qId = int.tryParse((b as Map<String, dynamic>)['question_id']?.toString() ?? '');
+                        final qId = int.tryParse(
+                          (b as Map<String, dynamic>)['question_id']
+                                  ?.toString() ??
+                              '',
+                        );
                         if (qId != null) _selectedBookmarkIds.add(qId);
                       }
                     } else {
                       for (var b in filtered) {
-                        final qId = int.tryParse((b as Map<String, dynamic>)['question_id']?.toString() ?? '');
+                        final qId = int.tryParse(
+                          (b as Map<String, dynamic>)['question_id']
+                                  ?.toString() ??
+                              '',
+                        );
                         if (qId != null) _selectedBookmarkIds.remove(qId);
                       }
                     }
@@ -1004,11 +1094,11 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   children: [
                     Text(
                       "Select Qs (${filtered.length})",
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.ink),
+                      style: AppTypography.cardTitle.copyWith(fontSize: 13),
                     ),
                     Text(
                       "$selectedFilteredCount selected",
-                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w500),
+                      style: AppTypography.caption,
                     ),
                   ],
                 ),
@@ -1017,21 +1107,34 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.ink,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   elevation: 0,
                 ),
-                onPressed: selectedFilteredCount == 0 || _compiling ? null : _startBookmarksTest,
+                onPressed: selectedFilteredCount == 0 || _compiling
+                    ? null
+                    : _startBookmarksTest,
                 icon: _compiling
                     ? const SizedBox(
                         width: 12,
                         height: 12,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 1.5),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 1.5,
+                        ),
                       )
                     : const Icon(Icons.play_arrow_rounded, size: 16),
                 label: Text(
                   "Take Revision Test",
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 11),
+                  style: AppTypography.button.copyWith(
+                    fontSize: 11,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -1045,7 +1148,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             child: Center(
               child: Text(
                 "No bookmarked questions in this category.",
-                style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.bold),
+                style: AppTypography.body.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
           )
@@ -1056,9 +1159,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             final q = b['question_version'] as Map? ?? {};
             final tax = b['taxonomy'] as Map? ?? {};
             final qIdVal = b['question_id'];
-            final qId = qIdVal is int ? qIdVal : (qIdVal != null ? int.tryParse(qIdVal.toString()) ?? 0 : 0);
+            final qId = qIdVal is int
+                ? qIdVal
+                : (qIdVal != null ? int.tryParse(qIdVal.toString()) ?? 0 : 0);
             final isSelected = _selectedBookmarkIds.contains(qId);
-            final statement = q['question_statement']?.toString() ?? 'No statement';
+            final statement =
+                q['question_statement']?.toString() ?? 'No statement';
 
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
@@ -1067,7 +1173,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? AppColors.civic.withOpacity(0.4) : AppColors.line,
+                  color: isSelected
+                      ? AppColors.civic.withOpacity(0.4)
+                      : AppColors.line,
                   width: isSelected ? 1.5 : 1,
                 ),
               ),
@@ -1093,14 +1201,21 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.paper,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            (tax['content_type']?.toString() ?? 'gk').toUpperCase(),
-                            style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.muted),
+                            (tax['content_type']?.toString() ?? 'gk')
+                                .toUpperCase(),
+                            style: AppTypography.eyebrowSmall.copyWith(
+                              fontSize: 8,
+                              letterSpacing: 0,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -1108,7 +1223,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           statement,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
+                          style: AppTypography.body.copyWith(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                             color: AppColors.ink,
@@ -1119,7 +1234,11 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: AppColors.berry, size: 20),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.berry,
+                      size: 20,
+                    ),
                     onPressed: () async {
                       try {
                         await _service.removeBookmark(qId);
@@ -1127,7 +1246,11 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           _bookmarks.removeWhere((item) {
                             if (item == null || item is! Map) return false;
                             final itemQIdVal = item['question_id'];
-                            final itemQId = itemQIdVal is int ? itemQIdVal : (itemQIdVal != null ? int.tryParse(itemQIdVal.toString()) : null);
+                            final itemQId = itemQIdVal is int
+                                ? itemQIdVal
+                                : (itemQIdVal != null
+                                      ? int.tryParse(itemQIdVal.toString())
+                                      : null);
                             return itemQId == qId;
                           });
                           _selectedBookmarkIds.remove(qId);
@@ -1146,8 +1269,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
-
-
   bool _isNodeDescendant(int childId, int parentId) {
     final parentNode = _findNodeInTree(_activeTree, parentId);
     if (parentNode == null) return false;
@@ -1156,7 +1277,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
   int _getAvailableCount(int nodeId) {
     final node = _findNodeInTree(_activeTree, nodeId);
-    if (node == null) return nodeId < 0 ? (_userQuestionCounts[-nodeId] ?? 0) : (_questionCounts[nodeId] ?? 0);
+    if (node == null)
+      return nodeId < 0
+          ? (_userQuestionCounts[-nodeId] ?? 0)
+          : (_questionCounts[nodeId] ?? 0);
     final total = _sumNodeQuestions(node);
 
     int selectedOverlap = 0;
@@ -1266,11 +1390,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Text(
               "$currentVal",
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.cardTitle.copyWith(fontSize: 12),
             ),
           ),
           IconButton(
@@ -1305,12 +1425,17 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     // an existing one) is chosen once, when the cart is finalized below, not
     // on every single Add tap.
     setState(() {
-      final existingIdx = _compiledItems.indexWhere((item) => item['node'].id == node.id);
+      final existingIdx = _compiledItems.indexWhere(
+        (item) => item['node'].id == node.id,
+      );
       final family = _activeTab == 'mains' ? 'mains_subjective' : 'objective';
 
       if (existingIdx >= 0) {
         final currentCount = _compiledItems[existingIdx]['count'] as int;
-        _compiledItems[existingIdx]['count'] = min(currentCount + selectedCount, available);
+        _compiledItems[existingIdx]['count'] = min(
+          currentCount + selectedCount,
+          available,
+        );
       } else {
         _compiledItems.add({
           'node': node,
@@ -1320,11 +1445,18 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Added to cart"), duration: Duration(seconds: 1)),
+      const SnackBar(
+        content: Text("Added to cart"),
+        duration: Duration(seconds: 1),
+      ),
     );
   }
 
-  Future<void> _addQuestionsToTargetTest(_TreeNode node, int testId, int count) async {
+  Future<void> _addQuestionsToTargetTest(
+    _TreeNode node,
+    int testId,
+    int count,
+  ) async {
     setState(() {
       _compiling = true;
     });
@@ -1339,21 +1471,26 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       final subtopicId = resolved['subtopic_node_id'];
 
       final apiClient = Provider.of<ApiClient>(context, listen: false);
-      String path = isMains ? '/api/v1/assessment/mains/questions' : '/api/v1/assessment/questions';
+      String path = isMains
+          ? '/api/v1/assessment/mains/questions'
+          : '/api/v1/assessment/questions';
       final queryParams = <String, String>{
         'limit': '100',
         'subject_node_id': subjectId.toString(),
       };
       if (topicId != null) queryParams['topic_node_id'] = topicId.toString();
-      if (subtopicId != null) queryParams['subtopic_node_id'] = subtopicId.toString();
+      if (subtopicId != null)
+        queryParams['subtopic_node_id'] = subtopicId.toString();
 
       final queryString = Uri(queryParameters: queryParams).query;
       final List<dynamic> data = await apiClient.get('$path?$queryString');
-      
+
       if (data.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("No questions found in this category")),
+            const SnackBar(
+              content: Text("No questions found in this category"),
+            ),
           );
         }
         return;
@@ -1361,10 +1498,13 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
       final shuffled = List.from(data)..shuffle();
       final selected = shuffled.take(count).toList();
-      final questionIds = selected.map<int>((q) {
-        final qId = q['id'] ?? q['question_id'];
-        return int.tryParse(qId.toString()) ?? 0;
-      }).where((id) => id > 0).toList();
+      final questionIds = selected
+          .map<int>((q) {
+            final qId = q['id'] ?? q['question_id'];
+            return int.tryParse(qId.toString()) ?? 0;
+          })
+          .where((id) => id > 0)
+          .toList();
 
       if (questionIds.isEmpty) return;
 
@@ -1375,14 +1515,18 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Successfully added ${questionIds.length} questions!")),
+          SnackBar(
+            content: Text(
+              "Successfully added ${questionIds.length} questions!",
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to add questions: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to add questions: $e")));
       }
     } finally {
       setState(() {
@@ -1402,7 +1546,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   };
 
   int _examLevelIdForContentType(String contentType) {
-    final candidates = _examLevelSlugCandidates[contentType] ?? _examLevelSlugCandidates['gk']!;
+    final candidates =
+        _examLevelSlugCandidates[contentType] ??
+        _examLevelSlugCandidates['gk']!;
     for (final slug in candidates) {
       final match = _examLevels.where((l) => l.slug == slug);
       if (match.isNotEmpty) return match.first.id;
@@ -1414,7 +1560,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
   int _examLevelIdForActiveTab() => _examLevelIdForContentType(_activeTab);
 
-  String _testTypeForActiveTab() => _activeTab == 'mains' ? 'mains_test' : 'sectional_test';
+  String _testTypeForActiveTab() =>
+      _activeTab == 'mains' ? 'mains_test' : 'sectional_test';
 
   // Builds category specs (any taxonomy level) from the whole cart, resolved
   // server-side with the same rollup logic used for live compiled attempts —
@@ -1427,7 +1574,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       final family = item['question_family'] as String? ?? 'objective';
       final isMainsItem = family == 'mains_subjective';
       final sourceList = isMainsItem ? _mainsNodesRaw : _objNodesRaw;
-      final targetNode = node.isUserNode ? _findNodeInTree(_activeTree, node.parentId!)! : node;
+      final targetNode = node.isUserNode
+          ? _findNodeInTree(_activeTree, node.parentId!)!
+          : node;
       final resolved = _resolveCategory(targetNode, sourceList);
       return {
         ...resolved,
@@ -1441,9 +1590,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   Future<void> _saveCartAsNewTest() async {
     final name = _customTestNameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Test name is required")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Test name is required")));
       return;
     }
     if (_compiledItems.isEmpty || _selectedExamId == null) return;
@@ -1467,9 +1616,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to save test: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to save test: $e")));
       }
     } finally {
       if (mounted) setState(() => _compiling = false);
@@ -1507,7 +1656,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("No Tests Found"),
-          content: const Text("You do not have any unattempted custom tests. Save this cart as a new test first!"),
+          content: const Text(
+            "You do not have any unattempted custom tests. Save this cart as a new test first!",
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -1524,7 +1675,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       builder: (context) => AlertDialog(
         title: Text(
           "Select Target Test",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+          style: AppTypography.cardTitle.copyWith(fontSize: 16),
         ),
         content: SizedBox(
           width: double.maxFinite,
@@ -1535,7 +1686,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             itemBuilder: (context, idx) {
               final t = tests[idx];
               return ListTile(
-                title: Text(t.title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold)),
+                title: Text(
+                  t.title,
+                  style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                ),
                 subtitle: Text("${t.questionCount ?? 0} Questions"),
                 trailing: const Icon(Icons.chevron_right, size: 16),
                 onTap: () async {
@@ -1571,8 +1725,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       ),
     );
   }
-
-
 
   Map<String, dynamic> _resolveCategory(
     _TreeNode node,
@@ -1687,19 +1839,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       const SizedBox(height: 20),
                       Text(
                         "Add Custom Question",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 18,
-                          color: AppColors.ink,
-                        ),
+                        style: AppTypography.title.copyWith(fontSize: 18),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "Add a private question directly to ${node.name}.",
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.muted,
-                        ),
+                        style: AppTypography.body,
                       ),
                       const SizedBox(height: 16),
 
@@ -1711,7 +1856,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           hintText: "Enter question statement here...",
                           border: OutlineInputBorder(),
                         ),
-                        validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                        validator: (value) =>
+                            value == null || value.isEmpty ? "Required" : null,
                       ),
                       const SizedBox(height: 12),
 
@@ -1724,7 +1870,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 labelText: "Option A *",
                                 border: OutlineInputBorder(),
                               ),
-                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? "Required"
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1735,7 +1884,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 labelText: "Option B *",
                                 border: OutlineInputBorder(),
                               ),
-                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? "Required"
+                                  : null,
                             ),
                           ),
                         ],
@@ -1751,7 +1903,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 labelText: "Option C *",
                                 border: OutlineInputBorder(),
                               ),
-                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? "Required"
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1762,7 +1917,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 labelText: "Option D *",
                                 border: OutlineInputBorder(),
                               ),
-                              validator: (value) => value == null || value.isEmpty ? "Required" : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? "Required"
+                                  : null,
                             ),
                           ),
                         ],
@@ -1778,10 +1936,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 labelText: "Correct Answer *",
                                 border: OutlineInputBorder(),
                               ),
-                              items: ['a', 'b', 'c', 'd'].map((label) => DropdownMenuItem(
-                                value: label,
-                                child: Text("Option ${label.toUpperCase()}"),
-                              )).toList(),
+                              items: ['a', 'b', 'c', 'd']
+                                  .map(
+                                    (label) => DropdownMenuItem(
+                                      value: label,
+                                      child: Text(
+                                        "Option ${label.toUpperCase()}",
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
                               onChanged: (val) {
                                 if (val != null) {
                                   setSheetState(() => correctAnswer = val);
@@ -1802,8 +1966,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                               ),
                               Text(
                                 "Mark for Revision",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
+                                style: AppTypography.body.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.ink,
                                 ),
@@ -1829,65 +1992,112 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: submitting ? null : () => Navigator.pop(context),
+                            onPressed: submitting
+                                ? null
+                                : () => Navigator.pop(context),
                             child: const Text("Cancel"),
                           ),
                           const SizedBox(width: 12),
                           ElevatedButton(
-                            onPressed: submitting ? null : () async {
-                              if (!formKey.currentState!.validate()) return;
-                              setSheetState(() => submitting = true);
-                              try {
-                                final questions = [
-                                  ParsedQuestion(
-                                    questionStatement: statementController.text.trim(),
-                                    options: [
-                                      QuestionOption(key: 'a', text: optionAController.text.trim()),
-                                      QuestionOption(key: 'b', text: optionBController.text.trim()),
-                                      QuestionOption(key: 'c', text: optionCController.text.trim()),
-                                      QuestionOption(key: 'd', text: optionDController.text.trim()),
-                                    ],
-                                    correctAnswer: correctAnswer,
-                                    explanation: explanationController.text.trim().isEmpty ? null : explanationController.text.trim(),
-                                  )
-                                ];
+                            onPressed: submitting
+                                ? null
+                                : () async {
+                                    if (!formKey.currentState!.validate())
+                                      return;
+                                    setSheetState(() => submitting = true);
+                                    try {
+                                      final questions = [
+                                        ParsedQuestion(
+                                          questionStatement: statementController
+                                              .text
+                                              .trim(),
+                                          options: [
+                                            QuestionOption(
+                                              key: 'a',
+                                              text: optionAController.text
+                                                  .trim(),
+                                            ),
+                                            QuestionOption(
+                                              key: 'b',
+                                              text: optionBController.text
+                                                  .trim(),
+                                            ),
+                                            QuestionOption(
+                                              key: 'c',
+                                              text: optionCController.text
+                                                  .trim(),
+                                            ),
+                                            QuestionOption(
+                                              key: 'd',
+                                              text: optionDController.text
+                                                  .trim(),
+                                            ),
+                                          ],
+                                          correctAnswer: correctAnswer,
+                                          explanation:
+                                              explanationController.text
+                                                  .trim()
+                                                  .isEmpty
+                                              ? null
+                                              : explanationController.text
+                                                    .trim(),
+                                        ),
+                                      ];
 
-                                await _service.aiSaveQuestions(
-                                  examId: _selectedExamId!,
-                                  examLevelId: _examLevelIdForActiveTab(),
-                                  subjectNodeId: resolved['subject_node_id'] as int,
-                                  topicNodeId: resolved['topic_node_id'] as int?,
-                                  questions: questions,
-                                );
+                                      await _service.aiSaveQuestions(
+                                        examId: _selectedExamId!,
+                                        examLevelId: _examLevelIdForActiveTab(),
+                                        subjectNodeId:
+                                            resolved['subject_node_id'] as int,
+                                        topicNodeId:
+                                            resolved['topic_node_id'] as int?,
+                                        questions: questions,
+                                      );
 
-                                if (context.mounted) {
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Question saved successfully!")),
-                                  );
-                                  await _loadCounts();
-                                  _buildActiveTree();
-                                }
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Failed to save: $e")),
-                                );
-                              } finally {
-                                setSheetState(() => submitting = false);
-                              }
-                            },
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              "Question saved successfully!",
+                                            ),
+                                          ),
+                                        );
+                                        await _loadCounts();
+                                        _buildActiveTree();
+                                      }
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text("Failed to save: $e"),
+                                        ),
+                                      );
+                                    } finally {
+                                      setSheetState(() => submitting = false);
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.civic,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
                             ),
                             child: submitting
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Text("Save"),
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text("Save"),
                           ),
                         ],
                       ),
@@ -1910,7 +2120,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
     for (var node in nodes) {
       final bool matchesNode = node.name.toLowerCase().contains(lowercaseQuery);
-      final List<_TreeNode> filteredChildren = _filterTree(node.children, query);
+      final List<_TreeNode> filteredChildren = _filterTree(
+        node.children,
+        query,
+      );
 
       if (matchesNode || filteredChildren.isNotEmpty) {
         final clonedNode = _TreeNode(
@@ -1994,25 +2207,17 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     const SizedBox(height: 20),
                     Text(
                       "Start Practice Test",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                        color: AppColors.ink,
-                      ),
+                      style: AppTypography.title.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       "Category: ${node.name}",
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppColors.muted,
-                      ),
+                      style: AppTypography.body.copyWith(fontSize: 13),
                     ),
                     const SizedBox(height: 20),
                     Text(
                       "TEST NAME *",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.eyebrowLarge.copyWith(
                         fontSize: 11,
                         color: AppColors.muted,
                         letterSpacing: 0.5,
@@ -2025,14 +2230,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         hintText: defaultTitle,
                         filled: true,
                         fillColor: AppColors.paper.withOpacity(0.4),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: AppColors.line),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.civic, width: 1.5),
+                          borderSide: const BorderSide(
+                            color: AppColors.civic,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                       validator: (value) {
@@ -2048,8 +2259,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       children: [
                         Text(
                           "NUMBER OF QUESTIONS",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w800,
+                          style: AppTypography.eyebrowLarge.copyWith(
                             fontSize: 11,
                             color: AppColors.muted,
                             letterSpacing: 0.5,
@@ -2057,8 +2267,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         ),
                         Text(
                           "$selectedCount Qs",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w900,
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 14,
                             color: AppColors.civic,
                           ),
@@ -2070,7 +2279,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       value: selectedCount.toDouble(),
                       min: 1,
                       max: min(100, available).toDouble(),
-                      divisions: min(100, available) > 1 ? min(100, available) - 1 : 1,
+                      divisions: min(100, available) > 1
+                          ? min(100, available) - 1
+                          : 1,
                       activeColor: AppColors.civic,
                       inactiveColor: AppColors.line,
                       onChanged: (val) {
@@ -2081,16 +2292,13 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     ),
                     Text(
                       "Drag to choose from 1 to ${min(100, available)} questions.",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.muted,
-                      ),
+                      style: AppTypography.caption.copyWith(fontSize: 11),
                     ),
                     const SizedBox(height: 16),
                     CheckboxListTile(
                       title: Text(
                         "Include already attempted questions",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.body.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.ink,
@@ -2123,38 +2331,54 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           if (formKey.currentState!.validate()) {
                             Navigator.pop(context); // Close bottom sheet
 
-                            final nodesList = isMains ? _mainsNodesRaw : _objNodesRaw;
-                            final targetNode = node.isUserNode ? _findNodeInTree(_activeTree, node.parentId!)! : node;
-                            final category = _resolveCategory(targetNode, nodesList);
-                            final family = isMains ? 'mains_subjective' : 'objective';
+                            final nodesList = isMains
+                                ? _mainsNodesRaw
+                                : _objNodesRaw;
+                            final targetNode = node.isUserNode
+                                ? _findNodeInTree(_activeTree, node.parentId!)!
+                                : node;
+                            final category = _resolveCategory(
+                              targetNode,
+                              nodesList,
+                            );
+                            final family = isMains
+                                ? 'mains_subjective'
+                                : 'objective';
 
                             setState(() => _compiling = true);
                             try {
-                              final attemptId = await _service.startCompiledAttempt(
-                                examId: _selectedExamId!,
-                                testType: isMains ? 'sectional_test' : 'quick_test',
-                                categories: [
-                                  {
-                                    ...category,
-                                    'question_count': selectedCount,
-                                    'question_family': family,
-                                    if (node.isUserNode) 'is_user_private': true,
-                                  },
-                                ],
-                                includeAttempted: includeAttempted,
-                                title: nameController.text.trim(),
-                              );
+                              final attemptId = await _service
+                                  .startCompiledAttempt(
+                                    examId: _selectedExamId!,
+                                    testType: isMains
+                                        ? 'sectional_test'
+                                        : 'quick_test',
+                                    categories: [
+                                      {
+                                        ...category,
+                                        'question_count': selectedCount,
+                                        'question_family': family,
+                                        if (node.isUserNode)
+                                          'is_user_private': true,
+                                      },
+                                    ],
+                                    includeAttempted: includeAttempted,
+                                    title: nameController.text.trim(),
+                                  );
 
                               if (mounted) {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => AttemptEngineScreen(attemptId: attemptId),
+                                    builder: (_) => AttemptEngineScreen(
+                                      attemptId: attemptId,
+                                    ),
                                   ),
                                 );
                               }
                             } catch (e) {
-                              if (e is ApiException && e.code == 'free_test_limit_reached') {
+                              if (e is ApiException &&
+                                  e.code == 'free_test_limit_reached') {
                                 if (mounted) _showFreeLimitDialog(e.message);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -2168,9 +2392,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         },
                         child: Text(
                           "Start Test Now",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.bold,
+                          style: AppTypography.button.copyWith(
                             fontSize: 15,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -2197,7 +2421,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
     for (var n in activeRawNodes) {
       final id = int.tryParse(n['id']?.toString() ?? '') ?? 0;
-      final parentId = n['parent_id'] != null ? int.tryParse(n['parent_id'].toString()) : null;
+      final parentId = n['parent_id'] != null
+          ? int.tryParse(n['parent_id'].toString())
+          : null;
       if (parentId != null) {
         parentToChildren.putIfAbsent(parentId, () => []).add(n);
       } else {
@@ -2205,9 +2431,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       }
     }
 
-    roots.sort((a, b) => (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? ''));
+    roots.sort(
+      (a, b) =>
+          (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? ''),
+    );
     parentToChildren.forEach((key, list) {
-      list.sort((a, b) => (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? ''));
+      list.sort(
+        (a, b) =>
+            (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? ''),
+      );
     });
 
     final currentExclusions = _activeTab == 'mains'
@@ -2228,7 +2460,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   final List<int> list = [];
                   final children = parentToChildren[id] ?? [];
                   for (var c in children) {
-                    final childId = int.tryParse(c['id']?.toString() ?? '') ?? 0;
+                    final childId =
+                        int.tryParse(c['id']?.toString() ?? '') ?? 0;
                     list.add(childId);
                     list.addAll(getDescendants(childId));
                   }
@@ -2275,28 +2508,35 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           },
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: type == 'subject' || type == 'paper'
                                 ? Colors.grey[200]
-                                : type == 'source_bucket' || type == 'subject_area'
-                                    ? Colors.amber[50]
-                                    : Colors.indigo[50],
+                                : type == 'source_bucket' ||
+                                      type == 'subject_area'
+                                ? Colors.amber[50]
+                                : Colors.indigo[50],
                             borderRadius: BorderRadius.circular(4),
-                            border: type == 'source_bucket' || type == 'subject_area'
+                            border:
+                                type == 'source_bucket' ||
+                                    type == 'subject_area'
                                 ? Border.all(color: Colors.amber[200]!)
                                 : null,
                           ),
                           child: Text(
                             type.replaceAll('_', ' ').toUpperCase(),
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowSmall.copyWith(
                               fontSize: 8,
-                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0,
                               color: type == 'subject' || type == 'paper'
                                   ? Colors.grey[700]
-                                  : type == 'source_bucket' || type == 'subject_area'
-                                      ? Colors.amber[800]
-                                      : Colors.indigo[800],
+                                  : type == 'source_bucket' ||
+                                        type == 'subject_area'
+                                  ? Colors.amber[800]
+                                  : Colors.indigo[800],
                             ),
                           ),
                         ),
@@ -2304,11 +2544,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         Expanded(
                           child: Text(
                             name,
-                            style: GoogleFonts.inter(
+                            style: AppTypography.body.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: isChecked ? AppColors.ink : AppColors.muted,
-                              decoration: isChecked ? null : TextDecoration.lineThrough,
+                              color: isChecked
+                                  ? AppColors.ink
+                                  : AppColors.muted,
+                              decoration: isChecked
+                                  ? null
+                                  : TextDecoration.lineThrough,
                             ),
                           ),
                         ),
@@ -2322,10 +2566,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             }
 
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               title: Text(
                 "Customize Syllabus",
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+                style: AppTypography.cardTitle.copyWith(fontSize: 16),
               ),
               content: SizedBox(
                 width: double.maxFinite,
@@ -2335,13 +2581,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   children: [
                     Text(
                       "Uncheck categories or sources to hide them from the test builder.",
-                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                      style: AppTypography.body,
                     ),
                     const SizedBox(height: 12),
                     const Divider(),
                     Expanded(
                       child: ListView(
-                        children: roots.map((r) => buildFilterNode(r, 0)).toList(),
+                        children: roots
+                            .map((r) => buildFilterNode(r, 0))
+                            .toList(),
                       ),
                     ),
                   ],
@@ -2354,14 +2602,21 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     setState(() => _loading = true);
                     try {
                       await _service.updateExcludedTaxonomyNodes(
-                        taxonomyType: _activeTab == 'mains' ? 'mains' : 'objective',
+                        taxonomyType: _activeTab == 'mains'
+                            ? 'mains'
+                            : 'objective',
                         excludedNodeIds: [],
                       );
-                      _exclusionsMap[_activeTab == 'mains' ? 'mains' : 'objective'] = [];
+                      _exclusionsMap[_activeTab == 'mains'
+                              ? 'mains'
+                              : 'objective'] =
+                          [];
                       _buildActiveTree();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Failed to reset customization: $e")),
+                        SnackBar(
+                          content: Text("Failed to reset customization: $e"),
+                        ),
                       );
                     } finally {
                       setState(() => _loading = false);
@@ -2369,18 +2624,27 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   },
                   child: Text(
                     "Reset View",
-                    style: GoogleFonts.inter(color: Colors.red[600], fontWeight: FontWeight.bold),
+                    style: AppTypography.button.copyWith(
+                      color: Colors.red[600],
+                    ),
                   ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
+                  child: Text(
+                    "Cancel",
+                    style: AppTypography.button.copyWith(
+                      color: AppColors.muted,
+                    ),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.civic,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () async {
                     Navigator.pop(context);
@@ -2388,20 +2652,30 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     try {
                       final list = tempExcluded.toList();
                       await _service.updateExcludedTaxonomyNodes(
-                        taxonomyType: _activeTab == 'mains' ? 'mains' : 'objective',
+                        taxonomyType: _activeTab == 'mains'
+                            ? 'mains'
+                            : 'objective',
                         excludedNodeIds: list,
                       );
-                      _exclusionsMap[_activeTab == 'mains' ? 'mains' : 'objective'] = list;
+                      _exclusionsMap[_activeTab == 'mains'
+                              ? 'mains'
+                              : 'objective'] =
+                          list;
                       _buildActiveTree();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Failed to save customization: $e")),
+                        SnackBar(
+                          content: Text("Failed to save customization: $e"),
+                        ),
                       );
                     } finally {
                       setState(() => _loading = false);
                     }
                   },
-                  child: Text("Save", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                  child: Text(
+                    "Save",
+                    style: AppTypography.button.copyWith(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -2410,7 +2684,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       },
     );
   }
-
 
   // Top-level subjects rendered as a tab strip. Selecting a tab (or drilling
   // into a row below it) shows that node's children inline via a breadcrumb —
@@ -2425,18 +2698,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         child: Center(
           child: Text(
             "No categories found.",
-            style: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
+            style: AppTypography.body.copyWith(fontSize: 13),
           ),
         ),
       );
     }
 
-    if (_browseActiveSubjectId == null || !nodes.any((n) => n.id == _browseActiveSubjectId)) {
+    if (_browseActiveSubjectId == null ||
+        !nodes.any((n) => n.id == _browseActiveSubjectId)) {
       _browseActiveSubjectId = nodes.first.id;
       _browseDrillPath = [];
     }
 
-    final subjectNode = _findNodeInTree(_activeTree, _browseActiveSubjectId!) ?? nodes.first;
+    final subjectNode =
+        _findNodeInTree(_activeTree, _browseActiveSubjectId!) ?? nodes.first;
 
     final pathNodes = <_TreeNode>[subjectNode];
     for (final id in _browseDrillPath) {
@@ -2464,7 +2739,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             child: Center(
               child: Text(
                 "No sub-categories here.",
-                style: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
+                style: AppTypography.body.copyWith(fontSize: 13),
               ),
             ),
           )
@@ -2482,7 +2757,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   _buildBrowseRow(
                     currentNode.children[i],
                     isLast: i == currentNode.children.length - 1,
-                    isTourAddAnchor: tourAnchorId != null &&
+                    isTourAddAnchor:
+                        tourAnchorId != null &&
                         subjectNode.id == tourAnchorId &&
                         pathNodes.length == 1 &&
                         i == 0,
@@ -2513,15 +2789,18 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: isActive ? AppColors.civic.withOpacity(0.1) : Colors.white,
+                color: isActive
+                    ? AppColors.civic.withOpacity(0.1)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: isActive ? AppColors.civic : AppColors.line),
+                border: Border.all(
+                  color: isActive ? AppColors.civic : AppColors.line,
+                ),
               ),
               alignment: Alignment.center,
               child: Text(
                 node.name,
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 13,
                   color: isActive ? AppColors.civic : AppColors.ink,
                 ),
@@ -2551,16 +2830,26 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             if (i > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.muted),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 14,
+                  color: AppColors.muted,
+                ),
               ),
             GestureDetector(
-              onTap: () => setState(() => _browseDrillPath = _browseDrillPath.sublist(0, i)),
+              onTap: () => setState(
+                () => _browseDrillPath = _browseDrillPath.sublist(0, i),
+              ),
               child: Text(
                 pathNodes[i].name,
-                style: GoogleFonts.inter(
+                style: AppTypography.button.copyWith(
                   fontSize: 11,
-                  fontWeight: i == pathNodes.length - 1 ? FontWeight.w800 : FontWeight.w600,
-                  color: i == pathNodes.length - 1 ? AppColors.ink : AppColors.civic,
+                  fontWeight: i == pathNodes.length - 1
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: i == pathNodes.length - 1
+                      ? AppColors.ink
+                      : AppColors.civic,
                 ),
               ),
             ),
@@ -2570,21 +2859,29 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
-  Widget _buildBrowseRow(_TreeNode node, {required bool isLast, bool isTourAddAnchor = false}) {
+  Widget _buildBrowseRow(
+    _TreeNode node, {
+    required bool isLast,
+    bool isTourAddAnchor = false,
+  }) {
     final available = _getAvailableCount(node.id);
     final hasChildren = node.children.isNotEmpty;
 
     final content = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        border: isLast ? null : const Border(bottom: BorderSide(color: AppColors.line)),
+        border: isLast
+            ? null
+            : const Border(bottom: BorderSide(color: AppColors.line)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
             onTap: hasChildren
-                ? () => setState(() => _browseDrillPath = [..._browseDrillPath, node.id])
+                ? () => setState(
+                    () => _browseDrillPath = [..._browseDrillPath, node.id],
+                  )
                 : null,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2593,7 +2890,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: (hasChildren ? AppColors.civic : AppColors.emerald).withOpacity(hasChildren ? 0.08 : 0.1),
+                    color: (hasChildren ? AppColors.civic : AppColors.emerald)
+                        .withOpacity(hasChildren ? 0.08 : 0.1),
                     borderRadius: BorderRadius.circular(9),
                   ),
                   child: Icon(
@@ -2611,18 +2909,24 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         node.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.ink),
+                        style: AppTypography.cardTitle.copyWith(fontSize: 13),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        available > 0 ? "$available questions total" : "No questions available",
-                        style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                        available > 0
+                            ? "$available questions total"
+                            : "No questions available",
+                        style: AppTypography.caption.copyWith(fontSize: 11),
                       ),
                     ],
                   ),
                 ),
                 if (hasChildren)
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: 20),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.muted,
+                    size: 20,
+                  ),
               ],
             ),
           ),
@@ -2639,9 +2943,14 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       side: const BorderSide(color: AppColors.civic),
                       foregroundColor: AppColors.civic,
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text("Add", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                    child: Text(
+                      "Add",
+                      style: AppTypography.button.copyWith(fontSize: 12),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -2652,15 +2961,27 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       backgroundColor: AppColors.ink,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.play_arrow_rounded, size: 14, color: Colors.white),
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 2),
-                        Text("Start", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                        Text(
+                          "Start",
+                          style: AppTypography.button.copyWith(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -2676,11 +2997,18 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.add_rounded, size: 13, color: AppColors.muted),
+                  const Icon(
+                    Icons.add_rounded,
+                    size: 13,
+                    color: AppColors.muted,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     "Add your questions",
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -2704,7 +3032,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -2712,7 +3043,14 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -2720,7 +3058,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Add your questions",
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.ink),
+                    style: AppTypography.sectionHeader.copyWith(fontSize: 15),
                   ),
                 ),
               ),
@@ -2729,11 +3067,24 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 leading: Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.edit_rounded, color: AppColors.ink, size: 18),
+                  decoration: BoxDecoration(
+                    color: AppColors.paper,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    color: AppColors.ink,
+                    size: 18,
+                  ),
                 ),
-                title: Text("Write manually", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
-                subtitle: Text("Type out the question yourself", style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                title: Text(
+                  "Write manually",
+                  style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                ),
+                subtitle: Text(
+                  "Type out the question yourself",
+                  style: AppTypography.caption.copyWith(fontSize: 11),
+                ),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _openManualAddForm(node);
@@ -2743,11 +3094,24 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 leading: Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(color: AppColors.civic.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.civic, size: 18),
+                  decoration: BoxDecoration(
+                    color: AppColors.civic.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppColors.civic,
+                    size: 18,
+                  ),
                 ),
-                title: Text("Parse with AI", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
-                subtitle: Text("Upload a file, image, or text and post with A.I.", style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                title: Text(
+                  "Parse with AI",
+                  style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                ),
+                subtitle: Text(
+                  "Upload a file, image, or text and post with A.I.",
+                  style: AppTypography.caption.copyWith(fontSize: 11),
+                ),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _openAiParsing(node);
@@ -2765,19 +3129,30 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   // _CategoryDrillDownScreen (see above). No longer reachable from the
   // build() call site but left in place for now; slated for removal once
   // the grid has been verified in real use.
-  Widget _buildTreeNodes(List<_TreeNode> nodes, int depth, {int? tourAnchorId}) {
+  Widget _buildTreeNodes(
+    List<_TreeNode> nodes,
+    int depth, {
+    int? tourAnchorId,
+  }) {
     return Column(
       children: nodes.map((node) {
         final bool hasChildren = node.children.isNotEmpty;
         final bool isExpanded = _expandedNodes.contains(node.id);
         final int available = _getAvailableCount(node.id);
-        final bool isRoot = depth == 0 || node.nodeType == 'subject' || node.nodeType == 'paper';
+        final bool isRoot =
+            depth == 0 ||
+            node.nodeType == 'subject' ||
+            node.nodeType == 'paper';
 
         Widget? childrenWidget;
         if (isExpanded && hasChildren) {
           childrenWidget = Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: _buildTreeNodes(node.children, depth + 1, tourAnchorId: tourAnchorId),
+            child: _buildTreeNodes(
+              node.children,
+              depth + 1,
+              tourAnchorId: tourAnchorId,
+            ),
           );
         }
 
@@ -2827,7 +3202,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           onStart: _startDirectTest,
           onManualAdd: _openManualAddForm,
           onParseAI: _openAiParsing,
-          getCartTotal: () => _compiledItems.fold<int>(0, (s, i) => s + (i['count'] as int)),
+          getCartTotal: () =>
+              _compiledItems.fold<int>(0, (s, i) => s + (i['count'] as int)),
         ),
       ),
     );
@@ -2863,9 +3239,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           ),
           child: Text(
             "Add",
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.bold,
+            style: AppTypography.button.copyWith(
               fontSize: 12,
+              color: Colors.white,
             ),
           ),
         ),
@@ -2883,9 +3259,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           ),
           child: Text(
             "Start",
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.bold,
+            style: AppTypography.button.copyWith(
               fontSize: 12,
+              color: Colors.white,
             ),
           ),
         ),
@@ -2934,8 +3310,12 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(16),
               topRight: const Radius.circular(16),
-              bottomLeft: available == 0 ? const Radius.circular(16) : Radius.zero,
-              bottomRight: available == 0 ? const Radius.circular(16) : Radius.zero,
+              bottomLeft: available == 0
+                  ? const Radius.circular(16)
+                  : Radius.zero,
+              bottomRight: available == 0
+                  ? const Radius.circular(16)
+                  : Radius.zero,
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -2956,10 +3336,8 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       children: [
                         Text(
                           node.name,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: AppTypography.title.copyWith(
                             fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.ink,
                             letterSpacing: -0.2,
                           ),
                         ),
@@ -2969,11 +3347,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             node.description!.trim(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.muted,
-                            ),
+                            style: AppTypography.caption,
                           ),
                         ],
                       ],
@@ -2987,15 +3361,23 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             title: "Browse Sub-Categories",
                             description: _tourBrowseDescription,
                             targetBorderRadius: BorderRadius.circular(8),
-                            child: const Icon(Icons.chevron_right_rounded, color: AppColors.civic, size: 24),
+                            child: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.civic,
+                              size: 24,
+                            ),
                           )
-                        : const Icon(Icons.chevron_right_rounded, color: AppColors.civic, size: 24),
+                        : const Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppColors.civic,
+                            size: 24,
+                          ),
                   ],
                 ],
               ),
             ),
           ),
-          
+
           // Selection Bar (only if available > 0)
           if (available > 0) ...[
             const Divider(color: AppColors.line, height: 1),
@@ -3009,18 +3391,22 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       children: [
                         Text(
                           "$available Qs",
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
+                          style: AppTypography.caption.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.civic,
+                            fontSize: 12,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (_userQuestionCounts[node.id] != null && _userQuestionCounts[node.id]! > 0) ...[
+                        if (_userQuestionCounts[node.id] != null &&
+                            _userQuestionCounts[node.id]! > 0) ...[
                           const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.amber.shade50,
                               border: Border.all(color: Colors.amber.shade200),
@@ -3028,10 +3414,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             ),
                             child: Text(
                               "+${_userQuestionCounts[node.id]} yours",
-                              style: GoogleFonts.inter(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                              style: AppTypography.eyebrowSmall.copyWith(
                                 color: Colors.amber.shade800,
+                                letterSpacing: 0,
                               ),
                             ),
                           ),
@@ -3052,8 +3437,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
               ),
             ),
           ],
-
-
 
           // Children list nested inside the card!
           if (childrenWidget != null) ...[
@@ -3086,15 +3469,27 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       final double leftPadding = (depth - 1) * 16.0;
       return Container(
         margin: const EdgeInsets.only(top: 10, bottom: 4),
-        padding: EdgeInsets.only(left: leftPadding + 8, right: 8, top: 8, bottom: 8),
+        padding: EdgeInsets.only(
+          left: leftPadding + 8,
+          right: 8,
+          top: 8,
+          bottom: 8,
+        ),
         decoration: BoxDecoration(
           color: Colors.amber.withOpacity(0.04),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.amber.withOpacity(0.4), style: BorderStyle.solid),
+          border: Border.all(
+            color: Colors.amber.withOpacity(0.4),
+            style: BorderStyle.solid,
+          ),
         ),
         child: Row(
           children: [
-            Icon(Icons.person_outline_rounded, color: Colors.amber[800], size: 16),
+            Icon(
+              Icons.person_outline_rounded,
+              color: Colors.amber[800],
+              size: 16,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -3102,17 +3497,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 children: [
                   Text(
                     node.name,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.bold,
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 12,
                       color: Colors.amber[900],
                     ),
                   ),
                   Text(
                     "Private questions submitted by you",
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
+                    style: AppTypography.eyebrowSmall.copyWith(
                       color: Colors.amber[800],
+                      letterSpacing: 0,
                     ),
                   ),
                 ],
@@ -3121,8 +3515,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             if (available > 0) ...[
               Text(
                 "$available Qs",
-                style: GoogleFonts.inter(
-                  fontSize: 11,
+                style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w700,
                   color: Colors.amber[900],
                 ),
@@ -3135,7 +3528,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber[700],
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
@@ -3145,9 +3541,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 ),
                 child: Text(
                   "Add",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.button.copyWith(
                     fontSize: 10,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -3157,7 +3553,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.ink,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
@@ -3167,19 +3566,17 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 ),
                 child: Text(
                   "Start",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.button.copyWith(
                     fontSize: 10,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ] else ...[
               Text(
                 "0 Qs",
-                style: GoogleFonts.inter(
-                  fontSize: 11,
+                style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.muted,
                 ),
               ),
             ],
@@ -3207,13 +3604,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
             Container(
               margin: const EdgeInsets.only(top: 2, right: 10),
               child: Icon(
-                hasChildren ? Icons.folder_open_rounded : Icons.radio_button_checked_rounded,
+                hasChildren
+                    ? Icons.folder_open_rounded
+                    : Icons.radio_button_checked_rounded,
                 size: 14,
                 color: AppColors.civic.withOpacity(0.7),
               ),
             ),
           ],
-          
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3225,23 +3624,25 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         children: [
                           Expanded(
                             child: GestureDetector(
-                              onTap: hasChildren ? () => _toggleExpanded(node.id) : null,
+                              onTap: hasChildren
+                                  ? () => _toggleExpanded(node.id)
+                                  : null,
                               child: Row(
                                 children: [
                                   Flexible(
                                     child: Text(
                                       node.name,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontWeight: FontWeight.bold,
+                                      style: AppTypography.cardTitle.copyWith(
                                         fontSize: 13,
-                                        color: AppColors.ink,
                                       ),
                                     ),
                                   ),
                                   if (hasChildren) ...[
                                     const SizedBox(width: 4),
                                     Icon(
-                                      isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                      isExpanded
+                                          ? Icons.keyboard_arrow_up_rounded
+                                          : Icons.keyboard_arrow_down_rounded,
                                       size: 16,
                                       color: AppColors.muted,
                                     ),
@@ -3252,14 +3653,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           ),
                           if (hasChildren)
                             IconButton(
-                              icon: const Icon(Icons.list_alt_rounded, color: AppColors.civic, size: 16),
+                              icon: const Icon(
+                                Icons.list_alt_rounded,
+                                color: AppColors.civic,
+                                size: 16,
+                              ),
                               tooltip: "Browse sub-categories",
                               onPressed: () async {
                                 final breadcrumb = _breadcrumbFor(node);
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    settings: RouteSettings(name: 'drilldown_0'),
+                                    settings: RouteSettings(
+                                      name: 'drilldown_0',
+                                    ),
                                     builder: (_) => _CategoryDrillDownScreen(
                                       levelNodes: node.children,
                                       breadcrumb: breadcrumb,
@@ -3270,7 +3677,11 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                       onStart: _startDirectTest,
                                       onManualAdd: _openManualAddForm,
                                       onParseAI: _openAiParsing,
-                                      getCartTotal: () => _compiledItems.fold<int>(0, (s, i) => s + (i['count'] as int)),
+                                      getCartTotal: () =>
+                                          _compiledItems.fold<int>(
+                                            0,
+                                            (s, i) => s + (i['count'] as int),
+                                          ),
                                     ),
                                   ),
                                 );
@@ -3284,17 +3695,19 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.civic.withOpacity(0.06),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         "L${depth + 1}",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.eyebrowSmall.copyWith(
                           fontSize: 8,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.civic,
+                          letterSpacing: 0,
                         ),
                       ),
                     ),
@@ -3306,10 +3719,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     node.description!.trim(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.muted,
-                    ),
+                    style: AppTypography.caption.copyWith(fontSize: 11),
                   ),
                 ],
                 const SizedBox(height: 4),
@@ -3318,16 +3728,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     children: [
                       Text(
                         "$available Qs",
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
+                        style: AppTypography.caption.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.civic,
+                          fontSize: 11,
                         ),
                       ),
-                      if (_userQuestionCounts[node.id] != null && _userQuestionCounts[node.id]! > 0) ...[
+                      if (_userQuestionCounts[node.id] != null &&
+                          _userQuestionCounts[node.id]! > 0) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.amber.shade50,
                             border: Border.all(color: Colors.amber.shade200),
@@ -3335,10 +3749,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                           ),
                           child: Text(
                             "+${_userQuestionCounts[node.id]} yours",
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                            style: AppTypography.eyebrowSmall.copyWith(
                               color: Colors.amber.shade800,
+                              letterSpacing: 0,
                             ),
                           ),
                         ),
@@ -3351,7 +3764,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.civic,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
@@ -3361,9 +3777,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         ),
                         child: Text(
                           "Add",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.bold,
+                          style: AppTypography.button.copyWith(
                             fontSize: 10,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -3373,7 +3789,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.ink,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
@@ -3383,9 +3802,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         ),
                         child: Text(
                           "Start",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.bold,
+                          style: AppTypography.button.copyWith(
                             fontSize: 10,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -3394,7 +3813,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                 ] else ...[
                   Text(
                     "0 Available",
-                    style: GoogleFonts.inter(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11,
                       color: AppColors.muted.withOpacity(0.7),
                     ),
@@ -3408,11 +3827,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         onTap: () => _openManualAddForm(node),
                         child: Row(
                           children: [
-                            const Icon(Icons.add_circle_outline_rounded, size: 12, color: AppColors.civic),
+                            const Icon(
+                              Icons.add_circle_outline_rounded,
+                              size: 12,
+                              color: AppColors.civic,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               "Add Q",
-                              style: GoogleFonts.inter(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.civic,
@@ -3424,8 +3847,13 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       const SizedBox(width: 16),
                       InkWell(
                         onTap: () {
-                          final apiClient = Provider.of<ApiClient>(context, listen: false);
-                          if (!apiClient.hasEntitlement('assessment.premium_tests')) {
+                          final apiClient = Provider.of<ApiClient>(
+                            context,
+                            listen: false,
+                          );
+                          if (!apiClient.hasEntitlement(
+                            'assessment.premium_tests',
+                          )) {
                             _showPremiumLockDialog();
                             return;
                           }
@@ -3441,11 +3869,15 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                         },
                         child: Row(
                           children: [
-                            const Icon(Icons.psychology_outlined, size: 12, color: AppColors.civic),
+                            const Icon(
+                              Icons.psychology_outlined,
+                              size: 12,
+                              color: AppColors.civic,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               "Parse AI",
-                              style: GoogleFonts.inter(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.civic,
@@ -3482,10 +3914,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       ),
       child: Text(
         hasQuestions ? "$available available" : "No questions",
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
+        style: AppTypography.eyebrowSmall.copyWith(
           color: hasQuestions ? AppColors.civic : AppColors.muted,
+          letterSpacing: 0,
         ),
       ),
     );
@@ -3549,15 +3980,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       );
     }
     if (_error != null) {
-      return Center(
-        child: Text(
-          _error!,
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.bold,
-            color: AppColors.ink,
-          ),
-        ),
-      );
+      return Center(child: Text(_error!, style: AppTypography.cardTitle));
     }
 
     final totalCartQs = _compiledItems.fold<int>(
@@ -3631,8 +4054,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                               if (widget.rootNodeId == null) ...[
                                 Text(
                                   "EXAM",
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.w800,
+                                  style: AppTypography.eyebrowLarge.copyWith(
                                     fontSize: 10,
                                     color: AppColors.muted,
                                     letterSpacing: 0.8,
@@ -3641,8 +4063,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 const SizedBox(height: 4),
                                 Text(
                                   "UPSC CSE",
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.w800,
+                                  style: AppTypography.title.copyWith(
                                     fontSize: 16,
                                     color: AppColors.civic,
                                   ),
@@ -3651,20 +4072,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                               ],
                               Text(
                                 "Test Topics",
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.w900,
+                                style: AppTypography.display.copyWith(
                                   fontSize: 22,
-                                  color: AppColors.ink,
                                   letterSpacing: -0.5,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 "Build and practice dedicated syllabus trees.",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
+                                style: AppTypography.body.copyWith(
                                   fontWeight: FontWeight.w500,
-                                  color: AppColors.muted,
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -3674,7 +4091,9 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: Colors.white,
-                                        border: Border.all(color: AppColors.line),
+                                        border: Border.all(
+                                          color: AppColors.line,
+                                        ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: TextField(
@@ -3685,12 +4104,13 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                           });
                                         },
                                         decoration: InputDecoration(
-                                          hintText: "Search categories or topics...",
-                                          hintStyle: GoogleFonts.inter(
-                                            color: AppColors.muted,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                          hintText:
+                                              "Search categories or topics...",
+                                          hintStyle: AppTypography.body
+                                              .copyWith(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                           prefixIcon: const Icon(
                                             Icons.search_rounded,
                                             color: AppColors.muted,
@@ -3698,7 +4118,11 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                           ),
                                           suffixIcon: _searchQuery.isNotEmpty
                                               ? IconButton(
-                                                  icon: const Icon(Icons.clear_rounded, size: 18, color: AppColors.muted),
+                                                  icon: const Icon(
+                                                    Icons.clear_rounded,
+                                                    size: 18,
+                                                    color: AppColors.muted,
+                                                  ),
                                                   onPressed: () {
                                                     _searchController.clear();
                                                     setState(() {
@@ -3708,10 +4132,11 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                                 )
                                               : null,
                                           border: InputBorder.none,
-                                          contentPadding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 11,
-                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 14,
+                                                vertical: 11,
+                                              ),
                                         ),
                                       ),
                                     ),
@@ -3727,100 +4152,97 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   },
                   body: _loadingBookmarks
                       ? const Center(
-                          child: CircularProgressIndicator(color: AppColors.civic),
+                          child: CircularProgressIndicator(
+                            color: AppColors.civic,
+                          ),
                         )
                       : _activeTab == 'revision' && _bookmarks.isEmpty
-                          ? Center(
-                              child: Text(
-                                "No bookmarks found.",
-                                style: GoogleFonts.inter(
-                                  color: AppColors.muted,
-                                  fontWeight: FontWeight.bold,
+                      ? Center(
+                          child: Text(
+                            "No bookmarks found.",
+                            style: AppTypography.body.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : _activeTab == 'revision'
+                      ? _buildRevisionView()
+                      : _activeTree.isEmpty
+                      ? Center(
+                          child: Text(
+                            "No categories found.",
+                            style: AppTypography.body.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : ListView(
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                            Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: AppColors.civic.withOpacity(0.2),
                                 ),
                               ),
-                            )
-                          : _activeTab == 'revision'
-                                  ? _buildRevisionView()
-                                  : _activeTree.isEmpty
-                                      ? Center(
-                                          child: Text(
-                                            "No categories found.",
-                                            style: GoogleFonts.inter(
-                                              color: AppColors.muted,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        )
-                                      : ListView(
-                                          padding: const EdgeInsets.all(16),
+                              color: AppColors.civic.withOpacity(0.05),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: _showCustomizeSyllabusModal,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.tune_rounded,
+                                        color: AppColors.civic,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Card(
-                                              elevation: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                                side: BorderSide(
-                                                    color: AppColors.civic.withOpacity(0.2)),
-                                              ),
-                                              color: AppColors.civic.withOpacity(0.05),
-                                              child: InkWell(
-                                                borderRadius: BorderRadius.circular(12),
-                                                onTap: _showCustomizeSyllabusModal,
-                                                child: Padding(
-                                                  padding: const EdgeInsets.symmetric(
-                                                      horizontal: 16, vertical: 12),
-                                                  child: Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.tune_rounded,
-                                                        color: AppColors.civic,
-                                                        size: 20,
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment.start,
-                                                          children: [
-                                                            Text(
-                                                              "Customize Syllabus View",
-                                                              style: GoogleFonts.plusJakartaSans(
-                                                                fontWeight: FontWeight.bold,
-                                                                fontSize: 14,
-                                                                color: AppColors.ink,
-                                                              ),
-                                                            ),
-                                                            const SizedBox(height: 2),
-                                                            Text(
-                                                              "Hide/show books, sources or specific topics.",
-                                                              style: GoogleFonts.inter(
-                                                                fontSize: 11,
-                                                                color: AppColors.muted,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const Icon(
-                                                        Icons.chevron_right_rounded,
-                                                        color: AppColors.muted,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
+                                            Text(
+                                              "Customize Syllabus View",
+                                              style: AppTypography.cardTitle
+                                                  .copyWith(fontSize: 14),
                                             ),
-                                            const SizedBox(height: 16),
-                                            _buildCategoryBrowser(
-                                              _filterTree(_activeTree, _searchQuery),
-                                              _findTourAnchorNodeId(),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              "Hide/show books, sources or specific topics.",
+                                              style: AppTypography.caption
+                                                  .copyWith(fontSize: 11),
                                             ),
-                                            const SizedBox(height: 80),
                                           ],
                                         ),
+                                      ),
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: AppColors.muted,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildCategoryBrowser(
+                              _filterTree(_activeTree, _searchQuery),
+                              _findTourAnchorNodeId(),
+                            ),
+                            const SizedBox(height: 80),
+                          ],
+                        ),
                 ),
               ),
-              if (_compiledItems.isNotEmpty)
-                const SizedBox(height: 76),
+              if (_compiledItems.isNotEmpty) const SizedBox(height: 76),
             ],
           ),
         ),
@@ -3861,7 +4283,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 20,
+                      ),
                       child: Column(
                         children: [
                           Center(
@@ -3883,10 +4308,10 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 children: [
                                   Text(
                                     "Custom Test Cart",
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontWeight: FontWeight.w800,
+                                    style: AppTypography.eyebrowLarge.copyWith(
                                       fontSize: 12,
                                       color: AppColors.muted,
+                                      letterSpacing: 0,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -3894,15 +4319,20 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                     children: [
                                       Text(
                                         "${_compiledItems.length} Categories • $totalCartQs / 100 Qs",
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontWeight: FontWeight.w900,
+                                        style: AppTypography.cardTitle.copyWith(
                                           fontSize: 15,
-                                          color: totalCartQs > 100 ? Colors.red : AppColors.ink,
+                                          color: totalCartQs > 100
+                                              ? Colors.red
+                                              : AppColors.ink,
                                         ),
                                       ),
                                       if (totalCartQs > 100) ...[
                                         const SizedBox(width: 6),
-                                        const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 16),
+                                        const Icon(
+                                          Icons.warning_amber_rounded,
+                                          color: Colors.red,
+                                          size: 16,
+                                        ),
                                       ],
                                     ],
                                   ),
@@ -3926,14 +4356,18 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   if (_isCartExpanded)
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 12),
+                        padding: const EdgeInsets.only(
+                          left: 20,
+                          right: 20,
+                          bottom: 20,
+                          top: 12,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               "TEST NAME *",
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w800,
+                              style: AppTypography.eyebrowLarge.copyWith(
                                 fontSize: 11,
                                 color: AppColors.muted,
                                 letterSpacing: 0.5,
@@ -3946,22 +4380,27 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 hintText: "e.g., My Custom Practice Test",
                                 filled: true,
                                 fillColor: AppColors.paper.withOpacity(0.4),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(color: AppColors.line),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: AppColors.civic, width: 1.5),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.civic,
+                                    width: 1.5,
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               "SELECTED CATEGORIES",
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w800,
+                              style: AppTypography.eyebrowLarge.copyWith(
                                 fontSize: 11,
                                 color: AppColors.muted,
                                 letterSpacing: 0.5,
@@ -3971,38 +4410,43 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             Expanded(
                               child: ListView.separated(
                                 itemCount: _compiledItems.length,
-                                separatorBuilder: (_, __) => const Divider(color: AppColors.line, height: 1),
+                                separatorBuilder: (_, __) => const Divider(
+                                  color: AppColors.line,
+                                  height: 1,
+                                ),
                                 itemBuilder: (context, index) {
                                   final item = _compiledItems[index];
                                   final node = item['node'] as _TreeNode;
                                   final count = item['count'] as int;
 
                                   return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
                                     child: Row(
                                       children: [
                                         Expanded(
                                           child: Text(
                                             node.name,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              color: AppColors.ink,
-                                            ),
+                                            style: AppTypography.cardTitle
+                                                .copyWith(fontSize: 13),
                                           ),
                                         ),
                                         Text(
                                           "$count Qs",
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13,
-                                            color: AppColors.civic,
-                                          ),
+                                          style: AppTypography.cardTitle
+                                              .copyWith(
+                                                fontSize: 13,
+                                                color: AppColors.civic,
+                                              ),
                                         ),
                                         const SizedBox(width: 8),
                                         IconButton(
-                                          icon: const Icon(Icons.delete_outline_rounded,
-                                              color: Colors.red, size: 20),
+                                          icon: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
                                           onPressed: () {
                                             setState(() {
                                               _compiledItems.removeAt(index);
@@ -4025,16 +4469,22 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                 decoration: BoxDecoration(
                                   color: Colors.red.withOpacity(0.06),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.red.withOpacity(0.15)),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.15),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.error_outline_rounded, color: Colors.red, size: 16),
+                                    const Icon(
+                                      Icons.error_outline_rounded,
+                                      color: Colors.red,
+                                      size: 16,
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         "Max 100 questions allowed in a single test.",
-                                        style: GoogleFonts.inter(
+                                        style: AppTypography.caption.copyWith(
                                           fontSize: 11,
                                           color: Colors.red,
                                           fontWeight: FontWeight.w600,
@@ -4056,18 +4506,27 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                     height: 48,
                                     child: OutlinedButton(
                                       style: OutlinedButton.styleFrom(
-                                        side: const BorderSide(color: AppColors.civic),
+                                        side: const BorderSide(
+                                          color: AppColors.civic,
+                                        ),
                                         foregroundColor: AppColors.civic,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                       ),
-                                      onPressed: (totalCartQs > 0 && totalCartQs <= 100 && !_compiling)
+                                      onPressed:
+                                          (totalCartQs > 0 &&
+                                              totalCartQs <= 100 &&
+                                              !_compiling)
                                           ? _addCartToExistingTest
                                           : null,
                                       child: Text(
                                         "Add to Existing",
-                                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: AppTypography.button.copyWith(
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -4081,11 +4540,16 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                         backgroundColor: AppColors.civic,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         elevation: 0,
                                       ),
-                                      onPressed: (totalCartQs > 0 && totalCartQs <= 100 && !_compiling)
+                                      onPressed:
+                                          (totalCartQs > 0 &&
+                                              totalCartQs <= 100 &&
+                                              !_compiling)
                                           ? _saveCartAsNewTest
                                           : null,
                                       child: _compiling
@@ -4099,7 +4563,11 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                             )
                                           : Text(
                                               "Save as New Test",
-                                              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
+                                              style: AppTypography.button
+                                                  .copyWith(
+                                                    fontSize: 13,
+                                                    color: Colors.white,
+                                                  ),
                                             ),
                                     ),
                                   ),
@@ -4118,51 +4586,57 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     );
   }
 
-
   void _showFreeLimitDialog(String message) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
               const Icon(Icons.lock_outline_rounded, color: Colors.indigo),
               const SizedBox(width: 10),
               Text(
                 "Free Tests Used Up",
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+                style: AppTypography.cardTitle.copyWith(fontSize: 16),
               ),
             ],
           ),
           content: Text(
             message,
-            style: GoogleFonts.inter(fontSize: 13, height: 1.4),
+            style: AppTypography.body.copyWith(fontSize: 13, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
                 "Cancel",
-                style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
+                style: AppTypography.button.copyWith(color: Colors.grey),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               onPressed: () async {
                 Navigator.pop(context);
                 final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
-                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                if (!await launchUrl(
+                  url,
+                  mode: LaunchMode.externalApplication,
+                )) {
                   debugPrint("Could not launch $url");
                 }
               },
               child: Text(
                 "View Plans",
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                style: AppTypography.button.copyWith(color: Colors.white),
               ),
             ),
           ],
@@ -4176,45 +4650,52 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
               const Icon(Icons.lock_outline_rounded, color: Colors.indigo),
               const SizedBox(width: 10),
               Text(
                 "Premium Feature",
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+                style: AppTypography.cardTitle.copyWith(fontSize: 16),
               ),
             ],
           ),
           content: Text(
             "Manually authoring or AI-parsing new questions is a premium feature. Upgrade to Assessment Premium for unlimited access.",
-            style: GoogleFonts.inter(fontSize: 13, height: 1.4),
+            style: AppTypography.body.copyWith(fontSize: 13, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
                 "Cancel",
-                style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
+                style: AppTypography.button.copyWith(color: Colors.grey),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               onPressed: () async {
                 Navigator.pop(context);
                 final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
-                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                if (!await launchUrl(
+                  url,
+                  mode: LaunchMode.externalApplication,
+                )) {
                   debugPrint("Could not launch $url");
                 }
               },
               child: Text(
                 "View Plans",
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                style: AppTypography.button.copyWith(color: Colors.white),
               ),
             ),
           ],
@@ -4222,8 +4703,6 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       },
     );
   }
-
-
 }
 
 class _SliverTabHeaderDelegate extends SliverPersistentHeaderDelegate {

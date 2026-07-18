@@ -77,7 +77,8 @@ class _CategoryDrillDownScreen extends StatefulWidget {
   });
 
   @override
-  State<_CategoryDrillDownScreen> createState() => _CategoryDrillDownScreenState();
+  State<_CategoryDrillDownScreen> createState() =>
+      _CategoryDrillDownScreenState();
 }
 
 class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
@@ -109,12 +110,16 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
     if (index == widget.breadcrumb.length - 1) return; // already here
     Navigator.popUntil(context, (route) {
       final name = route.settings.name;
-      return name == 'drilldown_$index' || !(name?.startsWith('drilldown_') ?? false);
+      return name == 'drilldown_$index' ||
+          !(name?.startsWith('drilldown_') ?? false);
     });
   }
 
   void _reviewCart() {
-    Navigator.popUntil(context, (route) => !(route.settings.name?.startsWith('drilldown_') ?? false));
+    Navigator.popUntil(
+      context,
+      (route) => !(route.settings.name?.startsWith('drilldown_') ?? false),
+    );
   }
 
   void _showAddQuestionsSheet(_TreeNode node) {
@@ -122,7 +127,10 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -130,7 +138,14 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -138,7 +153,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Add your questions",
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.ink),
+                    style: AppTypography.sectionHeader.copyWith(fontSize: 15),
                   ),
                 ),
               ),
@@ -147,11 +162,24 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                 leading: Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.edit_rounded, color: AppColors.ink, size: 18),
+                  decoration: BoxDecoration(
+                    color: AppColors.paper,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    color: AppColors.ink,
+                    size: 18,
+                  ),
                 ),
-                title: Text("Write manually", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
-                subtitle: Text("Type out the question yourself", style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                title: Text(
+                  "Write manually",
+                  style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                ),
+                subtitle: Text(
+                  "Type out the question yourself",
+                  style: AppTypography.caption.copyWith(fontSize: 11),
+                ),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   widget.onManualAdd(node);
@@ -161,11 +189,24 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                 leading: Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(color: AppColors.civic.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.civic, size: 18),
+                  decoration: BoxDecoration(
+                    color: AppColors.civic.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppColors.civic,
+                    size: 18,
+                  ),
                 ),
-                title: Text("Parse with AI", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
-                subtitle: Text("Upload a file, image, or text and post with A.I.", style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                title: Text(
+                  "Parse with AI",
+                  style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                ),
+                subtitle: Text(
+                  "Upload a file, image, or text and post with A.I.",
+                  style: AppTypography.caption.copyWith(fontSize: 11),
+                ),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   widget.onParseAI(node);
@@ -194,20 +235,28 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.remove, size: 14, color: AppColors.ink),
-            onPressed: currentVal > 1 ? () => setState(() => widget.setQuantity(node.id, currentVal - 1)) : null,
+            onPressed: currentVal > 1
+                ? () => setState(
+                    () => widget.setQuantity(node.id, currentVal - 1),
+                  )
+                : null,
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Text(
               "$currentVal",
-              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.ink),
+              style: AppTypography.cardTitle.copyWith(fontSize: 12),
             ),
           ),
           IconButton(
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.add, size: 14, color: AppColors.ink),
-            onPressed: currentVal < available ? () => setState(() => widget.setQuantity(node.id, currentVal + 1)) : null,
+            onPressed: currentVal < available
+                ? () => setState(
+                    () => widget.setQuantity(node.id, currentVal + 1),
+                  )
+                : null,
           ),
         ],
       ),
@@ -230,8 +279,15 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
             Container(
               width: 34,
               height: 34,
-              decoration: BoxDecoration(color: AppColors.civic.withOpacity(0.08), borderRadius: BorderRadius.circular(9)),
-              child: Icon(_drillDownNodeIcon(node.nodeType, true), size: 17, color: AppColors.civic),
+              decoration: BoxDecoration(
+                color: AppColors.civic.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(
+                _drillDownNodeIcon(node.nodeType, true),
+                size: 17,
+                color: AppColors.civic,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -245,16 +301,25 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                           node.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.ink),
+                          style: AppTypography.cardTitle.copyWith(fontSize: 13),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(6)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.paper,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                         child: Text(
                           _drillDownLevelLabels[node.nodeType] ?? 'Category',
-                          style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.muted),
+                          style: AppTypography.eyebrowSmall.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0,
+                          ),
                         ),
                       ),
                     ],
@@ -262,12 +327,16 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                   const SizedBox(height: 2),
                   Text(
                     "${node.children.length} $childLabel · $available Qs",
-                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                    style: AppTypography.caption.copyWith(fontSize: 11),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: 20),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.muted,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -290,8 +359,15 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
               Container(
                 width: 34,
                 height: 34,
-                decoration: BoxDecoration(color: AppColors.emerald.withOpacity(0.1), borderRadius: BorderRadius.circular(9)),
-                child: const Icon(Icons.description_rounded, size: 17, color: AppColors.emerald),
+                decoration: BoxDecoration(
+                  color: AppColors.emerald.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(
+                  Icons.description_rounded,
+                  size: 17,
+                  color: AppColors.emerald,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -302,12 +378,14 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                       node.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.ink),
+                      style: AppTypography.cardTitle.copyWith(fontSize: 13),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      available > 0 ? "$available questions available" : "No questions available",
-                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                      available > 0
+                          ? "$available questions available"
+                          : "No questions available",
+                      style: AppTypography.caption.copyWith(fontSize: 11),
                     ),
                   ],
                 ),
@@ -327,9 +405,14 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                       side: const BorderSide(color: AppColors.civic),
                       foregroundColor: AppColors.civic,
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text("Add", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                    child: Text(
+                      "Add",
+                      style: AppTypography.button.copyWith(fontSize: 12),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -340,15 +423,27 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                       backgroundColor: AppColors.ink,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.play_arrow_rounded, size: 14, color: Colors.white),
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 2),
-                        Text("Start", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                        Text(
+                          "Start",
+                          style: AppTypography.button.copyWith(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -366,11 +461,18 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.add_rounded, size: 13, color: AppColors.muted),
+                  const Icon(
+                    Icons.add_rounded,
+                    size: 13,
+                    color: AppColors.muted,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     "Add your questions",
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -391,7 +493,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
         elevation: 0,
         title: Text(
           widget.breadcrumb.last,
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.ink),
+          style: AppTypography.title.copyWith(fontSize: 16),
         ),
       ),
       body: Column(
@@ -409,16 +511,24 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                       if (i > 0)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.muted),
+                          child: Icon(
+                            Icons.chevron_right_rounded,
+                            size: 14,
+                            color: AppColors.muted,
+                          ),
                         ),
                       GestureDetector(
                         onTap: () => _jumpToBreadcrumb(i),
                         child: Text(
                           widget.breadcrumb[i],
-                          style: GoogleFonts.inter(
+                          style: AppTypography.button.copyWith(
                             fontSize: 11,
-                            fontWeight: i == widget.breadcrumb.length - 1 ? FontWeight.w800 : FontWeight.w600,
-                            color: i == widget.breadcrumb.length - 1 ? AppColors.ink : AppColors.civic,
+                            fontWeight: i == widget.breadcrumb.length - 1
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                            color: i == widget.breadcrumb.length - 1
+                                ? AppColors.ink
+                                : AppColors.civic,
                           ),
                         ),
                       ),
@@ -432,7 +542,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                 ? Center(
                     child: Text(
                       "No sub-categories here.",
-                      style: GoogleFonts.inter(color: AppColors.muted, fontSize: 13),
+                      style: AppTypography.body.copyWith(fontSize: 13),
                     ),
                   )
                 : ListView(
@@ -449,7 +559,9 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                         child: Column(
                           children: [
                             for (final node in widget.levelNodes)
-                              node.children.isNotEmpty ? _buildFolderRow(node) : _buildLeafRow(node),
+                              node.children.isNotEmpty
+                                  ? _buildFolderRow(node)
+                                  : _buildLeafRow(node),
                           ],
                         ),
                       ),
@@ -462,7 +574,10 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
           ? SafeArea(
               child: Container(
                 margin: const EdgeInsets.all(12),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.ink,
                   borderRadius: BorderRadius.circular(14),
@@ -473,15 +588,25 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                     children: [
                       Text(
                         "$cartTotal question${cartTotal == 1 ? '' : 's'} selected",
-                        style: GoogleFonts.inter(fontSize: 12, color: Colors.white70),
+                        style: AppTypography.caption.copyWith(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                       ),
                       const Spacer(),
                       Text(
                         "Review",
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
+                        style: AppTypography.button.copyWith(
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward_rounded, size: 14, color: Colors.white),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),
