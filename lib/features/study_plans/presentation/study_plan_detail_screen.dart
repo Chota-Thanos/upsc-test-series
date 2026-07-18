@@ -365,10 +365,10 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                         Text(
                           plan.summary.title,
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 22,
+                            fontSize: 19,
                             fontWeight: FontWeight.w800,
                             color: AppColors.ink,
-                            height: 1.2,
+                            height: 1.25,
                           ),
                         ),
                         if (plan.summary.subtitle != null) ...[
@@ -376,10 +376,10 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           Text(
                             plan.summary.subtitle!,
                             style: GoogleFonts.inter(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w400,
                               color: AppColors.muted,
-                              height: 1.4,
+                              height: 1.5,
                             ),
                           ),
                         ],
@@ -404,7 +404,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                                 "${plan.reviewsSummary.averageRating.toStringAsFixed(1)} (${plan.reviewsSummary.totalReviews} reviews)",
                                 style: GoogleFonts.inter(
                                   fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   color: AppColors.muted,
                                 ),
                               ),
@@ -425,9 +425,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                               Text(
                                 "${plan.items.length} sessions across ${sortedWeeks.length} weeks",
                                 style: GoogleFonts.inter(
-                                  fontSize: 11.5,
+                                  fontSize: 11,
                                   color: AppColors.muted,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -491,7 +491,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     child: Text(
                       "Course Schedule",
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: AppColors.ink,
                       ),
@@ -538,7 +538,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
             child: Text(
               "Try the free preview sessions below — no purchase needed",
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 color: AppColors.civic,
               ),
@@ -576,8 +576,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                       ? "FULL ACCESS"
                       : "FREE PLAN",
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                     color: AppColors.muted,
                   ),
@@ -585,7 +585,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                 Text(
                   priceStr,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: AppColors.ink,
                   ),
@@ -614,7 +614,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     ? "Unlock Plan"
                     : "Unlock Free",
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.3,
                 ),
@@ -648,7 +648,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     margin: Margins.zero,
                     padding: HtmlPaddings.zero,
                     fontFamily: GoogleFonts.inter().fontFamily,
-                    fontSize: FontSize(12.5),
+                    fontSize: FontSize(12),
                     color: AppColors.muted,
                     lineHeight: const LineHeight(1.5),
                   ),
@@ -754,7 +754,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                               Text(
                                 weekTitle,
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14.5,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.ink,
                                 ),
@@ -887,7 +887,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                   Text(
                     "DAY ${item.dayNo} · ${item.itemType.replaceAll('_', ' ').toUpperCase()}",
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 9,
+                      fontSize: 8.5,
                       fontWeight: FontWeight.w800,
                       color: AppColors.muted,
                       letterSpacing: 0.6,
@@ -897,7 +897,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                   Text(
                     item.title,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                       decoration: done ? TextDecoration.lineThrough : null,
                       decorationColor: AppColors.muted,
