@@ -4,7 +4,6 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -44,7 +43,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
   final GlobalKey _tourStatsPanelKey = GlobalKey();
   final GlobalKey _tourNextBtnKey = GlobalKey();
   bool _tourChecked = false;
-  
+
   // Subjective answering states
   final TextEditingController _subjectiveController = TextEditingController();
   final TextEditingController _fileUrlController = TextEditingController();
@@ -75,7 +74,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
 
     try {
       final paper = await _service.getAttemptPaper(widget.attemptId);
-      
+
       // If result already exists, skip attempt engine and go directly to results
       if (paper.result != null) {
         if (mounted) {
@@ -99,7 +98,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
       }
 
       // Fetch subjective answers
-      final mainsAnswersList = await _service.getMainsSubjectiveAnswers(widget.attemptId);
+      final mainsAnswersList = await _service.getMainsSubjectiveAnswers(
+        widget.attemptId,
+      );
       final Map<int, dynamic> answersMap = {};
       for (var ans in mainsAnswersList) {
         if (ans['question_version_id'] != null) {
@@ -128,7 +129,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
     if (_paper == null || _paper!.questions.isEmpty) return;
     final activeQ = _paper!.questions[_activeIndex];
     final ans = _mainsAnswers[activeQ.questionVersion.id];
-    
+
     _subjectiveController.text = ans?['student_answer_text']?.toString() ?? '';
     _fileUrlController.text = ans?['answer_file_url']?.toString() ?? '';
   }
@@ -158,7 +159,10 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
   Future<void> _autoSubmit() async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Time expired! Submitting your answers automatically..."), backgroundColor: AppColors.berry),
+      const SnackBar(
+        content: Text("Time expired! Submitting your answers automatically..."),
+        backgroundColor: AppColors.berry,
+      ),
     );
     try {
       final resultId = await _service.submitAttempt(
@@ -192,7 +196,8 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
   // Local helper to select option key
   String _optionKey(dynamic option, int index) {
     if (option is Map) {
-      final key = option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
+      final key =
+          option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
       if (key != null) return key.toString();
     }
     return String.fromCharCode(65 + index);
@@ -201,7 +206,11 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
   // Local helper to extract text
   String _optionText(dynamic option, int index) {
     if (option is Map) {
-      final text = option['text'] ?? option['label'] ?? option['value'] ?? option['statement'];
+      final text =
+          option['text'] ??
+          option['label'] ??
+          option['value'] ??
+          option['statement'];
       if (text != null) return text.toString();
     }
     if (option != null) return option.toString();
@@ -271,7 +280,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         }
 
         // Compress image using ImageCompressor in isolate
-        final compressedBytes = await ImageCompressor.compressImage(Uint8List.fromList(rawBytes));
+        final compressedBytes = await ImageCompressor.compressImage(
+          Uint8List.fromList(rawBytes),
+        );
         final base64String = base64Encode(compressedBytes);
         imagesBase64.add("data:image/jpeg;base64,$base64String");
       }
@@ -283,7 +294,10 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         final extractedText = await _service.performOcr(imagesBase64);
         setState(() {
           final currentText = _subjectiveController.text.trim();
-          _subjectiveController.text = currentText + (currentText.isNotEmpty ? "\n\n" : "") + extractedText;
+          _subjectiveController.text =
+              currentText +
+              (currentText.isNotEmpty ? "\n\n" : "") +
+              extractedText;
           _statusMessage = "OCR scan completed successfully!";
         });
       } else {
@@ -296,9 +310,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
       setState(() {
         _statusMessage = "OCR processing failed.";
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("OCR processing failed: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("OCR processing failed: $e")));
     } finally {
       setState(() {
         _submittingSubjective = false;
@@ -324,15 +338,15 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
       final file = result.files.first;
       // NOTE: Replace with actual file upload service when storage is configured
       final copyData = <String, String>{'url': file.name};
-      
+
       setState(() {
         _fileUrlController.text = copyData['url'] ?? '';
         _statusMessage = "Copy file selected: ${file.name}";
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Upload failed: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Upload failed: $e")));
     } finally {
       setState(() {
         _submittingSubjective = false;
@@ -348,7 +362,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
 
     if (draftText.isEmpty && fileUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Write an answer or enter a file copy URL first.")),
+        const SnackBar(
+          content: Text("Write an answer or enter a file copy URL first."),
+        ),
       );
       return;
     }
@@ -375,9 +391,12 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         };
         _statusMessage = null;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mains answer locked successfully!"), backgroundColor: AppColors.emerald),
+        const SnackBar(
+          content: Text("Mains answer locked successfully!"),
+          backgroundColor: AppColors.emerald,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -399,14 +418,27 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Submit Exam", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
-          content: const Text("Are you sure you want to finish and submit the test? You cannot edit answers after submission."),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            "Submit Exam",
+            style: AppTypography.cardTitle.copyWith(fontSize: 16),
+          ),
+          content: const Text(
+            "Are you sure you want to finish and submit the test? You cannot edit answers after submission.",
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("CANCEL"),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text("SUBMIT TEST", style: TextStyle(color: AppColors.civic)),
+              child: const Text(
+                "SUBMIT TEST",
+                style: TextStyle(color: AppColors.civic),
+              ),
             ),
           ],
         );
@@ -440,7 +472,8 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
       }
     } catch (e) {
       setState(() {
-        _error = "Submission failed: ${e.toString().replaceFirst('Exception: ', '')}";
+        _error =
+            "Submission failed: ${e.toString().replaceFirst('Exception: ', '')}";
         _loading = false;
       });
       _startTimer();
@@ -459,7 +492,10 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
     if (_paper == null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text("Test", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14)),
+          title: Text(
+            "Test",
+            style: AppTypography.sectionHeader.copyWith(fontSize: 14),
+          ),
           backgroundColor: Colors.white,
           elevation: 0,
         ),
@@ -469,17 +505,22 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.berry),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 48,
+                  color: AppColors.berry,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   "Failed to load the test paper.",
-                  style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800),
+                  style: AppTypography.title.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _error ?? "An unknown error occurred. Please check your connection and try again.",
-                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+                  _error ??
+                      "An unknown error occurred. Please check your connection and try again.",
+                  style: AppTypography.body.copyWith(fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -501,30 +542,38 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
     if (paper.questions.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(paper.testTemplate.title,
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14)),
+          title: Text(
+            paper.testTemplate.title,
+            style: AppTypography.sectionHeader.copyWith(fontSize: 14),
+          ),
           backgroundColor: Colors.white,
           elevation: 0,
         ),
         body: Center(
           child: Text(
             "No questions found in this test.",
-            style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted),
+            style: AppTypography.body.copyWith(fontSize: 14),
           ),
         ),
       );
     }
 
-    final activeQ = paper.questions[_activeIndex.clamp(0, paper.questions.length - 1)];
+    final activeQ =
+        paper.questions[_activeIndex.clamp(0, paper.questions.length - 1)];
     final activeQResp = _responses[activeQ.questionVersion.id] ?? {};
-    final isSubjective = activeQ.questionFormat.questionFamily == 'mains_subjective';
+    final isSubjective =
+        activeQ.questionFormat.questionFamily == 'mains_subjective';
     final hasMainsAns = _mainsAnswers[activeQ.questionVersion.id] != null;
-    
+
     // Summary values
     final totalQ = paper.questions.length;
-    final answeredQ = _responses.values.where((r) => r['status'] == 'answered').length;
+    final answeredQ = _responses.values
+        .where((r) => r['status'] == 'answered')
+        .length;
     final reviewQ = _responses.values.where((r) => r['marked'] == true).length;
-    final skippedQ = _responses.values.where((r) => r['status'] == 'skipped').length;
+    final skippedQ = _responses.values
+        .where((r) => r['status'] == 'skipped')
+        .length;
     final unvisitedQ = totalQ - answeredQ - reviewQ - skippedQ;
 
     return ShowCaseWidget(
@@ -533,13 +582,32 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
           _tourChecked = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) return;
-            if (await AppTourService.shouldShowTour(AppTourService.attemptScreenKey)) {
-              await AppTourService.markTourSeen(AppTourService.attemptScreenKey);
-              if (mounted) ShowCaseWidget.of(ctx).startShowCase([_tourStatsPanelKey, _tourNextBtnKey]);
+            if (await AppTourService.shouldShowTour(
+              AppTourService.attemptScreenKey,
+            )) {
+              await AppTourService.markTourSeen(
+                AppTourService.attemptScreenKey,
+              );
+              if (mounted)
+                ShowCaseWidget.of(
+                  ctx,
+                ).startShowCase([_tourStatsPanelKey, _tourNextBtnKey]);
             }
           });
         }
-        return _buildAttemptScaffold(ctx, paper, activeQ, activeQResp, isSubjective, hasMainsAns, totalQ, answeredQ, reviewQ, skippedQ, unvisitedQ);
+        return _buildAttemptScaffold(
+          ctx,
+          paper,
+          activeQ,
+          activeQResp,
+          isSubjective,
+          hasMainsAns,
+          totalQ,
+          answeredQ,
+          reviewQ,
+          skippedQ,
+          unvisitedQ,
+        );
       },
     );
   }
@@ -565,7 +633,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         scrolledUnderElevation: 1.5,
         title: Text(
           paper.testTemplate.title,
-          style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800),
+          style: AppTypography.sectionHeader.copyWith(fontSize: 14),
         ),
         actions: [
           Container(
@@ -577,14 +645,18 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.timer_outlined, color: AppColors.paper, size: 16),
+                const Icon(
+                  Icons.timer_outlined,
+                  color: AppColors.paper,
+                  size: 16,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   _formattedTime(_remainingSeconds),
-                  style: GoogleFonts.inter(
+                  style: AppTypography.eyebrowSmall.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
                     fontSize: 12,
+                    letterSpacing: 0,
                   ),
                 ),
               ],
@@ -595,7 +667,10 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
       endDrawer: Drawer(
         width: MediaQuery.of(context).size.width * 0.8,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(24), bottomLeft: Radius.circular(24)),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            bottomLeft: Radius.circular(24),
+          ),
         ),
         child: _buildPaletteDrawer(totalQ),
       ),
@@ -610,7 +685,11 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
               child: Center(
                 child: Text(
                   _statusMessage!,
-                  style: const TextStyle(fontSize: 10, color: AppColors.civic, fontWeight: FontWeight.bold),
+                  style: AppTypography.eyebrowSmall.copyWith(
+                    color: AppColors.civic,
+                    fontSize: 10,
+                    letterSpacing: 0,
+                  ),
                 ),
               ),
             ),
@@ -619,7 +698,8 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
           Showcase(
             key: _tourStatsPanelKey,
             title: "Track Your Progress",
-            description: "See how many questions you've answered, marked for review, or skipped. Tap 'Grid' to jump to any question.",
+            description:
+                "See how many questions you've answered, marked for review, or skipped. Tap 'Grid' to jump to any question.",
             targetBorderRadius: BorderRadius.zero,
             child: Container(
               color: Colors.white,
@@ -627,23 +707,51 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCompactStatBadge("${_activeIndex + 1}/$totalQ", "Question", Colors.grey[200]!, AppColors.ink),
-                  _buildCompactStatBadge(answeredQ.toString(), "Done", AppColors.emerald.withOpacity(0.1), AppColors.emerald),
-                  _buildCompactStatBadge(reviewQ.toString(), "Review", AppColors.saffron.withOpacity(0.1), AppColors.saffron),
+                  _buildCompactStatBadge(
+                    "${_activeIndex + 1}/$totalQ",
+                    "Question",
+                    Colors.grey[200]!,
+                    AppColors.ink,
+                  ),
+                  _buildCompactStatBadge(
+                    answeredQ.toString(),
+                    "Done",
+                    AppColors.emerald.withOpacity(0.1),
+                    AppColors.emerald,
+                  ),
+                  _buildCompactStatBadge(
+                    reviewQ.toString(),
+                    "Review",
+                    AppColors.saffron.withOpacity(0.1),
+                    AppColors.saffron,
+                  ),
                   Builder(
                     builder: (context) => InkWell(
                       onTap: () => Scaffold.of(context).openEndDrawer(),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.civic.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.grid_view_rounded, size: 14, color: AppColors.civic),
-                            SizedBox(width: 4),
-                            Text("Grid", style: TextStyle(fontSize: 11, color: AppColors.civic, fontWeight: FontWeight.bold)),
+                            const Icon(
+                              Icons.grid_view_rounded,
+                              size: 14,
+                              color: AppColors.civic,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Grid",
+                              style: AppTypography.eyebrowLarge.copyWith(
+                                fontSize: 11,
+                                letterSpacing: 0,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -669,28 +777,41 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                       children: [
                         Text(
                           "QUESTION ${_activeIndex + 1}",
-                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted),
+                          style: AppTypography.eyebrowLarge.copyWith(
+                            fontSize: 11,
+                            color: AppColors.muted,
+                            letterSpacing: 0,
+                          ),
                         ),
-                        if (activeQ.questionVersion.createdByUserId != null) ...[
+                        if (activeQ.questionVersion.createdByUserId !=
+                            null) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.amber.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                              border: Border.all(
+                                color: Colors.amber.withOpacity(0.5),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.warning_amber_rounded, size: 10, color: Colors.amber[800]),
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  size: 10,
+                                  color: Colors.amber[800],
+                                ),
                                 const SizedBox(width: 2),
                                 Text(
                                   "Your Question",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w800,
+                                  style: AppTypography.eyebrowSmall.copyWith(
                                     color: Colors.amber[800],
+                                    letterSpacing: 0,
                                   ),
                                 ),
                               ],
@@ -700,13 +821,20 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                         const Spacer(),
                         Text(
                           "+${activeQ.marks} Marks",
-                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.civic),
+                          style: AppTypography.eyebrowLarge.copyWith(
+                            fontSize: 10,
+                            letterSpacing: 0,
+                          ),
                         ),
                         if (activeQ.negativeMarks > 0) ...[
                           const SizedBox(width: 8),
                           Text(
                             "-${activeQ.negativeMarks} Neg",
-                            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.berry),
+                            style: AppTypography.eyebrowLarge.copyWith(
+                              fontSize: 10,
+                              color: AppColors.berry,
+                              letterSpacing: 0,
+                            ),
                           ),
                         ],
                       ],
@@ -719,12 +847,20 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                     MarkdownBody(
                       data: activeQ.questionVersion.questionStatement,
                       styleSheet: MarkdownStyleSheet(
-                        p: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink, height: 1.45),
+                        p: AppTypography.body.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink,
+                          height: 1.45,
+                        ),
                       ),
                     ),
 
-                    if (activeQ.questionVersion.supplementaryStatement != null &&
-                        activeQ.questionVersion.supplementaryStatement!.trim().isNotEmpty) ...[
+                    if (activeQ.questionVersion.supplementaryStatement !=
+                            null &&
+                        activeQ.questionVersion.supplementaryStatement!
+                            .trim()
+                            .isNotEmpty) ...[
                       const SizedBox(height: 14),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -735,25 +871,37 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                         child: MarkdownBody(
                           data: activeQ.questionVersion.supplementaryStatement!,
                           styleSheet: MarkdownStyleSheet(
-                            p: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, height: 1.4, fontStyle: FontStyle.italic),
+                            p: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              height: 1.4,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ),
                       ),
                     ],
 
                     if (activeQ.questionVersion.questionPrompt != null &&
-                        activeQ.questionVersion.questionPrompt!.trim().isNotEmpty) ...[
+                        activeQ.questionVersion.questionPrompt!
+                            .trim()
+                            .isNotEmpty) ...[
                       const SizedBox(height: 14),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.civic.withOpacity(0.04),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.civic.withOpacity(0.1)),
+                          border: Border.all(
+                            color: AppColors.civic.withOpacity(0.1),
+                          ),
                         ),
                         child: Text(
                           activeQ.questionVersion.questionPrompt!,
-                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.civic),
+                          style: AppTypography.body.copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.civic,
+                          ),
                         ),
                       ),
                     ],
@@ -782,7 +930,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                     // Back button
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         side: const BorderSide(color: AppColors.line),
                       ),
@@ -794,20 +944,30 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                               _syncSubjectiveInputs();
                             }
                           : null,
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: AppColors.ink),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 14,
+                        color: AppColors.ink,
+                      ),
                     ),
                     const SizedBox(width: 8),
 
                     // Skip button
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         side: const BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
                         if (isSubjective) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Lock & Submit your subjective answer, or use Next to proceed.")),
+                            const SnackBar(
+                              content: Text(
+                                "Lock & Submit your subjective answer, or use Next to proceed.",
+                              ),
+                            ),
                           );
                         } else {
                           _saveResponse(
@@ -818,18 +978,27 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                           );
                         }
                       },
-                      child: Text("SKIP", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.ink)),
+                      child: Text(
+                        "SKIP",
+                        style: AppTypography.button.copyWith(
+                          fontSize: 11,
+                          color: AppColors.ink,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
 
                     // Review toggle
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         side: const BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
-                        final currentMarked = activeQResp['marked'] as bool? ?? false;
+                        final currentMarked =
+                            activeQResp['marked'] as bool? ?? false;
                         _saveResponse(
                           question: activeQ,
                           selectedAnswer: activeQResp['selectedAnswer'],
@@ -840,12 +1009,20 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            activeQResp['marked'] == true ? Icons.star_rounded : Icons.star_outline_rounded,
+                            activeQResp['marked'] == true
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
                             size: 14,
                             color: AppColors.saffron,
                           ),
                           const SizedBox(width: 4),
-                          Text("REVIEW", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.ink)),
+                          Text(
+                            "REVIEW",
+                            style: AppTypography.button.copyWith(
+                              fontSize: 11,
+                              color: AppColors.ink,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -856,12 +1033,18 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                 Showcase(
                   key: _tourNextBtnKey,
                   title: "Submit When Ready",
-                  description: "Tap 'Next' to move through questions. On the last question this becomes 'Submit' — tap it to finish and see your results.",
+                  description:
+                      "Tap 'Next' to move through questions. On the last question this becomes 'Submit' — tap it to finish and see your results.",
                   targetBorderRadius: BorderRadius.circular(12),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                     ),
                     onPressed: _activeIndex < totalQ - 1
                         ? () {
@@ -876,7 +1059,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                         Text(_activeIndex == totalQ - 1 ? "SUBMIT" : "NEXT"),
                         const SizedBox(width: 4),
                         Icon(
-                          _activeIndex == totalQ - 1 ? Icons.send_rounded : Icons.arrow_forward_ios_rounded,
+                          _activeIndex == totalQ - 1
+                              ? Icons.send_rounded
+                              : Icons.arrow_forward_ios_rounded,
                           size: 12,
                         ),
                       ],
@@ -891,7 +1076,12 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
     );
   }
 
-  Widget _buildCompactStatBadge(String count, String label, Color bg, Color text) {
+  Widget _buildCompactStatBadge(
+    String count,
+    String label,
+    Color bg,
+    Color text,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -902,19 +1092,29 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         children: [
           Text(
             count,
-            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: text),
+            style: AppTypography.eyebrowLarge.copyWith(
+              fontSize: 11,
+              color: text,
+              letterSpacing: 0,
+            ),
           ),
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: text.withOpacity(0.8)),
+            style: AppTypography.eyebrowSmall.copyWith(
+              color: text.withOpacity(0.8),
+              letterSpacing: 0,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOptionsGrid(TestQuestionItem question, Map<String, dynamic> activeResp) {
+  Widget _buildOptionsGrid(
+    TestQuestionItem question,
+    Map<String, dynamic> activeResp,
+  ) {
     final options = question.questionVersion.options;
     final selectedKey = activeResp['selectedAnswer']?.toString();
 
@@ -941,7 +1141,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.civic.withOpacity(0.05) : Colors.white,
+              color: isSelected
+                  ? AppColors.civic.withOpacity(0.05)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected ? AppColors.civic : AppColors.line,
@@ -961,10 +1163,10 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                   child: Center(
                     child: Text(
                       key,
-                      style: GoogleFonts.inter(
+                      style: AppTypography.eyebrowLarge.copyWith(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
                         color: isSelected ? Colors.white : AppColors.ink,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -976,7 +1178,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                     child: MarkdownBody(
                       data: _optionText(option, index),
                       styleSheet: MarkdownStyleSheet(
-                        p: GoogleFonts.inter(
+                        p: AppTypography.body.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.ink,
@@ -1002,21 +1204,24 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "WRITE ANSWER",
-              style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5),
-            ),
+            Text("WRITE ANSWER", style: AppTypography.eyebrowSmall),
             if (!isLocked)
               InkWell(
                 onTap: _submittingSubjective ? null : _performOcrScan,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.camera_alt_outlined, size: 14, color: AppColors.civic),
-                    SizedBox(width: 4),
+                  children: [
+                    const Icon(
+                      Icons.camera_alt_outlined,
+                      size: 14,
+                      color: AppColors.civic,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       "OCR SCAN SHEET",
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.civic),
+                      style: AppTypography.eyebrowSmall.copyWith(
+                        color: AppColors.civic,
+                      ),
                     ),
                   ],
                 ),
@@ -1029,7 +1234,8 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
           maxLines: 8,
           readOnly: isLocked,
           decoration: const InputDecoration(
-            hintText: "Structure your answer here. Provide arguments and headings...",
+            hintText:
+                "Structure your answer here. Provide arguments and headings...",
           ),
           onChanged: (_) {
             setState(() {}); // trigger rebuild for word count
@@ -1038,7 +1244,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         const SizedBox(height: 6),
         Text(
           "Word Count: ${_subjectiveController.text.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty).length} words",
-          style: const TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.bold),
+          style: AppTypography.caption.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.right,
         ),
         const SizedBox(height: 16),
@@ -1046,7 +1252,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
         // Copy Upload URL field
         Text(
           "OR ATTACH SCAN COPY (PDF/IMAGE)",
-          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5),
+          style: AppTypography.eyebrowSmall,
         ),
         const SizedBox(height: 6),
         Row(
@@ -1064,24 +1270,38 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
               const SizedBox(width: 8),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   side: const BorderSide(color: AppColors.line, width: 1.5),
                 ),
                 onPressed: _submittingSubjective ? null : _pickAndUploadCopy,
-                child: const Icon(Icons.file_upload_outlined, color: AppColors.civic),
+                child: const Icon(
+                  Icons.file_upload_outlined,
+                  color: AppColors.civic,
+                ),
               ),
-            ]
+            ],
           ],
         ),
         const SizedBox(height: 20),
 
         if (!isLocked)
           ElevatedButton(
-            onPressed: _submittingSubjective ? null : () => _submitMainsAnswer(question),
+            onPressed: _submittingSubjective
+                ? null
+                : () => _submitMainsAnswer(question),
             child: _submittingSubjective
-                ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text("LOCK & SUBMIT ANSWER")
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text("LOCK & SUBMIT ANSWER"),
           )
         else ...[
           Container(
@@ -1093,12 +1313,20 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle_outline_rounded, color: AppColors.emerald, size: 20),
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: AppColors.emerald,
+                  size: 20,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     "This response sheet is locked and submitted for mentor review.",
-                    style: GoogleFonts.inter(color: AppColors.emerald, fontWeight: FontWeight.bold, fontSize: 12),
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.emerald,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -1113,7 +1341,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
               child: const Text("Open Submitted Document Copy"),
             ),
           ],
-        ]
+        ],
       ],
     );
   }
@@ -1130,12 +1358,18 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             children: [
               Text(
                 "Questions Directory",
-                style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: AppTypography.title.copyWith(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 "Jump directly to any section",
-                style: GoogleFonts.inter(color: Colors.white60, fontSize: 12),
+                style: AppTypography.caption.copyWith(
+                  color: Colors.white60,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -1196,7 +1430,10 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                   child: Center(
                     child: Text(
                       (index + 1).toString(),
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: text),
+                      style: AppTypography.cardTitle.copyWith(
+                        fontSize: 13,
+                        color: text,
+                      ),
                     ),
                   ),
                 ),
@@ -1204,7 +1441,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             },
           ),
         ),
-        
+
         // Status Legend inside Drawer
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -1215,7 +1452,9 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
               const SizedBox(height: 10),
               Text(
                 "LEGEND STATUS",
-                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.muted, letterSpacing: 0.5),
+                style: AppTypography.eyebrowSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -1254,7 +1493,13 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
           ),
         ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.muted)),
+        Text(
+          label,
+          style: AppTypography.caption.copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
