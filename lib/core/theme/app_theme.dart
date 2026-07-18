@@ -118,6 +118,76 @@ class AppTypography {
   );
 }
 
+/// Corner-radius scale. Screens had drifted to 9/10/12/14/16/18px corners
+/// for visually-identical "card" and "pill" shapes -- consolidated here into
+/// named roles so a card and the InkWell clipping it can't silently disagree
+/// again (that mismatch was a real bug: a catalog card's ripple used 14px
+/// while its own decoration used 16px).
+class AppRadius {
+  /// Small buttons and inline action chips.
+  static const double sm = 9;
+
+  /// Standard cards, bubbles, banners, thumbnails.
+  static const double md = 12;
+
+  /// Prominent/outer cards -- matches [AppTheme.cardDecoration].
+  static const double lg = 16;
+
+  /// Top corners of a bottom sheet or slide-up panel.
+  static const double sheet = 18;
+
+  /// Fully-rounded pills and circular icon buttons.
+  static const double pill = 999;
+}
+
+/// Named opacity values for state treatments. Reduced opacity on a
+/// saturated color doesn't desaturate it -- civic indigo at 0.5 opacity on
+/// white reads as light purple, not grey -- so "locked" dimming must always
+/// be layered on top of an already-correct locked color, never used alone to
+/// simulate one. Naming the value here stops it from drifting out of sync
+/// between the week and day-row locked treatments the way it did before.
+class AppOpacity {
+  static const double locked = 0.5;
+}
+
+/// Shared filled/outlined button shapes so a button's color can't silently
+/// fall back to the app's default black [ElevatedButtonThemeData] again --
+/// every call site here explicitly states its color instead of hoping the
+/// theme default matches.
+class AppButtonStyles {
+  static ButtonStyle filled({
+    required EdgeInsetsGeometry padding,
+    Color color = AppColors.civic,
+    double radius = AppRadius.sm,
+  }) {
+    return ElevatedButton.styleFrom(
+      backgroundColor: color,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      padding: padding,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+
+  static ButtonStyle outlined({
+    required EdgeInsetsGeometry padding,
+    Color borderColor = AppColors.line,
+    Color textColor = AppColors.civic,
+    double radius = AppRadius.sm,
+  }) {
+    return OutlinedButton.styleFrom(
+      foregroundColor: textColor,
+      side: BorderSide(color: borderColor),
+      padding: padding,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+}
+
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(

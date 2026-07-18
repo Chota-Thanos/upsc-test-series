@@ -160,7 +160,7 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
         coverFallbacks[plan.id.abs() % coverFallbacks.length];
 
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       onTap: () {
         Navigator.push(
           context,
@@ -198,7 +198,7 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.92),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(
                       plan.levelLabel?.toUpperCase() ?? "PRELIMS",
@@ -220,7 +220,7 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.55),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

@@ -480,7 +480,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
               width: 96,
               height: 130,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 child: AgoraVideoView(
                   controller: VideoViewController.remote(
                     rtcEngine: engine,
@@ -606,7 +606,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.berry,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -638,7 +638,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.black45,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -663,7 +663,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.emerald,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
@@ -708,7 +708,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
       children: [
         InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           child: Container(
             width: 40,
             height: 40,
@@ -826,9 +826,11 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
   Widget _buildChatPanel() {
     return Container(
       height: 300,
-      decoration: const BoxDecoration(
-        color: Color(0xE6111827),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      decoration: BoxDecoration(
+        color: const Color(0xE6111827),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.sheet),
+        ),
       ),
       child: Column(
         children: [
@@ -838,7 +840,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
             height: 4,
             decoration: BoxDecoration(
               color: Colors.white24,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
           ),
           Expanded(
@@ -889,7 +891,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                         vertical: 10,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -932,7 +934,7 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: message.isMe ? AppColors.civic : Colors.white10,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Text(
               message.text,
@@ -952,8 +954,10 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF111827),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.sheet),
+        ),
       ),
       builder: (sheetContext) {
         return StatefulBuilder(
@@ -1016,11 +1020,12 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
                               ),
                             ),
                             ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.emerald,
+                              style: AppButtonStyles.filled(
+                                color: AppColors.emerald,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 14,
                                 ),
+                                radius: AppRadius.md,
                               ),
                               onPressed: () {
                                 _approveRaisedHand(entry.key);

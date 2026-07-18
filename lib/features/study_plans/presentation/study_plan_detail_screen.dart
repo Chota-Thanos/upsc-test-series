@@ -379,7 +379,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.civic.withOpacity(0.14),
-                              borderRadius: BorderRadius.circular(999),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                             ),
                             child: Text(
                               _levelPillText(plan)!,
@@ -466,7 +468,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           ),
                           const SizedBox(height: 8),
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             child: LinearProgressIndicator(
                               value: progress / 100,
                               minHeight: 8,
@@ -530,7 +532,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       decoration: BoxDecoration(
         color: AppColors.civic.withOpacity(0.06),
         border: Border.all(color: AppColors.civic.withOpacity(0.25)),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
@@ -582,16 +584,12 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
               ],
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.civic,
-                foregroundColor: Colors.white,
+              style: AppButtonStyles.filled(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 22,
                   vertical: 13,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                radius: AppRadius.md,
               ),
               onPressed: _processing
                   ? null
@@ -715,7 +713,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
                       child: Opacity(
-                        opacity: locked ? 0.5 : 1.0,
+                        opacity: locked ? AppOpacity.locked : 1.0,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Column(
@@ -829,7 +827,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     final resourceUrl = item.lectureUrl ?? item.resourceUrl;
 
     return Opacity(
-      opacity: locked ? 0.5 : 1.0,
+      opacity: locked ? AppOpacity.locked : 1.0,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -839,7 +837,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
             color: isFreeSample ? AppColors.civic : AppColors.line,
             width: isFreeSample ? 1.5 : 1,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -906,7 +904,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.civic,
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: Text(
                             "FREE",
@@ -980,13 +978,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       height: 30,
       child: filled
           ? ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.civic,
-                foregroundColor: Colors.white,
+              style: AppButtonStyles.filled(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9),
-                ),
               ),
               onPressed: onTap,
               child: Text(
@@ -998,19 +991,14 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
               ),
             )
           : OutlinedButton(
-              style: OutlinedButton.styleFrom(
+              style: AppButtonStyles.outlined(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                side: const BorderSide(color: AppColors.line),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9),
-                ),
               ),
               onPressed: onTap,
               child: Text(
                 label,
                 style: AppTypography.button.copyWith(
                   fontSize: 10.5,
-                  color: AppColors.civic,
                   letterSpacing: 0.4,
                 ),
               ),
