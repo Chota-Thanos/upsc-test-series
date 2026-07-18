@@ -142,5 +142,79 @@ class StudyPlanService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  // --- Live Classes ---
+
+  // Fetch upcoming/live/ended live classes for a plan
+  Future<List<StudyPlanLiveClass>> getLiveClasses(int planId) async {
+    try {
+      final List<dynamic> data = await apiClient.get('/api/v1/study-plans/$planId/live-classes');
+      return data.map((json) => StudyPlanLiveClass.fromJson(json as Map<String, dynamic>)).toList();
+    } catch (e) {
+      debugPrint("Error fetching live classes for plan $planId: $e");
+      rethrow;
+    }
+  }
+
+  // Admin/staff: schedule a new live class for a plan
+  Future<StudyPlanLiveClass> scheduleLiveClass({
+    required int planId,
+    int? planItemId,
+    required String title,
+    String? description,
+    required int hostUserId,
+    required DateTime scheduledStart,
+    DateTime? scheduledEnd,
+  }) async {
+    try {
+      final Map<String, dynamic> data = await apiClient.post(
+        '/api/v1/study-plans/$planId/live-classes',
+        {
+          if (planItemId != null) 'plan_item_id': planItemId,
+          'title': title,
+          if (description != null) 'description': description,
+          'host_user_id': hostUserId,
+          'scheduled_start': scheduledStart.toUtc().toIso8601String(),
+          if (scheduledEnd != null) 'scheduled_end': scheduledEnd.toUtc().toIso8601String(),
+        },
+      );
+      return StudyPlanLiveClass.fromJson(data);
+    } catch (e) {
+      debugPrint("Error scheduling live class for plan $planId: $e");
+      rethrow;
+    }
+  }
+
+  // Host: mark a scheduled class as live
+  Future<void> startLiveClass(int liveClassId) async {
+    try {
+      await apiClient.post('/api/v1/study-plan-live-classes/$liveClassId/start', {});
+    } catch (e) {
+      debugPrint("Error starting live class $liveClassId: $e");
+      rethrow;
+    }
+  }
+
+  // Host: end a live class
+  Future<void> endLiveClass(int liveClassId) async {
+    try {
+      await apiClient.post('/api/v1/study-plan-live-classes/$liveClassId/end', {});
+    } catch (e) {
+      debugPrint("Error ending live class $liveClassId: $e");
+      rethrow;
+    }
+  }
+
+  // Fetch Agora join credentials for a live class (role determined server-side:
+  // host if you're the assigned host/staff, audience otherwise -- requires enrollment)
+  Future<AgoraJoinCredentials> getLiveClassToken(int liveClassId) async {
+    try {
+      final Map<String, dynamic> data = await apiClient.get('/api/v1/study-plan-live-classes/$liveClassId/token');
+      return AgoraJoinCredentials.fromJson(data);
+    } catch (e) {
+      debugPrint("Error fetching Agora token for live class $liveClassId: $e");
+      rethrow;
+    }
+  }
 }
 

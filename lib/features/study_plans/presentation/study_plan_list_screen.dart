@@ -98,6 +98,14 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.paper,
+      appBar: AppBar(
+        backgroundColor: AppColors.paper,
+        elevation: 0,
+        title: Text(
+          "Study Plans",
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 20, color: AppColors.ink),
+        ),
+      ),
       body: _plans.isEmpty
           ? Center(
               child: Column(
@@ -112,14 +120,16 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
                 ],
               ),
             )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
+          : GridView.builder(
+              padding: const EdgeInsets.all(14),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.66,
+              ),
               itemCount: _plans.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final plan = _plans[index];
-                return _buildPlanCard(plan);
-              },
+              itemBuilder: (context, index) => _buildPlanCard(_plans[index]),
             ),
     );
   }
@@ -136,189 +146,106 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
     ];
     final String fallbackUrl = coverFallbacks[plan.id.abs() % coverFallbacks.length];
 
-    return Container(
-      decoration: AppTheme.cardDecoration,
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Course Header Artwork with Overlay
-          Stack(
-            children: [
-              SizedBox(
-                height: 120,
-                width: double.infinity,
-                child: Image.network(
-                  resolvedCover ?? fallbackUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Image.network(
-                    fallbackUrl,
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => StudyPlanDetailScreen(planId: plan.id)),
+        );
+      },
+      child: Container(
+        decoration: AppTheme.cardDecoration,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Cover artwork with level pill + rating badge overlay
+            Stack(
+              children: [
+                SizedBox(
+                  height: 92,
+                  width: double.infinity,
+                  child: Image.network(
+                    resolvedCover ?? fallbackUrl,
                     fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Image.network(fallbackUrl, fit: BoxFit.cover),
                   ),
                 ),
-              ),
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.ink.withOpacity(0.9),
-                      AppColors.ink.withOpacity(0.4),
-                      Colors.transparent,
-                    ],
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
+                Positioned(
+                  top: 7,
+                  left: 7,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.92),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      plan.levelLabel?.toUpperCase() ?? "PRELIMS",
+                      style: GoogleFonts.inter(fontSize: 8.5, fontWeight: FontWeight.w800, color: AppColors.civic),
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: 12,
-                left: 16,
-                right: 16,
+                if (plan.totalReviews > 0)
+                  Positioned(
+                    top: 7,
+                    right: 7,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.55),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star_rounded, color: AppColors.saffron, size: 11),
+                          const SizedBox(width: 2),
+                          Text(
+                            plan.averageRating.toStringAsFixed(1),
+                            style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            // Details block
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      plan.examName ?? "Civil Services Prep",
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
+                      plan.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink, height: 1.25),
                     ),
+                    const SizedBox(height: 5),
                     Text(
-                      "${plan.durationWeeks} Weeks guided syllabus",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      "${plan.durationWeeks} weeks · ${plan.testCount ?? 0} tests",
+                      style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w500),
                     ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 12,
-                left: 16,
-                right: 16,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        plan.levelLabel?.toUpperCase() ?? "PRELIMS",
-                        style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const Icon(Icons.menu_book_rounded, color: Colors.white70, size: 20),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Details Block
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  plan.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.ink,
-                  ),
-                ),
-                if (plan.subtitle != null && plan.subtitle!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    plan.subtitle!,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.muted,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    const Icon(Icons.assignment_outlined, color: AppColors.muted, size: 15),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${plan.itemCount ?? 0} Tasks done",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    const Icon(Icons.quiz_outlined, color: AppColors.muted, size: 15),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${plan.testCount ?? 0} Mock tests",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                    const Spacer(),
                     Text(
                       priceStr,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => StudyPlanDetailScreen(planId: plan.id),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "VIEW CURRICULUM",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: plan.isFree ? AppColors.emerald : AppColors.civic,
                       ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

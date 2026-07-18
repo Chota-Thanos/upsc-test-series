@@ -19,6 +19,8 @@ class StudyPlanSummary {
   final int? itemCount;
   final int? testCount;
   final String? publishedAt;
+  final double averageRating;
+  final int totalReviews;
 
   StudyPlanSummary({
     required this.id,
@@ -41,7 +43,11 @@ class StudyPlanSummary {
     this.itemCount,
     this.testCount,
     this.publishedAt,
+    this.averageRating = 0.0,
+    this.totalReviews = 0,
   });
+
+  bool get isFree => priceAmountMinor == 0;
 
   factory StudyPlanSummary.fromJson(Map<String, dynamic> json) {
     return StudyPlanSummary(
@@ -65,6 +71,8 @@ class StudyPlanSummary {
       itemCount: json['item_count'] != null ? int.tryParse(json['item_count'].toString()) : null,
       testCount: json['test_count'] != null ? int.tryParse(json['test_count'].toString()) : null,
       publishedAt: json['published_at'] as String?,
+      averageRating: double.tryParse(json['average_rating']?.toString() ?? '0') ?? 0.0,
+      totalReviews: int.tryParse(json['total_reviews']?.toString() ?? '0') ?? 0,
     );
   }
 }
@@ -142,6 +150,40 @@ class StudyPlanItemProgress {
   }
 }
 
+/// Lightweight live-class summary embedded on a curriculum item (no channel_name --
+/// that's only ever revealed via the dedicated join-token endpoint).
+class StudyPlanLiveClassSummary {
+  final int id;
+  final String title;
+  final String status; // scheduled, live, ended, cancelled
+  final String scheduledStart;
+  final String? scheduledEnd;
+  final int hostUserId;
+
+  StudyPlanLiveClassSummary({
+    required this.id,
+    required this.title,
+    required this.status,
+    required this.scheduledStart,
+    this.scheduledEnd,
+    required this.hostUserId,
+  });
+
+  bool get isLive => status == 'live';
+  bool get hasEnded => status == 'ended' || status == 'cancelled';
+
+  factory StudyPlanLiveClassSummary.fromJson(Map<String, dynamic> json) {
+    return StudyPlanLiveClassSummary(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      title: json['title'] as String? ?? '',
+      status: json['status'] as String? ?? 'scheduled',
+      scheduledStart: json['scheduled_start'] as String? ?? '',
+      scheduledEnd: json['scheduled_end'] as String?,
+      hostUserId: int.tryParse(json['host_user_id']?.toString() ?? '') ?? 0,
+    );
+  }
+}
+
 class StudyPlanItem {
   final int id;
   final int planId;
@@ -158,6 +200,7 @@ class StudyPlanItem {
   final bool isPreview;
   final StudyPlanTestTemplate? testTemplate;
   StudyPlanItemProgress? progress;
+  final StudyPlanLiveClassSummary? liveClass;
 
   StudyPlanItem({
     required this.id,
@@ -175,6 +218,7 @@ class StudyPlanItem {
     required this.isPreview,
     this.testTemplate,
     this.progress,
+    this.liveClass,
   });
 
   factory StudyPlanItem.fromJson(Map<String, dynamic> json) {
@@ -198,6 +242,121 @@ class StudyPlanItem {
       progress: json['progress'] != null
           ? StudyPlanItemProgress.fromJson(json['progress'] as Map<String, dynamic>)
           : null,
+      liveClass: json['live_class'] != null
+          ? StudyPlanLiveClassSummary.fromJson(json['live_class'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+class StudyPlanWeekOverview {
+  final int weekNo;
+  final String title;
+  final String? description;
+
+  StudyPlanWeekOverview({required this.weekNo, required this.title, this.description});
+
+  factory StudyPlanWeekOverview.fromJson(Map<String, dynamic> json) {
+    return StudyPlanWeekOverview(
+      weekNo: int.tryParse(json['week_no']?.toString() ?? '') ?? 0,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+    );
+  }
+}
+
+class StudyPlanReviewsSummary {
+  final double averageRating;
+  final int totalReviews;
+
+  StudyPlanReviewsSummary({required this.averageRating, required this.totalReviews});
+
+  factory StudyPlanReviewsSummary.fromJson(Map<String, dynamic> json) {
+    return StudyPlanReviewsSummary(
+      averageRating: double.tryParse(json['average_rating']?.toString() ?? '0') ?? 0.0,
+      totalReviews: int.tryParse(json['total_reviews']?.toString() ?? '0') ?? 0,
+    );
+  }
+}
+
+/// A live-class row from the plan's full list endpoint (includes host name,
+/// timestamps) -- distinct from [StudyPlanLiveClassSummary], which is the
+/// trimmed version embedded on a single curriculum item.
+class StudyPlanLiveClass {
+  final int id;
+  final int planId;
+  final int? planItemId;
+  final String title;
+  final String? description;
+  final int hostUserId;
+  final String? hostName;
+  final String status;
+  final String scheduledStart;
+  final String? scheduledEnd;
+  final String? startedAt;
+  final String? endedAt;
+
+  StudyPlanLiveClass({
+    required this.id,
+    required this.planId,
+    this.planItemId,
+    required this.title,
+    this.description,
+    required this.hostUserId,
+    this.hostName,
+    required this.status,
+    required this.scheduledStart,
+    this.scheduledEnd,
+    this.startedAt,
+    this.endedAt,
+  });
+
+  bool get isLive => status == 'live';
+  bool get hasEnded => status == 'ended' || status == 'cancelled';
+
+  factory StudyPlanLiveClass.fromJson(Map<String, dynamic> json) {
+    return StudyPlanLiveClass(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      planId: int.tryParse(json['plan_id']?.toString() ?? '') ?? 0,
+      planItemId: json['plan_item_id'] != null ? int.tryParse(json['plan_item_id'].toString()) : null,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      hostUserId: int.tryParse(json['host_user_id']?.toString() ?? '') ?? 0,
+      hostName: json['host_name'] as String?,
+      status: json['status'] as String? ?? 'scheduled',
+      scheduledStart: json['scheduled_start'] as String? ?? '',
+      scheduledEnd: json['scheduled_end'] as String?,
+      startedAt: json['started_at'] as String?,
+      endedAt: json['ended_at'] as String?,
+    );
+  }
+}
+
+/// Join credentials for the Agora RTC channel of one live class.
+class AgoraJoinCredentials {
+  final String appId;
+  final String? token;
+  final int uid;
+  final String channelName;
+  final String role; // host or audience
+
+  AgoraJoinCredentials({
+    required this.appId,
+    this.token,
+    required this.uid,
+    required this.channelName,
+    required this.role,
+  });
+
+  bool get isHost => role == 'host';
+
+  factory AgoraJoinCredentials.fromJson(Map<String, dynamic> json) {
+    return AgoraJoinCredentials(
+      appId: json['appId'] as String? ?? '',
+      token: json['token'] as String?,
+      uid: int.tryParse(json['uid']?.toString() ?? '') ?? 0,
+      channelName: json['channelName'] as String? ?? '',
+      role: json['role'] as String? ?? 'audience',
     );
   }
 }
@@ -208,6 +367,8 @@ class StudyPlanDetail {
   final Map<String, dynamic>? enrollment;
   final Map<String, dynamic>? progressSummary;
   final List<StudyPlanItem> items;
+  final List<StudyPlanWeekOverview> weekOverviews;
+  final StudyPlanReviewsSummary reviewsSummary;
 
   StudyPlanDetail({
     required this.summary,
@@ -215,11 +376,25 @@ class StudyPlanDetail {
     this.enrollment,
     this.progressSummary,
     required this.items,
+    required this.weekOverviews,
+    required this.reviewsSummary,
   });
+
+  /// Named title for a week from admin-authored plan_weeks content, falling
+  /// back to a plain "Week N" when the admin hasn't set one.
+  String weekTitle(int weekNo) {
+    for (final overview in weekOverviews) {
+      if (overview.weekNo == weekNo) return overview.title;
+    }
+    return 'Week $weekNo';
+  }
 
   factory StudyPlanDetail.fromJson(Map<String, dynamic> json) {
     var itemsList = (json['items'] as List? ?? [])
         .map((i) => StudyPlanItem.fromJson(i as Map<String, dynamic>))
+        .toList();
+    var weekOverviewsList = (json['week_overviews'] as List? ?? [])
+        .map((w) => StudyPlanWeekOverview.fromJson(w as Map<String, dynamic>))
         .toList();
     return StudyPlanDetail(
       summary: StudyPlanSummary.fromJson(json),
@@ -229,6 +404,10 @@ class StudyPlanDetail {
           ? Map<String, dynamic>.from(json['progress_summary'] as Map)
           : null,
       items: itemsList,
+      weekOverviews: weekOverviewsList,
+      reviewsSummary: json['reviews_summary'] is Map
+          ? StudyPlanReviewsSummary.fromJson(Map<String, dynamic>.from(json['reviews_summary'] as Map))
+          : StudyPlanReviewsSummary(averageRating: 0.0, totalReviews: 0),
     );
   }
 }
