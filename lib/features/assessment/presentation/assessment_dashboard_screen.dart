@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
@@ -139,18 +138,20 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                         color: AppColors.civic.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Center(child: Text("📊", style: TextStyle(fontSize: 26))),
+                      child: const Center(
+                        child: Text("📊", style: TextStyle(fontSize: 26)),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       "Your scorecard is waiting",
-                      style: Theme.of(context).textTheme.displayMedium,
+                      style: AppTypography.title.copyWith(fontSize: 20),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       "Sign in to see your full attempt history, topic-wise accuracy trends, and weak-area heatmap — all saved to your account.",
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: AppTypography.body,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
@@ -189,12 +190,12 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                 const SizedBox(height: 16),
                 Text(
                   "Could not load dashboard",
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: AppTypography.sectionHeader.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   _error!,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: AppTypography.body,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -217,10 +218,15 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           _tourChecked = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) return;
-            final show = await AppTourService.shouldShowTour(AppTourService.dashboardScreenKey);
+            final show = await AppTourService.shouldShowTour(
+              AppTourService.dashboardScreenKey,
+            );
             if (show && mounted) {
-              await AppTourService.markTourSeen(AppTourService.dashboardScreenKey);
-              if (mounted && ctx.mounted) ShowCaseWidget.of(ctx).startShowCase([_tourTitleKey]);
+              await AppTourService.markTourSeen(
+                AppTourService.dashboardScreenKey,
+              );
+              if (mounted && ctx.mounted)
+                ShowCaseWidget.of(ctx).startShowCase([_tourTitleKey]);
             }
           });
         }
@@ -234,15 +240,12 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               title: Showcase(
                 key: _tourTitleKey,
                 title: "Your Performance Dashboard",
-                description: "See your accuracy, score trends, and topic-wise breakdown across all your tests. Switch between GK, CSAT, and Mains tabs.",
+                description:
+                    "See your accuracy, score trends, and topic-wise breakdown across all your tests. Switch between GK, CSAT, and Mains tabs.",
                 targetBorderRadius: BorderRadius.circular(8),
                 child: Text(
                   "Performance",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.ink,
-                  ),
+                  style: AppTypography.title.copyWith(fontSize: 20),
                 ),
               ),
               actions: const [],
@@ -259,9 +262,22 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             ),
             body: TabBarView(
               children: [
-                _buildNestedTabWrapper('gk', _buildDashboardTab(res.gk, _gkAttempts, 'gk')),
-                _buildNestedTabWrapper('aptitude', _buildDashboardTab(res.aptitude, _aptitudeAttempts, 'aptitude')),
-                _buildNestedTabWrapper('mains', _buildMainsDashboardTab(res.mains)),
+                _buildNestedTabWrapper(
+                  'gk',
+                  _buildDashboardTab(res.gk, _gkAttempts, 'gk'),
+                ),
+                _buildNestedTabWrapper(
+                  'aptitude',
+                  _buildDashboardTab(
+                    res.aptitude,
+                    _aptitudeAttempts,
+                    'aptitude',
+                  ),
+                ),
+                _buildNestedTabWrapper(
+                  'mains',
+                  _buildMainsDashboardTab(res.mains),
+                ),
               ],
             ),
           ),
@@ -284,8 +300,15 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               indicatorColor: AppColors.civic,
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
-              labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13),
-              unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13),
+              labelStyle: AppTypography.body.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.civic,
+              ),
+              unselectedLabelStyle: AppTypography.body.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
               tabs: const [
                 Tab(text: "Summary"),
                 Tab(text: "My Results"),
@@ -305,18 +328,16 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     );
   }
 
-  Widget _buildActiveAttemptsSection(List<StudentAttemptSummary> activeAttempts) {
+  Widget _buildActiveAttemptsSection(
+    List<StudentAttemptSummary> activeAttempts,
+  ) {
     if (activeAttempts.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "In-Progress Attempts",
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: AppColors.ink,
-          ),
+          style: AppTypography.sectionHeader.copyWith(fontSize: 15),
         ),
         const SizedBox(height: 10),
         ...activeAttempts.map((attempt) {
@@ -360,19 +381,12 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                     children: [
                       Text(
                         attempt.testTemplate.title,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.ink,
-                        ),
+                        style: AppTypography.title.copyWith(fontSize: 14),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "Started on ${attempt.startedAt.split('T').first}. You left this test in between.",
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: AppColors.muted,
-                        ),
+                        style: AppTypography.caption.copyWith(fontSize: 11),
                       ),
                     ],
                   ),
@@ -385,22 +399,26 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                   ),
                   onPressed: () async {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => AttemptEngineScreen(attemptId: attempt.id),
+                        builder: (_) =>
+                            AttemptEngineScreen(attemptId: attempt.id),
                       ),
                     );
                     _loadData(); // reload on return
                   },
                   child: Text(
                     "RESUME",
-                    style: GoogleFonts.inter(
+                    style: AppTypography.button.copyWith(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -449,7 +467,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     // percentage across everything attempted, not an average-of-averages.
     final overallScore = roots.fold<double>(0, (sum, r) => sum + r.score);
     final overallMaxScore = roots.fold<double>(0, (sum, r) => sum + r.maxScore);
-    final overallScorePercent = overallMaxScore > 0 ? (overallScore / overallMaxScore) * 100 : 0.0;
+    final overallScorePercent = overallMaxScore > 0
+        ? (overallScore / overallMaxScore) * 100
+        : 0.0;
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -460,7 +480,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildActiveAttemptsSection(attempts.where((a) => a.status == 'in_progress').toList()),
+            _buildActiveAttemptsSection(
+              attempts.where((a) => a.status == 'in_progress').toList(),
+            ),
             _buildDashboardHero(
               contentType: contentType,
               attempts: displayAttempts,
@@ -492,7 +514,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             ],
             _buildInsightSection(
               title: "Priority Revision",
-              subtitle: "Lowest marks-percentage nodes from the full syllabus tree",
+              subtitle:
+                  "Lowest marks-percentage nodes from the full syllabus tree",
               insights: weakInsights,
               emptyMessage:
                   "No weak subject, topic, or subtopic identified yet.",
@@ -527,7 +550,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildActiveAttemptsSection(_mainsAttempts.where((a) => a.status == 'in_progress').toList()),
+            _buildActiveAttemptsSection(
+              _mainsAttempts.where((a) => a.status == 'in_progress').toList(),
+            ),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -579,9 +604,16 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                   final sortedKeys = groupedPoints.keys.toList()..sort();
                   for (var key in sortedKeys) {
                     final pts = groupedPoints[key]!;
-                    final double totalScore = pts.map((p) => p.avgScore).reduce((a, b) => a + b);
-                    final double totalAccuracy = pts.map((p) => p.avgAccuracy).reduce((a, b) => a + b);
-                    final int totalAttempts = pts.fold<int>(0, (sum, p) => sum + (p.attempts > 0 ? p.attempts : 1));
+                    final double totalScore = pts
+                        .map((p) => p.avgScore)
+                        .reduce((a, b) => a + b);
+                    final double totalAccuracy = pts
+                        .map((p) => p.avgAccuracy)
+                        .reduce((a, b) => a + b);
+                    final int totalAttempts = pts.fold<int>(
+                      0,
+                      (sum, p) => sum + (p.attempts > 0 ? p.attempts : 1),
+                    );
 
                     aggregatedTrend.add(
                       TrendPoint(
@@ -595,7 +627,11 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
 
                   return Container(
                     height: 220,
-                    padding: const EdgeInsets.only(right: 20, top: 16, bottom: 8),
+                    padding: const EdgeInsets.only(
+                      right: 20,
+                      top: 16,
+                      bottom: 8,
+                    ),
                     decoration: AppTheme.cardDecoration,
                     child: LineChart(
                       LineChartData(
@@ -606,10 +642,12 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                             getTooltipItems: (touchedSpots) {
                               return touchedSpots.map((spot) {
                                 final trendPt = aggregatedTrend[spot.x.toInt()];
-                                final dateStr = _formatTrendDate(trendPt.resultDate);
+                                final dateStr = _formatTrendDate(
+                                  trendPt.resultDate,
+                                );
                                 return LineTooltipItem(
                                   "$dateStr\nAvg Score: ${spot.y.toStringAsFixed(1)}\nAttempts: ${trendPt.attempts}",
-                                  GoogleFonts.inter(
+                                  AppTypography.caption.copyWith(
                                     color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -644,21 +682,24 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                                   if (total <= 6) {
                                     showLabel = true;
                                   } else if (total <= 12) {
-                                    showLabel = (idx % 2 == 0 || idx == total - 1);
+                                    showLabel =
+                                        (idx % 2 == 0 || idx == total - 1);
                                   } else {
-                                    showLabel = (idx % 3 == 0 || idx == total - 1);
+                                    showLabel =
+                                        (idx % 3 == 0 || idx == total - 1);
                                   }
                                   if (!showLabel) return const SizedBox();
 
-                                  final dateStr = _formatTrendDate(aggregatedTrend[idx].resultDate);
+                                  final dateStr = _formatTrendDate(
+                                    aggregatedTrend[idx].resultDate,
+                                  );
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 6.0),
                                     child: Text(
                                       dateStr,
-                                      style: const TextStyle(
+                                      style: AppTypography.caption.copyWith(
                                         fontSize: 9,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.muted,
                                       ),
                                     ),
                                   );
@@ -675,10 +716,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                               getTitlesWidget: (val, meta) {
                                 return Text(
                                   val.toInt().toString(),
-                                  style: const TextStyle(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.muted,
                                   ),
                                 );
                               },
@@ -688,10 +728,22 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                         borderData: FlBorderData(show: false),
                         minX: 0,
                         maxX: (aggregatedTrend.length - 1).toDouble(),
-                        minY: aggregatedTrend.map((e) => e.avgScore).reduce((a, b) => a < b ? a : b) < 0
-                            ? (aggregatedTrend.map((e) => e.avgScore).reduce((a, b) => a < b ? a : b) - 2).toDouble()
+                        minY:
+                            aggregatedTrend
+                                    .map((e) => e.avgScore)
+                                    .reduce((a, b) => a < b ? a : b) <
+                                0
+                            ? (aggregatedTrend
+                                          .map((e) => e.avgScore)
+                                          .reduce((a, b) => a < b ? a : b) -
+                                      2)
+                                  .toDouble()
                             : 0.0,
-                        maxY: aggregatedTrend.map((e) => e.avgScore).reduce((a, b) => a > b ? a : b) + 5,
+                        maxY:
+                            aggregatedTrend
+                                .map((e) => e.avgScore)
+                                .reduce((a, b) => a > b ? a : b) +
+                            5,
                         lineBarsData: [
                           LineChartBarData(
                             spots: List.generate(
@@ -715,7 +767,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                       ),
                     ),
                   );
-                }
+                },
               ),
               const SizedBox(height: 24),
             ],
@@ -738,7 +790,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                 child: Center(
                   child: Text(
                     "Awesome! No weak topics identified yet.",
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: AppTypography.body,
                   ),
                 ),
               )
@@ -768,7 +820,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                             children: [
                               Text(
                                 name,
-                                style: GoogleFonts.inter(
+                                style: AppTypography.body.copyWith(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.ink,
@@ -777,9 +829,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 "${topic.questionCount} Questions evaluated",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 11,
-                                  color: AppColors.muted,
                                 ),
                               ),
                             ],
@@ -790,7 +841,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                           children: [
                             Text(
                               "Avg Score: ${topic.avgScore.toStringAsFixed(1)}",
-                              style: GoogleFonts.inter(
+                              style: AppTypography.body.copyWith(
                                 color: AppColors.saffron,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 12,
@@ -826,7 +877,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             decoration: AppTheme.cardDecoration,
             child: Text(
               "Category trend appears after evaluated answers are mapped to syllabus categories.",
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: AppTypography.body,
               textAlign: TextAlign.center,
             ),
           )
@@ -870,7 +921,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                                 category.categoryName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.ink,
@@ -879,10 +930,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                               const SizedBox(height: 3),
                               Text(
                                 "${_nodeTypeLabel(category.nodeType)} • ${category.attempts} answer${category.attempts == 1 ? '' : 's'}",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.muted,
                                 ),
                               ),
                             ],
@@ -891,9 +941,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                         const SizedBox(width: 12),
                         Text(
                           "${(ratio * 100).round()}%",
-                          style: GoogleFonts.plusJakartaSans(
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 17,
-                            fontWeight: FontWeight.w900,
                             color: color,
                           ),
                         ),
@@ -929,10 +978,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                         ),
                         child: Text(
                           "No dated trend yet",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.muted,
                           ),
                         ),
                       )
@@ -980,10 +1028,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                                       _formatTrendDate(point.resultDate),
                                       maxLines: 1,
                                       overflow: TextOverflow.clip,
-                                      style: GoogleFonts.inter(
+                                      style: AppTypography.caption.copyWith(
                                         fontSize: 8,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.muted,
                                       ),
                                     ),
                                   ],
@@ -1030,7 +1077,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             decoration: AppTheme.cardDecoration,
             child: Text(
               "Recurring mistakes appear after at least two evaluated answers share the same weakness.",
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: AppTypography.body,
               textAlign: TextAlign.center,
             ),
           )
@@ -1068,7 +1115,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                           ),
                           child: Text(
                             "${index + 1}",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.caption.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w900,
                               color: AppColors.berry,
@@ -1082,7 +1129,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                             children: [
                               Text(
                                 mistake.mistake,
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.ink,
@@ -1092,10 +1139,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 "Seen ${mistake.occurrenceCount} times in ${mistake.answerCount} answers",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.muted,
                                 ),
                               ),
                             ],
@@ -1122,10 +1168,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                         const SizedBox(width: 10),
                         Text(
                           "${mistake.avgScore.toStringAsFixed(1)} avg",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
-                            color: AppColors.muted,
                           ),
                         ),
                       ],
@@ -1148,10 +1193,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                             ),
                             child: Text(
                               name,
-                              style: GoogleFonts.inter(
+                              style: AppTypography.eyebrowSmall.copyWith(
                                 fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.muted,
+                                letterSpacing: 0,
                               ),
                             ),
                           );
@@ -1182,7 +1226,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(
+            style: AppTypography.caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w900,
               color: AppColors.ink,
@@ -1191,10 +1235,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
-            style: GoogleFonts.inter(
+            style: AppTypography.eyebrowSmall.copyWith(
               fontSize: 8,
-              fontWeight: FontWeight.w800,
-              color: AppColors.muted,
               letterSpacing: 0.4,
             ),
           ),
@@ -1215,7 +1257,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             const SizedBox(height: 8),
             Text(
               "You haven't attempted any tests yet.",
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: AppTypography.body,
             ),
           ],
         ),
@@ -1247,14 +1289,14 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                       children: [
                         Text(
                           test.title,
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: AppTypography.cardTitle.copyWith(fontSize: 13),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "Attempted on ${attempt.startedAt.split('T')[0]} • Status: ${attempt.status.toUpperCase()}",
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: AppTypography.body,
                         ),
                       ],
                     ),
@@ -1273,7 +1315,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                         children: [
                           Text(
                             "${result.score}/${result.maxScore}",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.caption.copyWith(
                               fontWeight: FontWeight.w800,
                               color: AppColors.civic,
                               fontSize: 14,
@@ -1281,9 +1323,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                           ),
                           Text(
                             "${(result.accuracy * 100).round()}% Acc",
-                            style: const TextStyle(
+                            style: AppTypography.caption.copyWith(
                               fontSize: 10,
-                              color: AppColors.muted,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1300,9 +1341,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                         color: AppColors.saffron.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text(
+                      child: Text(
                         "No Report",
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 11,
                           color: AppColors.saffron,
                           fontWeight: FontWeight.bold,
@@ -1334,8 +1375,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                     },
                     child: Text(
                       "REVIEW RESULT SHEET",
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
+                      style: AppTypography.eyebrowLarge.copyWith(
                         fontSize: 11,
                         color: AppColors.ink,
                         letterSpacing: 0.5,
@@ -1392,23 +1432,11 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                value,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.ink,
-                ),
-              ),
+              Text(value, style: AppTypography.title.copyWith(fontSize: 18)),
               const SizedBox(height: 2),
               Text(
                 title.toUpperCase(),
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.muted,
-                  letterSpacing: 0.3,
-                ),
+                style: AppTypography.eyebrowSmall.copyWith(letterSpacing: 0.3),
               ),
             ],
           ),
@@ -1423,7 +1451,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       children: [
         Text(
           title.toUpperCase(),
-          style: GoogleFonts.inter(
+          style: AppTypography.eyebrowLarge.copyWith(
             fontSize: 11,
             fontWeight: FontWeight.w700,
             color: AppColors.muted,
@@ -1434,9 +1462,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: const TextStyle(
+            style: AppTypography.caption.copyWith(
               fontSize: 10,
-              color: AppColors.muted,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -1463,7 +1490,11 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     return AppColors.berry;
   }
 
-  void _openCategoryPerformance(int taxonomyNodeId, String title, String contentType) {
+  void _openCategoryPerformance(
+    int taxonomyNodeId,
+    String title,
+    String contentType,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1556,7 +1587,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     // negative score, which accuracy alone can't surface.
     final weak =
         insights
-            .where((item) => item.attemptedQuestions > 0 && item.scorePercent < 40)
+            .where(
+              (item) => item.attemptedQuestions > 0 && item.scorePercent < 40,
+            )
             .toList()
           ..sort((a, b) {
             final scoreCompare = a.scorePercent.compareTo(b.scorePercent);
@@ -1620,7 +1653,11 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         gradient: AppColors.heroGradient,
         borderRadius: BorderRadius.circular(24),
         boxShadow: const [
-          BoxShadow(color: Color(0x2A0F172A), offset: Offset(0, 10), blurRadius: 26),
+          BoxShadow(
+            color: Color(0x2A0F172A),
+            offset: Offset(0, 10),
+            blurRadius: 26,
+          ),
         ],
       ),
       child: Column(
@@ -1636,11 +1673,20 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.radar_rounded, size: 13, color: Colors.white.withOpacity(0.85)),
+                Icon(
+                  Icons.radar_rounded,
+                  size: 13,
+                  color: Colors.white.withOpacity(0.85),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   _sectionLabel(contentType).toUpperCase(),
-                  style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.9), letterSpacing: 0.6),
+                  style: AppTypography.eyebrowLarge.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withOpacity(0.9),
+                    letterSpacing: 0.6,
+                  ),
                 ),
               ],
             ),
@@ -1648,23 +1694,61 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           const SizedBox(height: 14),
           Text(
             "${_sectionLabel(contentType)} Performance",
-            style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+            style: AppTypography.display.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             "Every attempted subject, book, chapter, and topic rolled into one view.",
-            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white.withOpacity(0.65), height: 1.4),
+            style: AppTypography.body.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.65),
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _buildHeroMetric("Score %", hasData ? _formatScorePercent(scorePercent) : "--")),
-              Container(width: 1, height: 34, color: Colors.white.withOpacity(0.12)),
-              Expanded(child: _buildHeroMetric("Accuracy", hasData ? _formatPercent(accuracy) : "--")),
-              Container(width: 1, height: 34, color: Colors.white.withOpacity(0.12)),
-              Expanded(child: _buildHeroMetric("Attempts", attempts.toString())),
-              Container(width: 1, height: 34, color: Colors.white.withOpacity(0.12)),
-              Expanded(child: _buildHeroMetric("Qs Attempted", totalQuestionsAttempted.toString())),
+              Expanded(
+                child: _buildHeroMetric(
+                  "Score %",
+                  hasData ? _formatScorePercent(scorePercent) : "--",
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 34,
+                color: Colors.white.withOpacity(0.12),
+              ),
+              Expanded(
+                child: _buildHeroMetric(
+                  "Accuracy",
+                  hasData ? _formatPercent(accuracy) : "--",
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 34,
+                color: Colors.white.withOpacity(0.12),
+              ),
+              Expanded(
+                child: _buildHeroMetric("Attempts", attempts.toString()),
+              ),
+              Container(
+                width: 1,
+                height: 34,
+                color: Colors.white.withOpacity(0.12),
+              ),
+              Expanded(
+                child: _buildHeroMetric(
+                  "Qs Attempted",
+                  totalQuestionsAttempted.toString(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 18),
@@ -1674,7 +1758,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               minHeight: 8,
               value: hasData ? (scorePercent / 100).clamp(0.0, 1.0) : 0,
               backgroundColor: Colors.white.withOpacity(0.12),
-              valueColor: AlwaysStoppedAnimation<Color>(hasData ? _scorePercentColor(scorePercent) : Colors.white24),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                hasData ? _scorePercentColor(scorePercent) : Colors.white24,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -1684,7 +1770,10 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             children: [
               _buildHeroChip("$weakCount weak", AppColors.berry),
               _buildHeroChip("$strongCount strong", AppColors.emerald),
-              _buildHeroChip("${(coverage * 100).round()}% syllabus mapped", AppColors.brand),
+              _buildHeroChip(
+                "${(coverage * 100).round()}% syllabus mapped",
+                AppColors.brand,
+              ),
             ],
           ),
         ],
@@ -1698,18 +1787,16 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       children: [
         Text(
           value,
-          style: GoogleFonts.plusJakartaSans(
+          style: AppTypography.statValue.copyWith(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
         ),
         const SizedBox(height: 3),
         Text(
           label.toUpperCase(),
-          style: GoogleFonts.inter(
+          style: AppTypography.eyebrowSmall.copyWith(
             fontSize: 8,
-            fontWeight: FontWeight.w600,
             color: Colors.white.withOpacity(0.55),
             letterSpacing: 0.4,
           ),
@@ -1729,14 +1816,18 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: AppTypography.eyebrowSmall.copyWith(
               fontSize: 9,
-              fontWeight: FontWeight.w600,
               color: Colors.white.withOpacity(0.85),
+              letterSpacing: 0,
             ),
           ),
         ],
@@ -1786,9 +1877,16 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     final sortedKeys = groupedPoints.keys.toList()..sort();
     for (var key in sortedKeys) {
       final pts = groupedPoints[key]!;
-      final double totalScore = pts.map((p) => p.avgScore).reduce((a, b) => a + b);
-      final double totalAccuracy = pts.map((p) => p.avgAccuracy).reduce((a, b) => a + b);
-      final int totalAttempts = pts.fold<int>(0, (sum, p) => sum + (p.attempts > 0 ? p.attempts : 1));
+      final double totalScore = pts
+          .map((p) => p.avgScore)
+          .reduce((a, b) => a + b);
+      final double totalAccuracy = pts
+          .map((p) => p.avgAccuracy)
+          .reduce((a, b) => a + b);
+      final int totalAttempts = pts.fold<int>(
+        0,
+        (sum, p) => sum + (p.attempts > 0 ? p.attempts : 1),
+      );
 
       aggregatedTrend.add(
         TrendPoint(
@@ -1816,7 +1914,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                   final dateStr = _formatTrendDate(trendPt.resultDate);
                   return LineTooltipItem(
                     "$dateStr\nAvg Score: ${spot.y.toStringAsFixed(1)}\nAccuracy: ${_formatPercent(trendPt.avgAccuracy)}\nAttempts: ${trendPt.attempts}",
-                    GoogleFonts.inter(
+                    AppTypography.caption.copyWith(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -1862,7 +1960,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                     }
                     if (!showLabel) return const SizedBox();
 
-                    final dateStr = _formatTrendDate(aggregatedTrend[idx].resultDate);
+                    final dateStr = _formatTrendDate(
+                      aggregatedTrend[idx].resultDate,
+                    );
                     return Padding(
                       padding: const EdgeInsets.only(top: 6.0),
                       child: Text(
@@ -1900,15 +2000,28 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           borderData: FlBorderData(show: false),
           minX: 0,
           maxX: (aggregatedTrend.length - 1).toDouble(),
-          minY: aggregatedTrend.map((e) => e.avgScore).reduce((a, b) => a < b ? a : b) < 0
-              ? (aggregatedTrend.map((e) => e.avgScore).reduce((a, b) => a < b ? a : b) - 2).toDouble()
+          minY:
+              aggregatedTrend
+                      .map((e) => e.avgScore)
+                      .reduce((a, b) => a < b ? a : b) <
+                  0
+              ? (aggregatedTrend
+                            .map((e) => e.avgScore)
+                            .reduce((a, b) => a < b ? a : b) -
+                        2)
+                    .toDouble()
               : 0.0,
-          maxY: aggregatedTrend.map((e) => e.avgScore).reduce((a, b) => a > b ? a : b) + 5,
+          maxY:
+              aggregatedTrend
+                  .map((e) => e.avgScore)
+                  .reduce((a, b) => a > b ? a : b) +
+              5,
           lineBarsData: [
             LineChartBarData(
               spots: List.generate(
                 aggregatedTrend.length,
-                (index) => FlSpot(index.toDouble(), aggregatedTrend[index].avgScore),
+                (index) =>
+                    FlSpot(index.toDouble(), aggregatedTrend[index].avgScore),
               ),
               isCurved: true,
               color: AppColors.civic,
@@ -1964,12 +2077,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               children: [
                 Icon(icon, color: AppColors.muted, size: 22),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    emptyMessage,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
+                Expanded(child: Text(emptyMessage, style: AppTypography.body)),
               ],
             ),
           )
@@ -1979,18 +2087,28 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: insights.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) =>
-                _buildInsightCard(insights[index], accent, index + 1, contentType),
+            itemBuilder: (context, index) => _buildInsightCard(
+              insights[index],
+              accent,
+              index + 1,
+              contentType,
+            ),
           ),
       ],
     );
   }
 
-  Widget _buildInsightCard(_TopicInsight insight, Color accent, int rank, String contentType) {
+  Widget _buildInsightCard(
+    _TopicInsight insight,
+    Color accent,
+    int rank,
+    String contentType,
+  ) {
     final barValue = (insight.scorePercent / 100).clamp(0.0, 1.0).toDouble();
     final color = _scorePercentColor(insight.scorePercent);
     return InkWell(
-      onTap: () => _openCategoryPerformance(insight.id, insight.name, contentType),
+      onTap: () =>
+          _openCategoryPerformance(insight.id, insight.name, contentType),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -2019,9 +2137,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               ),
               child: Text(
                 rank.toString(),
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
                   color: accent,
                 ),
               ),
@@ -2038,7 +2155,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                           insight.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
+                          style: AppTypography.body.copyWith(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: AppColors.ink,
@@ -2062,10 +2179,9 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                   const SizedBox(height: 6),
                   Text(
                     "${insight.correctCount}/${insight.totalQuestions} correct, ${_formatPercent(insight.accuracy)} accuracy, ${insight.unattemptedCount} skipped",
-                    style: GoogleFonts.inter(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.muted,
                     ),
                   ),
                 ],
@@ -2077,9 +2193,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               children: [
                 Text(
                   _formatScorePercent(insight.scorePercent),
-                  style: GoogleFonts.plusJakartaSans(
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
                     color: color,
                   ),
                 ),
@@ -2103,11 +2218,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       ),
       child: Text(
         label.toUpperCase(),
-        style: GoogleFonts.inter(
-          fontSize: 8,
-          fontWeight: FontWeight.w600,
-          color: AppColors.muted,
-        ),
+        style: AppTypography.eyebrowSmall.copyWith(letterSpacing: 0),
       ),
     );
   }
@@ -2162,7 +2273,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             (double.tryParse(metricJson['total_score']?.toString() ?? '') ?? 0);
         node.ownMaxScore =
             node.ownMaxScore +
-            (double.tryParse(metricJson['total_max_score']?.toString() ?? '') ?? 0);
+            (double.tryParse(metricJson['total_max_score']?.toString() ?? '') ??
+                0);
       }
     }
 
@@ -2180,12 +2292,16 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     }
 
     final filteredRoots = rootNodes
-        .where((node) => node.containsContentType(contentType) && node.totalQuestions > 0)
+        .where(
+          (node) =>
+              node.containsContentType(contentType) && node.totalQuestions > 0,
+        )
         .toList();
 
     void sortNodeAndChildren(_PerformanceTreeNode node) {
       node.children.retainWhere(
-        (child) => child.containsContentType(contentType) && child.totalQuestions > 0,
+        (child) =>
+            child.containsContentType(contentType) && child.totalQuestions > 0,
       );
       node.children.sort((a, b) {
         if (a.totalQuestions > 0 && b.totalQuestions == 0) return -1;
@@ -2213,14 +2329,15 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     return filteredRoots;
   }
 
-
-
   /// Level-grouped sections (Subjects / Books / Chapters / Subtopics), each a
   /// flat weakest-first list — replaces an earlier nested expandable tree,
   /// which tested poorly: tapping a leaf row did nothing without noticing a
   /// tiny trailing icon, and nesting made a person's own weak subject harder
   /// to spot than a plain per-level ranking does.
-  Widget _buildCategoryPerformanceSections(List<_TopicInsight> insights, String contentType) {
+  Widget _buildCategoryPerformanceSections(
+    List<_TopicInsight> insights,
+    String contentType,
+  ) {
     if (insights.isEmpty) {
       return Container(
         width: double.infinity,
@@ -2229,7 +2346,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         child: Center(
           child: Text(
             "No performance data available for this section yet.",
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: AppTypography.body,
           ),
         ),
       );
@@ -2270,10 +2387,13 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           ),
           child: TextField(
             controller: _searchController,
-            style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+            style: AppTypography.body.copyWith(
+              fontSize: 13,
+              color: AppColors.ink,
+            ),
             decoration: InputDecoration(
               hintText: "Search subject, book, chapter, or topic...",
-              hintStyle: GoogleFonts.inter(
+              hintStyle: AppTypography.body.copyWith(
                 color: AppColors.muted.withOpacity(0.6),
                 fontSize: 13,
               ),
@@ -2314,21 +2434,32 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
             child: Center(
               child: Text(
                 "No categories match \"${_searchQuery.trim()}\".",
-                style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
+                style: AppTypography.caption.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           )
         else
           for (final key in sectionOrder)
             if (groups[key]!.isNotEmpty) ...[
-              _buildCategoryGroupSection(sectionLabels[key]!, groups[key]!, contentType),
+              _buildCategoryGroupSection(
+                sectionLabels[key]!,
+                groups[key]!,
+                contentType,
+              ),
               const SizedBox(height: 18),
             ],
       ],
     );
   }
 
-  Widget _buildCategoryGroupSection(String label, List<_TopicInsight> items, String contentType) {
+  Widget _buildCategoryGroupSection(
+    String label,
+    List<_TopicInsight> items,
+    String contentType,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2336,15 +2467,23 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
           children: [
             Text(
               label.toUpperCase(),
-              style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.8),
+              style: AppTypography.eyebrowLarge.copyWith(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.muted,
+                letterSpacing: 0.8,
+              ),
             ),
             const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(999)),
+              decoration: BoxDecoration(
+                color: AppColors.paper,
+                borderRadius: BorderRadius.circular(999),
+              ),
               child: Text(
                 items.length.toString(),
-                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w600, color: AppColors.muted),
+                style: AppTypography.eyebrowSmall.copyWith(letterSpacing: 0),
               ),
             ),
           ],
@@ -2362,7 +2501,8 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
-        onTap: () => _openCategoryPerformance(insight.id, insight.name, contentType),
+        onTap: () =>
+            _openCategoryPerformance(insight.id, insight.name, contentType),
         borderRadius: BorderRadius.circular(13),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
@@ -2381,12 +2521,18 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                       insight.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.ink),
+                      style: AppTypography.cardTitle.copyWith(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       "${insight.totalQuestions} question${insight.totalQuestions == 1 ? '' : 's'}",
-                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.muted),
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -2394,17 +2540,23 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
               const SizedBox(width: 10),
               Text(
                 hasData ? _formatScorePercent(insight.scorePercent) : "--",
-                style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: color),
+                style: AppTypography.cardTitle.copyWith(
+                  fontSize: 13.5,
+                  color: color,
+                ),
               ),
               const SizedBox(width: 2),
-              Icon(Icons.chevron_right_rounded, size: 17, color: AppColors.muted.withOpacity(0.6)),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 17,
+                color: AppColors.muted.withOpacity(0.6),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-
 }
 
 class _PerformanceTreeNode {
@@ -2499,6 +2651,7 @@ class _TopicInsight {
   final int incorrectCount;
   final int unattemptedCount;
   final double accuracy;
+
   /// score / maxScore * 100 — can be negative once negative marking outweighs
   /// correct answers. This is the primary ranking metric for weak/strong/
   /// extremes, since accuracy alone can't express that.
