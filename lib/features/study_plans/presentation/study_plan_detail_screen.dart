@@ -12,9 +12,25 @@ import 'study_plan_attempt_engine_screen.dart';
 import 'live_class_screen.dart';
 
 const List<String> _testItemTypes = ['prelims_test', 'csat_test', 'mains_test'];
-const List<String> _privilegedHostRoles = ['admin', 'moderator', 'content_editor'];
+const List<String> _privilegedHostRoles = [
+  'admin',
+  'moderator',
+  'content_editor',
+];
 const List<String> _monthNames = [
-  '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  '',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 class StudyPlanDetailScreen extends StatefulWidget {
@@ -79,7 +95,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     int currentWeek = sortedWeeks.first;
     for (final w in sortedWeeks) {
       final items = weeksMap[w]!;
-      final allDone = items.isNotEmpty && items.every((i) => i.progress?.status == 'completed');
+      final allDone =
+          items.isNotEmpty &&
+          items.every((i) => i.progress?.status == 'completed');
       currentWeek = w;
       if (!allDone) break;
     }
@@ -97,11 +115,16 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       setState(() => _plan = fresh);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Study plan unlocked successfully!"), backgroundColor: AppColors.emerald),
+        const SnackBar(
+          content: Text("Study plan unlocked successfully!"),
+          backgroundColor: AppColors.emerald,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enrollment failed: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Enrollment failed: $e")));
     } finally {
       if (mounted) setState(() => _processing = false);
     }
@@ -109,7 +132,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
 
   Future<void> _launchWebPurchase() async {
     if (_plan == null) return;
-    final url = Uri.parse("${ApiConstants.webAppUrl}/study-plans/${_plan!.summary.slug}");
+    final url = Uri.parse(
+      "${ApiConstants.webAppUrl}/study-plans/${_plan!.summary.slug}",
+    );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint("Could not launch $url");
     }
@@ -123,7 +148,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       setState(() => _plan = fresh);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Progress update failed: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Progress update failed: $e")));
     } finally {
       if (mounted) setState(() => _processing = false);
     }
@@ -133,19 +160,27 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     if (item.testTemplateId == null) return;
     setState(() => _processing = true);
     try {
-      final attemptId = await _service.startTestAttempt(item.testTemplateId!, item.id);
+      final attemptId = await _service.startTestAttempt(
+        item.testTemplateId!,
+        item.id,
+      );
       if (mounted) {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => StudyPlanAttemptEngineScreen(attemptId: attemptId, planItemId: item.id),
+            builder: (_) => StudyPlanAttemptEngineScreen(
+              attemptId: attemptId,
+              planItemId: item.id,
+            ),
           ),
         );
         _loadDetails();
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Could not start test attempt: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Could not start test attempt: $e")),
+      );
     } finally {
       if (mounted) setState(() => _processing = false);
     }
@@ -154,15 +189,20 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
   Future<void> _openResourceUrl(String url) async {
     final uri = Uri.tryParse(url);
     final messenger = ScaffoldMessenger.of(context);
-    if (uri == null || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      messenger.showSnackBar(const SnackBar(content: Text("Could not open this link.")));
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Could not open this link.")),
+      );
     }
   }
 
   Future<void> _joinLiveClass(int liveClassId, String title) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => LiveClassScreen(liveClassId: liveClassId, title: title)),
+      MaterialPageRoute(
+        builder: (_) => LiveClassScreen(liveClassId: liveClassId, title: title),
+      ),
     );
     _loadDetails();
   }
@@ -174,13 +214,16 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       if (mounted) await _joinLiveClass(liveClassId, title);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Could not start class: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Could not start class: $e")));
     } finally {
       if (mounted) setState(() => _processing = false);
     }
   }
 
-  bool get _isPrivilegedHost => _privilegedHostRoles.contains(_apiClient.user?['role'] as String?);
+  bool get _isPrivilegedHost =>
+      _privilegedHostRoles.contains(_apiClient.user?['role'] as String?);
 
   int? get _currentUserId {
     final raw = _apiClient.user?['id'];
@@ -236,11 +279,18 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.berry,
+                  size: 44,
+                ),
                 const SizedBox(height: 16),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _loadDetails, child: const Text("RETRY")),
+                ElevatedButton(
+                  onPressed: _loadDetails,
+                  child: const Text("RETRY"),
+                ),
               ],
             ),
           ),
@@ -255,14 +305,21 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     final completed = plan.progressSummary?['completed_items'] ?? 0;
     final total = plan.progressSummary?['total_items'] ?? plan.items.length;
     final progress = total > 0 ? (completed / total * 100).round() : 0;
-    final priceStr = _formatPrice(plan.summary.priceAmountMinor, plan.summary.currency);
+    final priceStr = _formatPrice(
+      plan.summary.priceAmountMinor,
+      plan.summary.currency,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         title: Text(
           "Study Schedule",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            color: AppColors.ink,
+            fontSize: 18,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -272,15 +329,23 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           child: Container(color: AppColors.line, height: 1),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.ink,
+            size: 18,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (_processing)
             const Padding(
               padding: EdgeInsets.only(right: 16.0),
-              child: SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-            )
+              child: SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
         ],
       ),
       body: SingleChildScrollView(
@@ -307,7 +372,12 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     const SizedBox(height: 8),
                     Text(
                       plan.summary.subtitle!,
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w400, color: AppColors.muted, height: 1.4),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.muted,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                   if (plan.reviewsSummary.totalReviews > 0) ...[
@@ -315,13 +385,24 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     Row(
                       children: [
                         ...List.generate(5, (i) {
-                          final filled = i < plan.reviewsSummary.averageRating.round();
-                          return Icon(filled ? Icons.star_rounded : Icons.star_outline_rounded, color: AppColors.saffron, size: 15);
+                          final filled =
+                              i < plan.reviewsSummary.averageRating.round();
+                          return Icon(
+                            filled
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            color: AppColors.saffron,
+                            size: 15,
+                          );
                         }),
                         const SizedBox(width: 6),
                         Text(
                           "${plan.reviewsSummary.averageRating.toStringAsFixed(1)} (${plan.reviewsSummary.totalReviews} reviews)",
-                          style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.muted),
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.muted,
+                          ),
                         ),
                       ],
                     ),
@@ -340,20 +421,43 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                             children: [
                               Text(
                                 "PLAN UNLOCK FEE",
-                                style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: AppColors.muted),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8,
+                                  color: AppColors.muted,
+                                ),
                               ),
                               Text(
                                 priceStr,
-                                style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.ink,
+                                ),
                               ),
                             ],
                           ),
                           ElevatedButton(
-                            style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                            onPressed: _processing ? null : (plan.summary.priceAmountMinor > 0 ? _launchWebPurchase : _enroll),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: _processing
+                                ? null
+                                : (plan.summary.priceAmountMinor > 0
+                                      ? _launchWebPurchase
+                                      : _enroll),
                             child: Text(
-                              plan.summary.priceAmountMinor > 0 ? "BUY ON WEB" : "UNLOCK NOW",
-                              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                              plan.summary.priceAmountMinor > 0
+                                  ? "BUY ON WEB"
+                                  : "UNLOCK NOW",
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                         ],
@@ -363,8 +467,22 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Your Progress", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.muted)),
-                        Text("$progress%", style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.civic)),
+                        Text(
+                          "Your Progress",
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        Text(
+                          "$progress%",
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.civic,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -374,23 +492,36 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                         value: progress / 100,
                         minHeight: 8,
                         backgroundColor: AppColors.paper,
-                        valueColor: const AlwaysStoppedAnimation(AppColors.civic),
+                        valueColor: const AlwaysStoppedAnimation(
+                          AppColors.civic,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       "$completed of $total items done",
-                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: Text(
                 "Course Schedule",
-                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.ink,
+                ),
               ),
             ),
             Padding(
@@ -414,7 +545,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
   }
 
   Widget _buildDescription(String? description) {
-    if (description == null || description.trim().isEmpty) return const SizedBox.shrink();
+    if (description == null || description.trim().isEmpty)
+      return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -423,7 +555,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           duration: const Duration(milliseconds: 220),
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: _descriptionExpanded ? 4000 : 90),
+            constraints: BoxConstraints(
+              maxHeight: _descriptionExpanded ? 4000 : 90,
+            ),
             child: ClipRect(
               child: Html(
                 data: description,
@@ -446,94 +580,132 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
         ),
         const SizedBox(height: 6),
         GestureDetector(
-          onTap: () => setState(() => _descriptionExpanded = !_descriptionExpanded),
+          onTap: () =>
+              setState(() => _descriptionExpanded = !_descriptionExpanded),
           child: Text(
             _descriptionExpanded ? "Show less" : "Read more",
-            style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.civic),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: AppColors.civic,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildWeekNode(int week, List<StudyPlanItem> items, StudyPlanDetail plan, {required bool isLast}) {
-    final allDone = items.isNotEmpty && items.every((i) => i.progress?.status == 'completed');
+  Widget _buildWeekNode(
+    int week,
+    List<StudyPlanItem> items,
+    StudyPlanDetail plan, {
+    required bool isLast,
+  }) {
+    final allDone =
+        items.isNotEmpty &&
+        items.every((i) => i.progress?.status == 'completed');
     final isExpanded = _expandedWeeks.contains(week);
     final locked = !plan.hasAccess && !items.any((i) => i.isPreview);
     final weekTitle = plan.weekTitle(week);
 
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            children: [
-              _buildWeekStatusCircle(done: allDone, locked: locked, isCurrent: isExpanded && !allDone),
-              if (!isLast) Expanded(child: Container(width: 2, color: AppColors.line, margin: const EdgeInsets.symmetric(vertical: 2))),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 8 : 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  InkWell(
-                    onTap: () => setState(() {
-                      if (isExpanded) {
-                        _expandedWeeks.remove(week);
-                      } else {
-                        _expandedWeeks.add(week);
-                      }
-                    }),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "WEEK $week${allDone ? ' · COMPLETE' : (locked ? ' · LOCKED' : '')}",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
-                              color: allDone ? AppColors.emerald : (locked ? AppColors.muted : AppColors.civic),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            weekTitle,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
-                              color: locked ? AppColors.muted : AppColors.ink,
-                            ),
-                          ),
-                        ],
-                      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                _buildWeekStatusCircle(
+                  done: allDone,
+                  locked: locked,
+                  isCurrent: isExpanded && !allDone,
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: AppColors.line,
+                      margin: const EdgeInsets.symmetric(vertical: 2),
                     ),
                   ),
-                  if (isExpanded) ...[
-                    const SizedBox(height: 8),
-                    ...items.map((item) => _buildDayRow(item, plan.hasAccess)),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 8 : 22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      onTap: () => setState(() {
+                        if (isExpanded) {
+                          _expandedWeeks.remove(week);
+                        } else {
+                          _expandedWeeks.add(week);
+                        }
+                      }),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "WEEK $week${allDone ? ' · COMPLETE' : (locked ? ' · LOCKED' : '')}",
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                                color: allDone
+                                    ? AppColors.emerald
+                                    : (locked
+                                          ? AppColors.muted
+                                          : AppColors.civic),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              weekTitle,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
+                                color: locked ? AppColors.muted : AppColors.ink,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (isExpanded) ...[
+                      const SizedBox(height: 8),
+                      ...items.map(
+                        (item) => _buildDayRow(item, plan.hasAccess),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildWeekStatusCircle({required bool done, required bool locked, required bool isCurrent}) {
+  Widget _buildWeekStatusCircle({
+    required bool done,
+    required bool locked,
+    required bool isCurrent,
+  }) {
     if (done) {
       return Container(
         width: 24,
         height: 24,
-        decoration: const BoxDecoration(color: AppColors.emerald, shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+          color: AppColors.emerald,
+          shape: BoxShape.circle,
+        ),
         child: const Icon(Icons.check_rounded, color: Colors.white, size: 15),
       );
     }
@@ -544,18 +716,41 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
         decoration: BoxDecoration(
           color: AppColors.civic,
           shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: AppColors.civic.withOpacity(0.25), blurRadius: 0, spreadRadius: 4)],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.civic.withOpacity(0.25),
+              blurRadius: 0,
+              spreadRadius: 4,
+            ),
+          ],
         ),
         child: Center(
-          child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
         ),
       );
     }
     return Container(
       width: 24,
       height: 24,
-      decoration: BoxDecoration(color: AppColors.paper, shape: BoxShape.circle, border: Border.all(color: AppColors.line, width: 2)),
-      child: locked ? const Icon(Icons.lock_outline_rounded, size: 11, color: AppColors.muted) : null,
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.line, width: 2),
+      ),
+      child: locked
+          ? const Icon(
+              Icons.lock_outline_rounded,
+              size: 11,
+              color: AppColors.muted,
+            )
+          : null,
     );
   }
 
@@ -569,15 +764,25 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(color: Colors.white, border: Border.all(color: AppColors.line), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Icon(
-              done ? Icons.check_circle_rounded : (locked ? Icons.lock_outline_rounded : _itemIcon(item.itemType)),
-              color: done ? AppColors.emerald : (locked ? AppColors.muted : AppColors.civic),
+              done
+                  ? Icons.check_circle_rounded
+                  : (locked
+                        ? Icons.lock_outline_rounded
+                        : _itemIcon(item.itemType)),
+              color: done
+                  ? AppColors.emerald
+                  : (locked ? AppColors.muted : AppColors.civic),
               size: 17,
             ),
           ),
@@ -588,7 +793,12 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
               children: [
                 Text(
                   "DAY ${item.dayNo} · ${item.itemType.replaceAll('_', ' ').toUpperCase()}",
-                  style: GoogleFonts.plusJakartaSans(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.6),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.muted,
+                    letterSpacing: 0.6,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -598,14 +808,21 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     fontWeight: FontWeight.w700,
                     decoration: done ? TextDecoration.lineThrough : null,
                     decorationColor: AppColors.muted,
-                    color: done ? AppColors.muted : (locked ? AppColors.muted : AppColors.ink),
+                    color: done
+                        ? AppColors.muted
+                        : (locked ? AppColors.muted : AppColors.ink),
                   ),
                 ),
-                if (item.description != null && item.description!.trim().isNotEmpty) ...[
+                if (item.description != null &&
+                    item.description!.trim().isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text(
                     item.description!,
-                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, height: 1.3),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.muted,
+                      height: 1.3,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 6),
@@ -615,13 +832,22 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     if (item.estimatedMinutes != null)
-                      _metaChip(Icons.timer_outlined, "${item.estimatedMinutes} mins"),
+                      _metaChip(
+                        Icons.timer_outlined,
+                        "${item.estimatedMinutes} mins",
+                      ),
                     if (item.isPreview && !planHasAccess)
                       Text(
                         "FREE PREVIEW",
-                        style: GoogleFonts.plusJakartaSans(fontSize: 9.5, color: AppColors.civic, fontWeight: FontWeight.w800, letterSpacing: 0.3),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9.5,
+                          color: AppColors.civic,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
+                        ),
                       ),
-                    if (isLive && item.liveClass != null) _buildLiveClassStatusText(item.liveClass!),
+                    if (isLive && item.liveClass != null)
+                      _buildLiveClassStatusText(item.liveClass!),
                   ],
                 ),
               ],
@@ -629,15 +855,36 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           ),
           const SizedBox(width: 8),
           if (locked)
-            const Padding(padding: EdgeInsets.only(top: 2), child: Icon(Icons.lock_outline_rounded, color: AppColors.muted, size: 16))
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.lock_outline_rounded,
+                color: AppColors.muted,
+                size: 16,
+              ),
+            )
           else if (isLive && item.liveClass != null)
             _buildLiveClassAction(item.liveClass!, item.title)
           else if (isTest)
-            _actionButton(done ? "RETAKE" : "ATTEMPT", filled: true, onTap: _processing ? null : () => _startTest(item))
+            _actionButton(
+              done ? "RETAKE" : "ATTEMPT",
+              filled: true,
+              onTap: _processing ? null : () => _startTest(item),
+            )
           else if (resourceUrl != null)
-            _actionButton("OPEN", filled: false, onTap: () => _openResourceUrl(resourceUrl))
+            _actionButton(
+              "OPEN",
+              filled: false,
+              onTap: () => _openResourceUrl(resourceUrl),
+            )
           else if (!done)
-            _actionButton("MARK DONE", filled: false, onTap: _processing ? null : () => _updateProgress(item, 'completed'))
+            _actionButton(
+              "MARK DONE",
+              filled: false,
+              onTap: _processing
+                  ? null
+                  : () => _updateProgress(item, 'completed'),
+            ),
         ],
       ),
     );
@@ -649,37 +896,68 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       children: [
         Icon(icon, color: AppColors.muted, size: 12),
         const SizedBox(width: 3),
-        Text(text, style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w600)),
+        Text(
+          text,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            color: AppColors.muted,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _actionButton(String label, {required bool filled, required VoidCallback? onTap}) {
+  Widget _actionButton(
+    String label, {
+    required bool filled,
+    required VoidCallback? onTap,
+  }) {
     return SizedBox(
       height: 30,
       child: filled
           ? ElevatedButton(
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9),
+                ),
               ),
               onPressed: onTap,
-              child: Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
+              child: Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
+                ),
+              ),
             )
           : OutlinedButton(
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 side: const BorderSide(color: AppColors.line),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9),
+                ),
               ),
               onPressed: onTap,
-              child: Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: AppColors.civic, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
+              child: Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10.5,
+                  color: AppColors.civic,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
+                ),
+              ),
             ),
     );
   }
 
   bool _canHostLiveClass(StudyPlanLiveClassSummary liveClass) {
-    return _isPrivilegedHost || (_currentUserId != null && _currentUserId == liveClass.hostUserId);
+    return _isPrivilegedHost ||
+        (_currentUserId != null && _currentUserId == liveClass.hostUserId);
   }
 
   Widget _buildLiveClassStatusText(StudyPlanLiveClassSummary liveClass) {
@@ -687,19 +965,46 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.berry, shape: BoxShape.circle)),
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: AppColors.berry,
+              shape: BoxShape.circle,
+            ),
+          ),
           const SizedBox(width: 4),
-          Text("LIVE NOW", style: GoogleFonts.plusJakartaSans(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.berry)),
+          Text(
+            "LIVE NOW",
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: AppColors.berry,
+            ),
+          ),
         ],
       );
     }
     if (liveClass.hasEnded) {
-      return Text("Session ended", style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w600));
+      return Text(
+        "Session ended",
+        style: GoogleFonts.inter(
+          fontSize: 10,
+          color: AppColors.muted,
+          fontWeight: FontWeight.w600,
+        ),
+      );
     }
-    return _metaChip(Icons.schedule_rounded, "Starts ${_formatScheduledTime(liveClass.scheduledStart)}");
+    return _metaChip(
+      Icons.schedule_rounded,
+      "Starts ${_formatScheduledTime(liveClass.scheduledStart)}",
+    );
   }
 
-  Widget _buildLiveClassAction(StudyPlanLiveClassSummary liveClass, String title) {
+  Widget _buildLiveClassAction(
+    StudyPlanLiveClassSummary liveClass,
+    String title,
+  ) {
     final canHost = _canHostLiveClass(liveClass);
 
     if (liveClass.hasEnded) {
@@ -718,7 +1023,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       return _actionButton(
         "START",
         filled: false,
-        onTap: _processing ? null : () => _startAndJoinLiveClass(liveClass.id, title),
+        onTap: _processing
+            ? null
+            : () => _startAndJoinLiveClass(liveClass.id, title),
       );
     }
 
