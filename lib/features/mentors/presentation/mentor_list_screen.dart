@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../data/mentor_service.dart';
@@ -25,7 +24,8 @@ class _MentorListScreenState extends State<MentorListScreen> {
   String _searchQuery = "";
   String _selectedExamFilter = "all";
   String _selectedScopeFilter = "all"; // all, all_areas, specific_field
-  String _selectedTypeFilter = "all"; // all, evaluation_mentorship, only_mentorship
+  String _selectedTypeFilter =
+      "all"; // all, evaluation_mentorship, only_mentorship
   String? _selectedFocusTag;
   int _minExperience = 0;
 
@@ -75,11 +75,18 @@ class _MentorListScreenState extends State<MentorListScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.berry,
+                  size: 44,
+                ),
                 const SizedBox(height: 16),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _loadMentorsData, child: const Text("RETRY")),
+                ElevatedButton(
+                  onPressed: _loadMentorsData,
+                  child: const Text("RETRY"),
+                ),
               ],
             ),
           ),
@@ -97,18 +104,30 @@ class _MentorListScreenState extends State<MentorListScreen> {
     // Filters application
     final filteredMentors = _mentors.where((m) {
       final q = _searchQuery.toLowerCase();
-      final matchesSearch = q.isEmpty ||
+      final matchesSearch =
+          q.isEmpty ||
           m.displayName.toLowerCase().contains(q) ||
           (m.headline ?? '').toLowerCase().contains(q) ||
           (m.bio ?? '').toLowerCase().contains(q);
 
-      final matchesExam = _selectedExamFilter == 'all' || m.exams.contains(_selectedExamFilter);
-      final matchesScope = _selectedScopeFilter == 'all' || m.specializationType == _selectedScopeFilter;
-      final matchesType = _selectedTypeFilter == 'all' || m.mentorType == _selectedTypeFilter;
-      final matchesTag = _selectedFocusTag == null || m.specializationTags.contains(_selectedFocusTag);
+      final matchesExam =
+          _selectedExamFilter == 'all' || m.exams.contains(_selectedExamFilter);
+      final matchesScope =
+          _selectedScopeFilter == 'all' ||
+          m.specializationType == _selectedScopeFilter;
+      final matchesType =
+          _selectedTypeFilter == 'all' || m.mentorType == _selectedTypeFilter;
+      final matchesTag =
+          _selectedFocusTag == null ||
+          m.specializationTags.contains(_selectedFocusTag);
       final matchesExp = m.yearsExperience >= _minExperience;
 
-      return matchesSearch && matchesExam && matchesScope && matchesType && matchesTag && matchesExp;
+      return matchesSearch &&
+          matchesExam &&
+          matchesScope &&
+          matchesType &&
+          matchesTag &&
+          matchesExp;
     }).toList();
 
     return Scaffold(
@@ -151,7 +170,9 @@ class _MentorListScreenState extends State<MentorListScreen> {
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
-                            borderRadius: const BorderRadius.all(Radius.circular(24)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(24),
+                            ),
                           ),
                         ),
                         Positioned(
@@ -162,36 +183,35 @@ class _MentorListScreenState extends State<MentorListScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   "EXPERT ADVISORY",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 9,
+                                  style: AppTypography.eyebrowSmall.copyWith(
                                     fontWeight: FontWeight.w900,
                                     color: Colors.white,
-                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 10),
                               Text(
                                 "Discover UPSC Mentors",
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white,
+                                style: AppTypography.display.copyWith(
                                   fontSize: 22,
-                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 "Connect 1-on-1 with civil servants and exam veterans to unlock copy evaluation sessions.",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.body.copyWith(
                                   color: Colors.white.withOpacity(0.9),
-                                  fontSize: 12,
                                   height: 1.4,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -206,19 +226,29 @@ class _MentorListScreenState extends State<MentorListScreen> {
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppColors.line),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const MyBookingsScreen(),
+                          ),
                         );
                       },
-                      icon: const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.civic),
+                      icon: const Icon(
+                        Icons.calendar_today_rounded,
+                        size: 16,
+                        color: AppColors.civic,
+                      ),
                       label: Text(
                         "My Booking Requests",
-                        style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.civic),
+                        style: AppTypography.button.copyWith(
+                          color: AppColors.civic,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -245,10 +275,22 @@ class _MentorListScreenState extends State<MentorListScreen> {
                             value: _minExperience,
                             hint: "Any Experience",
                             items: const [
-                              DropdownMenuItem(value: 0, child: Text("Any Experience")),
-                              DropdownMenuItem(value: 2, child: Text("2+ Years")),
-                              DropdownMenuItem(value: 5, child: Text("5+ Years")),
-                              DropdownMenuItem(value: 8, child: Text("8+ Years")),
+                              DropdownMenuItem(
+                                value: 0,
+                                child: Text("Any Experience"),
+                              ),
+                              DropdownMenuItem(
+                                value: 2,
+                                child: Text("2+ Years"),
+                              ),
+                              DropdownMenuItem(
+                                value: 5,
+                                child: Text("5+ Years"),
+                              ),
+                              DropdownMenuItem(
+                                value: 8,
+                                child: Text("8+ Years"),
+                              ),
                             ],
                             onChanged: (val) {
                               setState(() {
@@ -263,9 +305,18 @@ class _MentorListScreenState extends State<MentorListScreen> {
                             value: _selectedTypeFilter,
                             hint: "Any Type",
                             items: const [
-                              DropdownMenuItem(value: "all", child: Text("Any Type")),
-                              DropdownMenuItem(value: "evaluation_mentorship", child: Text("Evaluation + Mentor")),
-                              DropdownMenuItem(value: "only_mentorship", child: Text("Only Mentorship")),
+                              DropdownMenuItem(
+                                value: "all",
+                                child: Text("Any Type"),
+                              ),
+                              DropdownMenuItem(
+                                value: "evaluation_mentorship",
+                                child: Text("Evaluation + Mentor"),
+                              ),
+                              DropdownMenuItem(
+                                value: "only_mentorship",
+                                child: Text("Only Mentorship"),
+                              ),
                             ],
                             onChanged: (val) {
                               setState(() {
@@ -280,8 +331,14 @@ class _MentorListScreenState extends State<MentorListScreen> {
                             value: _selectedExamFilter,
                             hint: "Any Exam",
                             items: [
-                              const DropdownMenuItem(value: "all", child: Text("Any Exam")),
-                              ..._targetExams.map((e) => DropdownMenuItem(value: e, child: Text(e))),
+                              const DropdownMenuItem(
+                                value: "all",
+                                child: Text("Any Exam"),
+                              ),
+                              ..._targetExams.map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              ),
                             ],
                             onChanged: (val) {
                               setState(() {
@@ -298,12 +355,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
                     if (sortedTags.isNotEmpty) ...[
                       Text(
                         "FILTER BY SUBJECT FOCUS",
-                        style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.muted,
-                          letterSpacing: 0.5,
-                        ),
+                        style: AppTypography.eyebrowSmall,
                       ),
                       const SizedBox(height: 8),
                       SizedBox(
@@ -331,19 +383,19 @@ class _MentorListScreenState extends State<MentorListScreen> {
                               label: Text(tag),
                               selected: isSelected,
                               onSelected: (_) {
-                                  setState(() {
-                                    _selectedFocusTag = tag;
-                                  });
+                                setState(() {
+                                  _selectedFocusTag = tag;
+                                });
                               },
                             );
                           },
                         ),
-                      )
-                    ]
+                      ),
+                    ],
                   ],
                 ),
               ),
-            )
+            ),
           ];
         },
         body: filteredMentors.isEmpty
@@ -351,17 +403,26 @@ class _MentorListScreenState extends State<MentorListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.people_outline_rounded, color: AppColors.muted, size: 40),
+                    const Icon(
+                      Icons.people_outline_rounded,
+                      color: AppColors.muted,
+                      size: 40,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       "No mentors match your search filters.",
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.muted),
+                      style: AppTypography.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
               )
             : ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: filteredMentors.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 16),
                 itemBuilder: (context, index) {
@@ -389,8 +450,18 @@ class _MentorListScreenState extends State<MentorListScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          hint: Text(hint, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
-          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.ink),
+          hint: Text(
+            hint,
+            style: AppTypography.caption.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          style: AppTypography.caption.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: AppColors.ink,
+          ),
           items: items,
           onChanged: onChanged,
         ),
@@ -412,7 +483,12 @@ class _MentorListScreenState extends State<MentorListScreen> {
               if (mentor.profileImageUrl != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(mentor.profileImageUrl!, height: 52, width: 52, fit: BoxFit.cover),
+                  child: Image.network(
+                    mentor.profileImageUrl!,
+                    height: 52,
+                    width: 52,
+                    fit: BoxFit.cover,
+                  ),
                 )
               else
                 Container(
@@ -424,8 +500,13 @@ class _MentorListScreenState extends State<MentorListScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      mentor.displayName.isNotEmpty ? mentor.displayName[0].toUpperCase() : 'M',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.civic),
+                      mentor.displayName.isNotEmpty
+                          ? mentor.displayName[0].toUpperCase()
+                          : 'M',
+                      style: AppTypography.statValue.copyWith(
+                        fontSize: 22,
+                        color: AppColors.civic,
+                      ),
                     ),
                   ),
                 ),
@@ -438,30 +519,28 @@ class _MentorListScreenState extends State<MentorListScreen> {
                       children: [
                         Text(
                           mentor.displayName,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.ink,
-                          ),
+                          style: AppTypography.title.copyWith(fontSize: 14),
                         ),
                         if (mentor.isVerified) ...[
                           const SizedBox(width: 6),
-                          const Icon(Icons.verified_rounded, color: AppColors.civic, size: 16),
+                          const Icon(
+                            Icons.verified_rounded,
+                            color: AppColors.civic,
+                            size: 16,
+                          ),
                         ],
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       mentor.headline ?? "UPSC Mentorship Veteran",
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.muted,
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -470,12 +549,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
           if (mentor.bio != null) ...[
             Text(
               mentor.bio!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: AppColors.muted,
-                height: 1.35,
-              ),
+              style: AppTypography.body.copyWith(height: 1.35),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -488,12 +562,16 @@ class _MentorListScreenState extends State<MentorListScreen> {
             runSpacing: 6,
             children: [
               _buildCompactBadge(
-                mentor.mentorType == 'only_mentorship' ? "Only Guidance" : "Evaluation + Mentorship",
+                mentor.mentorType == 'only_mentorship'
+                    ? "Only Guidance"
+                    : "Evaluation + Mentorship",
                 AppColors.civic.withOpacity(0.08),
                 AppColors.civic,
               ),
               _buildCompactBadge(
-                mentor.specializationType == 'specific_field' ? "Topic Expert" : "General Syllabus Guide",
+                mentor.specializationType == 'specific_field'
+                    ? "Topic Expert"
+                    : "General Syllabus Guide",
                 AppColors.paper,
                 AppColors.ink,
               ),
@@ -504,25 +582,39 @@ class _MentorListScreenState extends State<MentorListScreen> {
           // Exams / Experience spec
           Row(
             children: [
-              const Icon(Icons.history_toggle_off_rounded, color: AppColors.muted, size: 14),
+              const Icon(
+                Icons.history_toggle_off_rounded,
+                color: AppColors.muted,
+                size: 14,
+              ),
               const SizedBox(width: 4),
               Text(
                 "${mentor.yearsExperience} Years Exp",
-                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted),
+                style: AppTypography.caption.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (mentor.exams.isNotEmpty) ...[
                 const SizedBox(width: 16),
-                const Icon(Icons.menu_book_rounded, color: AppColors.muted, size: 14),
+                const Icon(
+                  Icons.menu_book_rounded,
+                  color: AppColors.muted,
+                  size: 14,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     mentor.exams.join(', '),
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ]
+              ],
             ],
           ),
           const SizedBox(height: 16),
@@ -538,24 +630,32 @@ class _MentorListScreenState extends State<MentorListScreen> {
                 children: [
                   Text(
                     "CONSULTATION FEE",
-                    style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.muted),
+                    style: AppTypography.eyebrowSmall.copyWith(
+                      letterSpacing: 0,
+                    ),
                   ),
                   Text(
                     "₹1,000",
-                    style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.ink),
+                    style: AppTypography.statValue.copyWith(fontSize: 16),
                   ),
                 ],
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                 ),
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MentorDetailScreen(mentorUserId: mentor.userId),
+                      builder: (_) =>
+                          MentorDetailScreen(mentorUserId: mentor.userId),
                     ),
                   );
                 },
@@ -578,10 +678,9 @@ class _MentorListScreenState extends State<MentorListScreen> {
       ),
       child: Text(
         text,
-        style: GoogleFonts.inter(
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
+        style: AppTypography.eyebrowSmall.copyWith(
           color: labelColor,
+          letterSpacing: 0,
         ),
       ),
     );

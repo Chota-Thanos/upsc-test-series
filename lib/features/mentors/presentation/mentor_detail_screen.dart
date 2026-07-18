@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -56,7 +55,9 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
 
     try {
       final profiles = await _service.getMentorProfiles();
-      final mentor = profiles.firstWhere((m) => m.userId == widget.mentorUserId);
+      final mentor = profiles.firstWhere(
+        (m) => m.userId == widget.mentorUserId,
+      );
       setState(() {
         _mentor = mentor;
         _loading = false;
@@ -93,7 +94,9 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
 
   Future<void> _pickAndUploadCopy() async {
     try {
-      final copyData = await _service.uploadStudentCopyMetadata("mains_answer_sheet.pdf");
+      final copyData = await _service.uploadStudentCopyMetadata(
+        "mains_answer_sheet.pdf",
+      );
       setState(() {
         _uploadedCopyData = copyData;
       });
@@ -101,9 +104,9 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
         const SnackBar(content: Text("Mock answer sheet copy uploaded.")),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Upload error: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Upload error: $e")));
     }
   }
 
@@ -111,13 +114,21 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
     if (_attachCopy) {
       if (_copySource == 'upload' && _uploadedCopyData == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please select and upload a scanned copy of your answer sheet first.")),
+          const SnackBar(
+            content: Text(
+              "Please select and upload a scanned copy of your answer sheet first.",
+            ),
+          ),
         );
         return;
       }
       if (_copySource == 'platform' && _selectedAttemptId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No Mains attempts linked. Go submit a test or choose upload copy.")),
+          const SnackBar(
+            content: Text(
+              "No Mains attempts linked. Go submit a test or choose upload copy.",
+            ),
+          ),
         );
         return;
       }
@@ -130,8 +141,12 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
     try {
       await _service.submitMentorshipRequest(
         mentorId: _mentor!.id,
-        mainsAttemptId: _attachCopy && _copySource == 'platform' ? _selectedAttemptId : null,
-        studentCopy: _attachCopy && _copySource == 'upload' ? _uploadedCopyData : null,
+        mainsAttemptId: _attachCopy && _copySource == 'platform'
+            ? _selectedAttemptId
+            : null,
+        studentCopy: _attachCopy && _copySource == 'upload'
+            ? _uploadedCopyData
+            : null,
         preferredMode: _preferredMode,
         note: _noteController.text,
       );
@@ -140,9 +155,16 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
           context: context,
           builder: (context) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text("Success", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
-              content: const Text("Mentorship request sent successfully! You can track bookings and initiate Agora Video calls once accepted by the mentor on the web dashboard."),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                "Success",
+                style: AppTypography.cardTitle.copyWith(fontSize: 16),
+              ),
+              content: const Text(
+                "Mentorship request sent successfully! You can track bookings and initiate Agora Video calls once accepted by the mentor on the web dashboard.",
+              ),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -157,9 +179,9 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to submit request: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to submit request: $e")));
     } finally {
       if (mounted) {
         setState(() {
@@ -171,7 +193,9 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
 
   Future<void> _launchWebBooking() async {
     if (_mentor == null) return;
-    final url = Uri.parse("${ApiConstants.webAppUrl}/mentors/${widget.mentorUserId}");
+    final url = Uri.parse(
+      "${ApiConstants.webAppUrl}/mentors/${widget.mentorUserId}",
+    );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint("Could not launch $url");
     }
@@ -194,11 +218,18 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.berry,
+                  size: 44,
+                ),
                 const SizedBox(height: 16),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _loadMentorDetails, child: const Text("RETRY")),
+                ElevatedButton(
+                  onPressed: _loadMentorDetails,
+                  child: const Text("RETRY"),
+                ),
               ],
             ),
           ),
@@ -213,7 +244,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
       appBar: AppBar(
         title: Text(
           "Mentor Profile",
-          style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink),
+          style: AppTypography.title.copyWith(fontSize: 16),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -223,7 +254,11 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
           child: Container(color: AppColors.line, height: 1),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.ink,
+            size: 18,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -245,7 +280,12 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                       if (m.profileImageUrl != null)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: Image.network(m.profileImageUrl!, height: 64, width: 64, fit: BoxFit.cover),
+                          child: Image.network(
+                            m.profileImageUrl!,
+                            height: 64,
+                            width: 64,
+                            fit: BoxFit.cover,
+                          ),
                         )
                       else
                         Container(
@@ -257,8 +297,13 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              m.displayName.isNotEmpty ? m.displayName[0].toUpperCase() : 'M',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.civic),
+                              m.displayName.isNotEmpty
+                                  ? m.displayName[0].toUpperCase()
+                                  : 'M',
+                              style: AppTypography.statValue.copyWith(
+                                fontSize: 26,
+                                color: AppColors.civic,
+                              ),
                             ),
                           ),
                         ),
@@ -271,22 +316,26 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                               children: [
                                 Text(
                                   m.displayName,
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: AppTypography.title.copyWith(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.ink,
                                   ),
                                 ),
                                 if (m.isVerified) ...[
                                   const SizedBox(width: 4),
-                                  const Icon(Icons.verified_rounded, color: AppColors.civic, size: 18),
-                                ]
+                                  const Icon(
+                                    Icons.verified_rounded,
+                                    color: AppColors.civic,
+                                    size: 18,
+                                  ),
+                                ],
                               ],
                             ),
                             const SizedBox(height: 2),
                             Text(
                               m.headline ?? "UPSC Coach & Evaluator",
-                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600),
+                              style: AppTypography.body.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -299,24 +348,25 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
 
                   Text(
                     "Biography",
-                    style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink),
+                    style: AppTypography.sectionHeader.copyWith(fontSize: 14),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    m.bio ?? "Experienced civil service mentor guiding students.",
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.muted, height: 1.35),
+                    m.bio ??
+                        "Experienced civil service mentor guiding students.",
+                    style: AppTypography.body.copyWith(height: 1.35),
                   ),
-                  
+
                   if (m.education != null && m.education!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
                       "Education",
-                      style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink),
+                      style: AppTypography.sectionHeader.copyWith(fontSize: 14),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       m.education!,
-                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.muted, height: 1.35),
+                      style: AppTypography.body.copyWith(height: 1.35),
                     ),
                   ],
 
@@ -325,17 +375,33 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                     const SizedBox(height: 16),
                     Text(
                       "Specialties",
-                      style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink),
+                      style: AppTypography.sectionHeader.copyWith(fontSize: 14),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: m.specializationTags.map((t) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16)),
-                        child: Text(t, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
-                      )).toList(),
+                      children: m.specializationTags
+                          .map(
+                            (t) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.paper,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                t,
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ],
 
@@ -343,24 +409,27 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                     const SizedBox(height: 16),
                     Text(
                       "Highlights",
-                      style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink),
+                      style: AppTypography.sectionHeader.copyWith(fontSize: 14),
                     ),
                     const SizedBox(height: 8),
-                    ...m.highlights.map((hl) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.star_rounded, color: AppColors.saffron, size: 16),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              hl,
-                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.muted),
+                    ...m.highlights.map(
+                      (hl) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: AppColors.saffron,
+                              size: 16,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(hl, style: AppTypography.body),
+                            ),
+                          ],
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ],
               ),
@@ -393,21 +462,13 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                   const SizedBox(height: 16),
                   Text(
                     "Book Consultation Session",
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.ink,
-                    ),
+                    style: AppTypography.title.copyWith(fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "Mentorship bookings and secure one-time payments are managed on our web platform. Review coach availability and book your slot on your dashboard.",
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.muted,
-                      height: 1.4,
-                    ),
+                    style: AppTypography.body.copyWith(height: 1.4),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
@@ -418,19 +479,14 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                     children: [
                       Text(
                         "Consultation Fee",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 12,
-                          color: AppColors.muted,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         "₹1,000 / Session",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.ink,
-                        ),
+                        style: AppTypography.statValue.copyWith(fontSize: 16),
                       ),
                     ],
                   ),
@@ -446,9 +502,8 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                     onPressed: _launchWebBooking,
                     child: Text(
                       "BOOK SESSION ON WEB",
-                      style: GoogleFonts.inter(
+                      style: AppTypography.button.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
