@@ -728,6 +728,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                           _expandedWeeks.add(week);
                         }
                       }),
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
                       child: Opacity(
                         opacity: locked ? 0.5 : 1.0,
                         child: Padding(
@@ -743,7 +745,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                                   letterSpacing: 0.6,
                                   color: allDone
                                       ? AppColors.emerald
-                                      : AppColors.civic,
+                                      : (locked
+                                            ? AppColors.muted
+                                            : AppColors.civic),
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -869,7 +873,9 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
                     : (locked
                           ? Icons.lock_outline_rounded
                           : _itemIcon(item.itemType)),
-                color: done ? AppColors.emerald : AppColors.civic,
+                color: done
+                    ? AppColors.emerald
+                    : (locked ? AppColors.muted : AppColors.civic),
                 size: 17,
               ),
             ),
