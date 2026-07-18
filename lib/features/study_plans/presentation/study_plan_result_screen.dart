@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -9,6 +8,7 @@ import '../data/study_plan_service.dart';
 import 'study_plan_list_screen.dart';
 
 enum _SPResultTab { summary, questions, topics, time }
+
 enum _SPQuestionFilter { all, correct, incorrect, unattempted }
 
 class StudyPlanResultScreen extends StatefulWidget {
@@ -57,7 +57,8 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
 
   String _optionKey(dynamic option, int index) {
     if (option is Map) {
-      final key = option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
+      final key =
+          option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
       if (key != null) return key.toString();
     }
     return String.fromCharCode(65 + index);
@@ -65,7 +66,11 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
 
   String _optionText(dynamic option, int index) {
     if (option is Map) {
-      final text = option['text'] ?? option['label'] ?? option['value'] ?? option['statement'];
+      final text =
+          option['text'] ??
+          option['label'] ??
+          option['value'] ??
+          option['statement'];
       if (text != null) return text.toString();
     }
     if (option != null) return option.toString();
@@ -98,11 +103,18 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.berry,
+                  size: 44,
+                ),
                 const SizedBox(height: 16),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _loadResult, child: const Text("RETRY")),
+                ElevatedButton(
+                  onPressed: _loadResult,
+                  child: const Text("RETRY"),
+                ),
               ],
             ),
           ),
@@ -117,11 +129,15 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
       appBar: AppBar(
         title: Text(
           "Study Plan Result",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
+          style: AppTypography.title.copyWith(fontSize: 18),
         ),
         backgroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.ink,
+            size: 18,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -135,14 +151,29 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _tabChip(_SPResultTab.summary, Icons.emoji_events_rounded, "Summary"),
+                  _tabChip(
+                    _SPResultTab.summary,
+                    Icons.emoji_events_rounded,
+                    "Summary",
+                  ),
                   const SizedBox(width: 8),
-                  _tabChip(_SPResultTab.questions, Icons.checklist_rounded,
-                      "Questions (${(review['questions'] as List? ?? []).length})"),
+                  _tabChip(
+                    _SPResultTab.questions,
+                    Icons.checklist_rounded,
+                    "Questions (${(review['questions'] as List? ?? []).length})",
+                  ),
                   const SizedBox(width: 8),
-                  _tabChip(_SPResultTab.topics, Icons.track_changes_rounded, "Topics"),
+                  _tabChip(
+                    _SPResultTab.topics,
+                    Icons.track_changes_rounded,
+                    "Topics",
+                  ),
                   const SizedBox(width: 8),
-                  _tabChip(_SPResultTab.time, Icons.timer_outlined, "Time Analysis"),
+                  _tabChip(
+                    _SPResultTab.time,
+                    Icons.timer_outlined,
+                    "Time Analysis",
+                  ),
                 ],
               ),
             ),
@@ -174,16 +205,25 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         decoration: BoxDecoration(
           color: isActive ? AppColors.ink : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? AppColors.ink : AppColors.line, width: 1.5),
+          border: Border.all(
+            color: isActive ? AppColors.ink : AppColors.line,
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 14, color: isActive ? Colors.white : AppColors.muted),
+            Icon(
+              icon,
+              size: 14,
+              color: isActive ? Colors.white : AppColors.muted,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
-              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700,
-                  color: isActive ? Colors.white : AppColors.ink),
+              style: AppTypography.button.copyWith(
+                fontSize: 12,
+                color: isActive ? Colors.white : AppColors.ink,
+              ),
             ),
           ],
         ),
@@ -208,12 +248,15 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
 
   Widget _buildSummary(Map<String, dynamic> review) {
     final score = double.tryParse(review['score']?.toString() ?? '0') ?? 0;
-    final maxScore = double.tryParse(review['max_score']?.toString() ?? '0') ?? 0;
-    final accuracy = double.tryParse(review['accuracy']?.toString() ?? '0') ?? 0;
+    final maxScore =
+        double.tryParse(review['max_score']?.toString() ?? '0') ?? 0;
+    final accuracy =
+        double.tryParse(review['accuracy']?.toString() ?? '0') ?? 0;
     final correctCount = review['correct_count'] as int? ?? 0;
     final incorrectCount = review['incorrect_count'] as int? ?? 0;
     final unattemptedCount = review['unattempted_count'] as int? ?? 0;
-    final negativeMarks = double.tryParse(review['negative_marks']?.toString() ?? '0') ?? 0;
+    final negativeMarks =
+        double.tryParse(review['negative_marks']?.toString() ?? '0') ?? 0;
     final pct = maxScore > 0 ? (score / maxScore * 100).clamp(0.0, 100.0) : 0.0;
 
     final testTemplate = review['test_template'] as Map<String, dynamic>? ?? {};
@@ -250,12 +293,24 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                           runSpacing: 10,
                           alignment: WrapAlignment.center,
                           children: [
-                            _statBox("🎯", "Score", "${score.toStringAsFixed(1)}/$maxScore"),
-                            _statBox("📊", "Accuracy", "${(accuracy <= 1 ? accuracy * 100 : accuracy).round()}%"),
+                            _statBox(
+                              "🎯",
+                              "Score",
+                              "${score.toStringAsFixed(1)}/$maxScore",
+                            ),
+                            _statBox(
+                              "📊",
+                              "Accuracy",
+                              "${(accuracy <= 1 ? accuracy * 100 : accuracy).round()}%",
+                            ),
                             _statBox("✅", "Correct", "$correctCount"),
                             _statBox("❌", "Incorrect", "$incorrectCount"),
                             _statBox("⬜", "Skipped", "$unattemptedCount"),
-                            _statBox("⚠️", "Negative", "-${negativeMarks.toStringAsFixed(2)}"),
+                            _statBox(
+                              "⚠️",
+                              "Negative",
+                              "-${negativeMarks.toStringAsFixed(2)}",
+                            ),
                           ],
                         ),
                       ],
@@ -270,12 +325,24 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                             spacing: 10,
                             runSpacing: 10,
                             children: [
-                              _statBox("🎯", "Score", "${score.toStringAsFixed(1)}/$maxScore"),
-                              _statBox("📊", "Accuracy", "${(accuracy <= 1 ? accuracy * 100 : accuracy).round()}%"),
+                              _statBox(
+                                "🎯",
+                                "Score",
+                                "${score.toStringAsFixed(1)}/$maxScore",
+                              ),
+                              _statBox(
+                                "📊",
+                                "Accuracy",
+                                "${(accuracy <= 1 ? accuracy * 100 : accuracy).round()}%",
+                              ),
                               _statBox("✅", "Correct", "$correctCount"),
                               _statBox("❌", "Incorrect", "$incorrectCount"),
                               _statBox("⬜", "Skipped", "$unattemptedCount"),
-                              _statBox("⚠️", "Negative", "-${negativeMarks.toStringAsFixed(2)}"),
+                              _statBox(
+                                "⚠️",
+                                "Negative",
+                                "-${negativeMarks.toStringAsFixed(2)}",
+                              ),
                             ],
                           ),
                         ),
@@ -300,14 +367,17 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
               ),
               child: Text(
                 testType.replaceAll('_', ' ').toUpperCase(),
-                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.civic),
+                style: AppTypography.eyebrowSmall.copyWith(
+                  color: AppColors.civic,
+                  letterSpacing: 0,
+                ),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 testTitle,
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.ink),
+                style: AppTypography.cardTitle.copyWith(fontSize: 13),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -317,10 +387,16 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         const SizedBox(height: 20),
 
         if (weakTopics.isNotEmpty) ...[
-          Text("Priority Revision Areas", style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            "Priority Revision Areas",
+            style: AppTypography.sectionHeader.copyWith(fontSize: 16),
+          ),
           const SizedBox(height: 12),
           ...weakTopics.take(4).map((t) {
-            final name = t['taxonomy_name']?.toString() ?? t['question_nature_name']?.toString() ?? 'General';
+            final name =
+                t['taxonomy_name']?.toString() ??
+                t['question_nature_name']?.toString() ??
+                'General';
             final acc = double.tryParse(t['accuracy']?.toString() ?? '0') ?? 0;
             final total = t['total_questions'] as int? ?? 0;
             return Container(
@@ -339,11 +415,14 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name, style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          name,
+                          style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           "${(acc <= 1 ? acc * 100 : acc).round()}% accuracy · $total questions",
-                          style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                          style: AppTypography.caption,
                         ),
                       ],
                     ),
@@ -361,10 +440,13 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.line),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                onPressed: () => setState(() => _activeTab = _SPResultTab.questions),
+                onPressed: () =>
+                    setState(() => _activeTab = _SPResultTab.questions),
                 child: const Text("REVIEW QUESTIONS"),
               ),
             ),
@@ -372,13 +454,17 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (_) => const StudyPlanListScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const StudyPlanListScreen(),
+                    ),
                   );
                 },
                 child: const Text("STUDY PLANS"),
@@ -404,8 +490,15 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         children: [
           Text(emoji, style: const TextStyle(fontSize: 16)),
           const SizedBox(height: 4),
-          Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
-          Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w600)),
+          Text(value, style: AppTypography.statValue),
+          Text(
+            label,
+            style: AppTypography.eyebrowSmall.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+            ),
+          ),
         ],
       ),
     );
@@ -414,7 +507,9 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
   // ─── Questions ─────────────────────────────────────────────────────────────
 
   Widget _buildQuestions(Map<String, dynamic> review) {
-    final questions = (review['questions'] as List? ?? []).map((q) => q as Map<String, dynamic>).toList();
+    final questions = (review['questions'] as List? ?? [])
+        .map((q) => q as Map<String, dynamic>)
+        .toList();
     final correctCount = review['correct_count'] as int? ?? 0;
     final incorrectCount = review['incorrect_count'] as int? ?? 0;
     final unattemptedCount = review['unattempted_count'] as int? ?? 0;
@@ -443,11 +538,23 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
             children: [
               _filterChip(_SPQuestionFilter.all, "All (${questions.length})"),
               const SizedBox(width: 8),
-              _filterChip(_SPQuestionFilter.correct, "Correct ($correctCount)", color: AppColors.emerald),
+              _filterChip(
+                _SPQuestionFilter.correct,
+                "Correct ($correctCount)",
+                color: AppColors.emerald,
+              ),
               const SizedBox(width: 8),
-              _filterChip(_SPQuestionFilter.incorrect, "Incorrect ($incorrectCount)", color: AppColors.berry),
+              _filterChip(
+                _SPQuestionFilter.incorrect,
+                "Incorrect ($incorrectCount)",
+                color: AppColors.berry,
+              ),
               const SizedBox(width: 8),
-              _filterChip(_SPQuestionFilter.unattempted, "Skipped ($unattemptedCount)", color: AppColors.muted),
+              _filterChip(
+                _SPQuestionFilter.unattempted,
+                "Skipped ($unattemptedCount)",
+                color: AppColors.muted,
+              ),
             ],
           ),
         ),
@@ -457,10 +564,13 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
           final idx = entry.key;
           final q = entry.value;
           final outcome = q['score_item']?['outcome'] as String?;
-          final show = _qFilter == _SPQuestionFilter.all ||
+          final show =
+              _qFilter == _SPQuestionFilter.all ||
               (_qFilter == _SPQuestionFilter.correct && outcome == 'correct') ||
-              (_qFilter == _SPQuestionFilter.incorrect && outcome == 'incorrect') ||
-              (_qFilter == _SPQuestionFilter.unattempted && (outcome == null || outcome == 'unattempted'));
+              (_qFilter == _SPQuestionFilter.incorrect &&
+                  outcome == 'incorrect') ||
+              (_qFilter == _SPQuestionFilter.unattempted &&
+                  (outcome == null || outcome == 'unattempted'));
           if (!show) return const SizedBox.shrink();
           return _buildQuestionCard(q, idx);
         }),
@@ -468,7 +578,11 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
     );
   }
 
-  Widget _filterChip(_SPQuestionFilter filter, String label, {Color color = AppColors.ink}) {
+  Widget _filterChip(
+    _SPQuestionFilter filter,
+    String label, {
+    Color color = AppColors.ink,
+  }) {
     final isActive = _qFilter == filter;
     return GestureDetector(
       onTap: () => setState(() => _qFilter = filter),
@@ -478,11 +592,17 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         decoration: BoxDecoration(
           color: isActive ? color : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? color : AppColors.line, width: 1.5),
+          border: Border.all(
+            color: isActive ? color : AppColors.line,
+            width: 1.5,
+          ),
         ),
         child: Text(
           label,
-          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: isActive ? Colors.white : AppColors.ink),
+          style: AppTypography.button.copyWith(
+            fontSize: 12,
+            color: isActive ? Colors.white : AppColors.ink,
+          ),
         ),
       ),
     );
@@ -490,10 +610,16 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
 
   Widget _buildQuestionCard(Map<String, dynamic> q, int index) {
     final outcome = q['score_item']?['outcome'] as String? ?? 'unattempted';
-    final userSelected = _selectedKey(q['score_item']?['selected_answer'] ?? q['response']?['selected_answer']);
-    final correctAns = _selectedKey(q['score_item']?['correct_answer'] ?? q['correct_answer']);
-    final timeSpent = (q['score_item']?['time_spent_seconds'] as num?)?.toInt() ??
-        (q['response']?['time_spent_seconds'] as num?)?.toInt() ?? 0;
+    final userSelected = _selectedKey(
+      q['score_item']?['selected_answer'] ?? q['response']?['selected_answer'],
+    );
+    final correctAns = _selectedKey(
+      q['score_item']?['correct_answer'] ?? q['correct_answer'],
+    );
+    final timeSpent =
+        (q['score_item']?['time_spent_seconds'] as num?)?.toInt() ??
+        (q['response']?['time_spent_seconds'] as num?)?.toInt() ??
+        0;
     final score = q['score_item']?['score'];
     final statement = q['question_statement']?.toString() ?? '';
     final explanation = q['explanation']?.toString();
@@ -528,34 +654,66 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: const BoxDecoration(
               color: AppColors.paper,
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: outcomeColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: outcomeColor.withOpacity(0.3)),
                   ),
-                  child: Text(outcomeLabel,
-                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: outcomeColor)),
+                  child: Text(
+                    outcomeLabel,
+                    style: AppTypography.eyebrowSmall.copyWith(
+                      fontSize: 10,
+                      color: outcomeColor,
+                      letterSpacing: 0,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                Text("Q${index + 1}",
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                Text(
+                  "Q${index + 1}",
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 if (timeSpent > 0) ...[
                   const SizedBox(width: 8),
-                  const Icon(Icons.timer_outlined, size: 12, color: AppColors.muted),
+                  const Icon(
+                    Icons.timer_outlined,
+                    size: 12,
+                    color: AppColors.muted,
+                  ),
                   const SizedBox(width: 2),
-                  Text("${timeSpent}s",
-                      style: const TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.bold)),
+                  Text(
+                    "${timeSpent}s",
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
                 const Spacer(),
                 if (score != null)
-                  Text("${double.tryParse(score.toString())?.toStringAsFixed(2) ?? score} pts",
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  Text(
+                    "${double.tryParse(score.toString())?.toStringAsFixed(2) ?? score} pts",
+                    style: AppTypography.eyebrowLarge.copyWith(
+                      fontSize: 11,
+                      color: AppColors.ink,
+                      letterSpacing: 0,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -569,21 +727,41 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                 MarkdownBody(
                   data: statement,
                   styleSheet: MarkdownStyleSheet(
-                    p: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink, height: 1.45),
+                    p: AppTypography.body.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink,
+                      height: 1.45,
+                    ),
                   ),
                 ),
-                if (supplementary != null && supplementary.trim().isNotEmpty) ...[
+                if (supplementary != null &&
+                    supplementary.trim().isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(10)),
-                    child: Text(supplementary,
-                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontStyle: FontStyle.italic)),
+                    decoration: BoxDecoration(
+                      color: AppColors.paper,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      supplementary,
+                      style: AppTypography.body.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
                 ],
                 if (prompt != null && prompt.trim().isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(prompt, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                  Text(
+                    prompt,
+                    style: AppTypography.body.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink,
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 14),
 
@@ -595,19 +773,22 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                   final isCorrect = correctAns == key;
                   return Container(
                     margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: isCorrect
                           ? AppColors.emerald.withOpacity(0.05)
                           : isSelected
-                              ? AppColors.berry.withOpacity(0.05)
-                              : Colors.white,
+                          ? AppColors.berry.withOpacity(0.05)
+                          : Colors.white,
                       border: Border.all(
                         color: isCorrect
                             ? AppColors.emerald
                             : isSelected
-                                ? AppColors.berry
-                                : AppColors.line,
+                            ? AppColors.berry
+                            : AppColors.line,
                         width: 1.5,
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -619,34 +800,56 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                           height: 24,
                           width: 24,
                           decoration: BoxDecoration(
-                            color: isCorrect ? AppColors.emerald : isSelected ? AppColors.berry : AppColors.paper,
+                            color: isCorrect
+                                ? AppColors.emerald
+                                : isSelected
+                                ? AppColors.berry
+                                : AppColors.paper,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Center(
-                            child: Text(key,
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: (isCorrect || isSelected) ? Colors.white : AppColors.ink)),
+                            child: Text(
+                              key,
+                              style: AppTypography.eyebrowSmall.copyWith(
+                                fontSize: 10,
+                                color: (isCorrect || isSelected)
+                                    ? Colors.white
+                                    : AppColors.ink,
+                                letterSpacing: 0,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.only(top: 3.0),
-                            child: Text(text,
-                                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                            child: Text(
+                              text,
+                              style: AppTypography.body.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.ink,
+                              ),
+                            ),
                           ),
                         ),
                         if (isCorrect)
                           const Padding(
                             padding: EdgeInsets.only(top: 4.0),
-                            child: Icon(Icons.check_rounded, color: AppColors.emerald, size: 16),
+                            child: Icon(
+                              Icons.check_rounded,
+                              color: AppColors.emerald,
+                              size: 16,
+                            ),
                           )
                         else if (isSelected)
                           const Padding(
                             padding: EdgeInsets.only(top: 4.0),
-                            child: Icon(Icons.close_rounded, color: AppColors.berry, size: 16),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: AppColors.berry,
+                              size: 16,
+                            ),
                           ),
                       ],
                     ),
@@ -660,25 +863,34 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.civic.withOpacity(0.04),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.civic.withOpacity(0.2)),
+                      border: Border.all(
+                        color: AppColors.civic.withOpacity(0.2),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.lightbulb_outline_rounded, size: 14, color: AppColors.civic),
+                            Icon(
+                              Icons.lightbulb_outline_rounded,
+                              size: 14,
+                              color: AppColors.civic,
+                            ),
                             const SizedBox(width: 6),
-                            Text("EXPLANATION",
-                                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800,
-                                    color: AppColors.civic, letterSpacing: 0.5)),
+                            Text(
+                              "EXPLANATION",
+                              style: AppTypography.eyebrowSmall.copyWith(
+                                color: AppColors.civic,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         MarkdownBody(
                           data: explanation,
                           styleSheet: MarkdownStyleSheet(
-                            p: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, height: 1.45),
+                            p: AppTypography.body.copyWith(height: 1.45),
                           ),
                         ),
                       ],
@@ -696,20 +908,24 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
   // ─── Topics ────────────────────────────────────────────────────────────────
 
   Widget _buildTopics(Map<String, dynamic> review) {
-    final breakdowns = (review['topic_breakdowns'] as List? ?? [])
-        .map((t) => t as Map<String, dynamic>)
-        .toList()
-      ..sort((a, b) {
-        final aAcc = double.tryParse(a['accuracy']?.toString() ?? '0') ?? 0;
-        final bAcc = double.tryParse(b['accuracy']?.toString() ?? '0') ?? 0;
-        return aAcc.compareTo(bAcc);
-      });
+    final breakdowns =
+        (review['topic_breakdowns'] as List? ?? [])
+            .map((t) => t as Map<String, dynamic>)
+            .toList()
+          ..sort((a, b) {
+            final aAcc = double.tryParse(a['accuracy']?.toString() ?? '0') ?? 0;
+            final bAcc = double.tryParse(b['accuracy']?.toString() ?? '0') ?? 0;
+            return aAcc.compareTo(bAcc);
+          });
 
     if (breakdowns.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text("No topic breakdowns available.", style: TextStyle(color: AppColors.muted)),
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            "No topic breakdowns available.",
+            style: AppTypography.body,
+          ),
         ),
       );
     }
@@ -717,19 +933,33 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Topic Performance Heatmap", style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          "Topic Performance Heatmap",
+          style: AppTypography.sectionHeader.copyWith(fontSize: 16),
+        ),
         const SizedBox(height: 4),
-        const Text("Sorted weakest to strongest",
-            style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.bold)),
+        Text(
+          "Sorted weakest to strongest",
+          style: AppTypography.caption.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 16),
         ...breakdowns.map((t) {
-          final name = t['taxonomy_name']?.toString() ?? t['question_nature_name']?.toString() ?? 'General';
+          final name =
+              t['taxonomy_name']?.toString() ??
+              t['question_nature_name']?.toString() ??
+              'General';
           final acc = double.tryParse(t['accuracy']?.toString() ?? '0') ?? 0;
           final pct = (acc <= 1 ? acc * 100 : acc).clamp(0.0, 100.0);
           final correct = t['correct_count'] as int? ?? 0;
           final total = t['total_questions'] as int? ?? 0;
-          final avgTime = double.tryParse(t['avg_time_seconds']?.toString() ?? '0') ?? 0;
-          final barColor = pct < 50 ? AppColors.berry : (pct < 70 ? AppColors.saffron : AppColors.emerald);
+          final avgTime =
+              double.tryParse(t['avg_time_seconds']?.toString() ?? '0') ?? 0;
+          final barColor = pct < 50
+              ? AppColors.berry
+              : (pct < 70 ? AppColors.saffron : AppColors.emerald);
 
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
@@ -742,15 +972,30 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(name, style: Theme.of(context).textTheme.titleMedium,
-                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        name,
+                        style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                          color: barColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                      child: Text("${pct.round()}% Acc",
-                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: barColor)),
+                        color: barColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "${pct.round()}% Acc",
+                        style: AppTypography.eyebrowLarge.copyWith(
+                          fontSize: 11,
+                          color: barColor,
+                          letterSpacing: 0,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -765,8 +1010,10 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text("$correct/$total Correct  ·  Avg ${avgTime.round()}s/question",
-                    style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+                Text(
+                  "$correct/$total Correct  ·  Avg ${avgTime.round()}s/question",
+                  style: AppTypography.caption,
+                ),
               ],
             ),
           );
@@ -778,44 +1025,82 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
   // ─── Time ──────────────────────────────────────────────────────────────────
 
   Widget _buildTime(Map<String, dynamic> review) {
-    final questions = (review['questions'] as List? ?? []).map((q) => q as Map<String, dynamic>).toList();
-    final durationMinutes = (review['test_template']?['duration_minutes'] as int?) ?? 60;
+    final questions = (review['questions'] as List? ?? [])
+        .map((q) => q as Map<String, dynamic>)
+        .toList();
+    final durationMinutes =
+        (review['test_template']?['duration_minutes'] as int?) ?? 60;
 
     final totalTime = questions.fold<int>(0, (sum, q) {
       return sum +
           ((q['score_item']?['time_spent_seconds'] as num?)?.toInt() ??
-              (q['response']?['time_spent_seconds'] as num?)?.toInt() ?? 0);
+              (q['response']?['time_spent_seconds'] as num?)?.toInt() ??
+              0);
     });
     final avgTime = questions.isNotEmpty ? totalTime / questions.length : 0;
-    final maxTime = questions.map((q) {
-      return (q['score_item']?['time_spent_seconds'] as num?)?.toInt() ??
-          (q['response']?['time_spent_seconds'] as num?)?.toInt() ?? 0;
-    }).fold<int>(0, (a, b) => a > b ? a : b);
+    final maxTime = questions
+        .map((q) {
+          return (q['score_item']?['time_spent_seconds'] as num?)?.toInt() ??
+              (q['response']?['time_spent_seconds'] as num?)?.toInt() ??
+              0;
+        })
+        .fold<int>(0, (a, b) => a > b ? a : b);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Time Analysis", style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          "Time Analysis",
+          style: AppTypography.sectionHeader.copyWith(fontSize: 16),
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _timeCard("Duration", "$durationMinutes min", Icons.timer_outlined, AppColors.civic)),
+            Expanded(
+              child: _timeCard(
+                "Duration",
+                "$durationMinutes min",
+                Icons.timer_outlined,
+                AppColors.civic,
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _timeCard("Spent", "${(totalTime / 60).toStringAsFixed(1)} min", Icons.timer, AppColors.saffron)),
+            Expanded(
+              child: _timeCard(
+                "Spent",
+                "${(totalTime / 60).toStringAsFixed(1)} min",
+                Icons.timer,
+                AppColors.saffron,
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _timeCard("Avg/Q", "${avgTime.toStringAsFixed(0)}s", Icons.speed_rounded, AppColors.brand)),
+            Expanded(
+              child: _timeCard(
+                "Avg/Q",
+                "${avgTime.toStringAsFixed(0)}s",
+                Icons.speed_rounded,
+                AppColors.brand,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 20),
-        Text("Per-Question Time", style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          "Per-Question Time",
+          style: AppTypography.sectionHeader.copyWith(fontSize: 13),
+        ),
         const SizedBox(height: 12),
         ...questions.asMap().entries.map((entry) {
           final idx = entry.key;
           final q = entry.value;
-          final timeSpent = (q['score_item']?['time_spent_seconds'] as num?)?.toInt() ??
-              (q['response']?['time_spent_seconds'] as num?)?.toInt() ?? 0;
+          final timeSpent =
+              (q['score_item']?['time_spent_seconds'] as num?)?.toInt() ??
+              (q['response']?['time_spent_seconds'] as num?)?.toInt() ??
+              0;
           final outcome = q['score_item']?['outcome'] as String?;
-          final barPct = maxTime > 0 ? (timeSpent / maxTime).clamp(0.0, 1.0) : 0.0;
+          final barPct = maxTime > 0
+              ? (timeSpent / maxTime).clamp(0.0, 1.0)
+              : 0.0;
           Color barColor = AppColors.muted;
           if (outcome == 'correct') barColor = AppColors.emerald;
           if (outcome == 'incorrect') barColor = AppColors.berry;
@@ -826,8 +1111,13 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
               children: [
                 SizedBox(
                   width: 28,
-                  child: Text("Q${idx + 1}",
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.muted)),
+                  child: Text(
+                    "Q${idx + 1}",
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 Expanded(
                   child: Stack(
@@ -835,14 +1125,18 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                       Container(
                         height: 20,
                         decoration: BoxDecoration(
-                            color: AppColors.line.withOpacity(0.3), borderRadius: BorderRadius.circular(4)),
+                          color: AppColors.line.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                       FractionallySizedBox(
                         widthFactor: barPct,
                         child: Container(
                           height: 20,
                           decoration: BoxDecoration(
-                              color: barColor.withOpacity(0.7), borderRadius: BorderRadius.circular(4)),
+                            color: barColor.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
                     ],
@@ -851,9 +1145,14 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 32,
-                  child: Text("${timeSpent}s",
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.muted),
-                      textAlign: TextAlign.right),
+                  child: Text(
+                    "${timeSpent}s",
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
                 ),
               ],
             ),
@@ -871,9 +1170,14 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 6),
-          Text(value,
-              style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink)),
-          Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.bold)),
+          Text(value, style: AppTypography.statValue.copyWith(fontSize: 14)),
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -888,20 +1192,34 @@ class _SPScoreGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = percentage >= 70 ? AppColors.emerald : percentage >= 40 ? AppColors.saffron : AppColors.berry;
+    final color = percentage >= 70
+        ? AppColors.emerald
+        : percentage >= 40
+        ? AppColors.saffron
+        : AppColors.berry;
     return SizedBox(
       height: 100,
       width: 100,
       child: CustomPaint(
-        painter: _SPGaugePainter(percentage: percentage.clamp(0.0, 100.0), color: color),
+        painter: _SPGaugePainter(
+          percentage: percentage.clamp(0.0, 100.0),
+          color: color,
+        ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("${percentage.round()}%",
-                  style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.ink)),
-              const Text("score",
-                  style: TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.bold)),
+              Text(
+                "${percentage.round()}%",
+                style: AppTypography.statValue.copyWith(fontSize: 20),
+              ),
+              Text(
+                "score",
+                style: AppTypography.caption.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ),
@@ -939,5 +1257,6 @@ class _SPGaugePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SPGaugePainter old) => old.percentage != percentage || old.color != color;
+  bool shouldRepaint(_SPGaugePainter old) =>
+      old.percentage != percentage || old.color != color;
 }

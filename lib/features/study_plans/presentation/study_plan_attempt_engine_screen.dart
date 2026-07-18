@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -9,17 +8,22 @@ import '../data/study_plan_service.dart';
 import '../models/study_plan_models.dart';
 import 'study_plan_result_screen.dart';
 
-
 class StudyPlanAttemptEngineScreen extends StatefulWidget {
   final int attemptId;
   final int planItemId;
-  const StudyPlanAttemptEngineScreen({super.key, required this.attemptId, required this.planItemId});
+  const StudyPlanAttemptEngineScreen({
+    super.key,
+    required this.attemptId,
+    required this.planItemId,
+  });
 
   @override
-  State<StudyPlanAttemptEngineScreen> createState() => _StudyPlanAttemptEngineScreenState();
+  State<StudyPlanAttemptEngineScreen> createState() =>
+      _StudyPlanAttemptEngineScreenState();
 }
 
-class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScreen> {
+class _StudyPlanAttemptEngineScreenState
+    extends State<StudyPlanAttemptEngineScreen> {
   late StudyPlanService _service;
   bool _loading = true;
   String? _error;
@@ -55,12 +59,17 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
 
     try {
       final paper = await _service.getStudyPlanAttemptPaper(widget.attemptId);
-      
+
       // If result already submitted, exit and go back
       if (paper.status != "in_progress" && paper.result != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Test already submitted. Score: ${paper.result!['score']}/${paper.result!['max_score']}"), backgroundColor: AppColors.emerald),
+            SnackBar(
+              content: Text(
+                "Test already submitted. Score: ${paper.result!['score']}/${paper.result!['max_score']}",
+              ),
+              backgroundColor: AppColors.emerald,
+            ),
           );
           Navigator.pop(context);
         }
@@ -116,7 +125,10 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
   Future<void> _autoSubmit() async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Time expired! Submitting study plan test..."), backgroundColor: AppColors.berry),
+      const SnackBar(
+        content: Text("Time expired! Submitting study plan test..."),
+        backgroundColor: AppColors.berry,
+      ),
     );
     try {
       await _service.submitStudyPlanAttempt(widget.attemptId);
@@ -135,7 +147,8 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
   // Key selector
   String _optionKey(dynamic option, int index) {
     if (option is Map) {
-      final key = option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
+      final key =
+          option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
       if (key != null) return key.toString();
     }
     return String.fromCharCode(65 + index);
@@ -144,7 +157,11 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
   // Text selector
   String _optionText(dynamic option, int index) {
     if (option is Map) {
-      final text = option['text'] ?? option['label'] ?? option['value'] ?? option['statement'];
+      final text =
+          option['text'] ??
+          option['label'] ??
+          option['value'] ??
+          option['statement'];
       if (text != null) return text.toString();
     }
     if (option != null) return option.toString();
@@ -192,14 +209,27 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Submit Test", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
-          content: const Text("Submit this study plan test? Your weekly progress will sync on submission."),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            "Submit Test",
+            style: AppTypography.cardTitle.copyWith(fontSize: 16),
+          ),
+          content: const Text(
+            "Submit this study plan test? Your weekly progress will sync on submission.",
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("CANCEL"),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text("SUBMIT TEST", style: TextStyle(color: AppColors.civic)),
+              child: const Text(
+                "SUBMIT TEST",
+                style: TextStyle(color: AppColors.civic),
+              ),
             ),
           ],
         );
@@ -218,11 +248,16 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
       final resultId = await _service.submitStudyPlanAttempt(widget.attemptId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Mock test submitted successfully!"), backgroundColor: AppColors.emerald),
+          const SnackBar(
+            content: Text("Mock test submitted successfully!"),
+            backgroundColor: AppColors.emerald,
+          ),
         );
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => StudyPlanResultScreen(resultId: resultId)),
+          MaterialPageRoute(
+            builder: (_) => StudyPlanResultScreen(resultId: resultId),
+          ),
         );
       }
     } catch (e) {
@@ -232,7 +267,6 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
       });
       _startTimer();
     }
-
   }
 
   @override
@@ -248,7 +282,9 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
     final activeQResp = _responses[activeQ.id] ?? {};
 
     final totalQ = paper.questions.length;
-    final answeredQ = _responses.values.where((r) => r['status'] == 'answered').length;
+    final answeredQ = _responses.values
+        .where((r) => r['status'] == 'answered')
+        .length;
     final reviewQ = _responses.values.where((r) => r['marked'] == true).length;
 
     return Scaffold(
@@ -256,19 +292,26 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
       appBar: AppBar(
         title: Text(
           paper.testTemplate.title,
-          style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800),
+          style: AppTypography.sectionHeader.copyWith(fontSize: 14),
         ),
         backgroundColor: Colors.white,
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: AppColors.ink,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Text(
               _formattedTime(_remainingSeconds),
-              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+              style: AppTypography.eyebrowSmall.copyWith(
+                color: Colors.white,
+                fontSize: 11,
+                letterSpacing: 0,
+              ),
             ),
-          )
+          ),
         ],
       ),
       endDrawer: Drawer(
@@ -283,7 +326,14 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Center(
-                child: Text(_statusMessage!, style: const TextStyle(fontSize: 10, color: AppColors.civic, fontWeight: FontWeight.bold)),
+                child: Text(
+                  _statusMessage!,
+                  style: AppTypography.eyebrowSmall.copyWith(
+                    color: AppColors.civic,
+                    fontSize: 10,
+                    letterSpacing: 0,
+                  ),
+                ),
               ),
             ),
 
@@ -294,19 +344,41 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildCompactStatBadge("${_activeIndex + 1}/$totalQ", "Question", Colors.grey[200]!, AppColors.ink),
-                _buildCompactStatBadge(answeredQ.toString(), "Done", AppColors.emerald.withOpacity(0.1), AppColors.emerald),
-                _buildCompactStatBadge(reviewQ.toString(), "Review", AppColors.saffron.withOpacity(0.1), AppColors.saffron),
+                _buildCompactStatBadge(
+                  "${_activeIndex + 1}/$totalQ",
+                  "Question",
+                  Colors.grey[200]!,
+                  AppColors.ink,
+                ),
+                _buildCompactStatBadge(
+                  answeredQ.toString(),
+                  "Done",
+                  AppColors.emerald.withOpacity(0.1),
+                  AppColors.emerald,
+                ),
+                _buildCompactStatBadge(
+                  reviewQ.toString(),
+                  "Review",
+                  AppColors.saffron.withOpacity(0.1),
+                  AppColors.saffron,
+                ),
                 Builder(
                   builder: (context) => InkWell(
                     onTap: () => Scaffold.of(context).openEndDrawer(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.civic.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.grid_view_rounded, size: 14, color: AppColors.civic),
+                      child: const Icon(
+                        Icons.grid_view_rounded,
+                        size: 14,
+                        color: AppColors.civic,
+                      ),
                     ),
                   ),
                 ),
@@ -328,12 +400,19 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                       children: [
                         Text(
                           "QUESTION ${_activeIndex + 1}",
-                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted),
+                          style: AppTypography.eyebrowLarge.copyWith(
+                            fontSize: 11,
+                            color: AppColors.muted,
+                            letterSpacing: 0,
+                          ),
                         ),
                         const Spacer(),
                         Text(
                           "+${activeQ.marks} Marks",
-                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.civic),
+                          style: AppTypography.eyebrowLarge.copyWith(
+                            fontSize: 10,
+                            letterSpacing: 0,
+                          ),
                         ),
                       ],
                     ),
@@ -344,11 +423,17 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                     MarkdownBody(
                       data: activeQ.questionStatement,
                       styleSheet: MarkdownStyleSheet(
-                        p: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink, height: 1.45),
+                        p: AppTypography.body.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink,
+                          height: 1.45,
+                        ),
                       ),
                     ),
 
-                    if (activeQ.supplementaryStatement != null && activeQ.supplementaryStatement!.trim().isNotEmpty) ...[
+                    if (activeQ.supplementaryStatement != null &&
+                        activeQ.supplementaryStatement!.trim().isNotEmpty) ...[
                       const SizedBox(height: 14),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -359,13 +444,18 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                         child: MarkdownBody(
                           data: activeQ.supplementaryStatement!,
                           styleSheet: MarkdownStyleSheet(
-                            p: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, height: 1.4, fontStyle: FontStyle.italic),
+                            p: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              height: 1.4,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ),
                       ),
                     ],
 
-                    if (activeQ.questionPrompt != null && activeQ.questionPrompt!.trim().isNotEmpty) ...[
+                    if (activeQ.questionPrompt != null &&
+                        activeQ.questionPrompt!.trim().isNotEmpty) ...[
                       const SizedBox(height: 14),
                       Container(
                         width: double.infinity,
@@ -373,11 +463,17 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                         decoration: BoxDecoration(
                           color: AppColors.civic.withOpacity(0.04),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.civic.withOpacity(0.1)),
+                          border: Border.all(
+                            color: AppColors.civic.withOpacity(0.1),
+                          ),
                         ),
                         child: Text(
                           activeQ.questionPrompt!,
-                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.civic),
+                          style: AppTypography.body.copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.civic,
+                          ),
                         ),
                       ),
                     ],
@@ -402,7 +498,9 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                   children: [
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         side: const BorderSide(color: AppColors.line),
                       ),
@@ -413,12 +511,18 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                               });
                             }
                           : null,
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: AppColors.ink),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 14,
+                        color: AppColors.ink,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         side: const BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
@@ -429,16 +533,25 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                           marked: false,
                         );
                       },
-                      child: Text("SKIP", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.ink)),
+                      child: Text(
+                        "SKIP",
+                        style: AppTypography.button.copyWith(
+                          fontSize: 11,
+                          color: AppColors.ink,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         side: const BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
-                        final currentMarked = activeQResp['marked'] as bool? ?? false;
+                        final currentMarked =
+                            activeQResp['marked'] as bool? ?? false;
                         _saveResponse(
                           question: activeQ,
                           selectedAnswer: activeQResp['selectedAnswer'],
@@ -447,7 +560,9 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                         );
                       },
                       child: Icon(
-                        activeQResp['marked'] == true ? Icons.star_rounded : Icons.star_outline_rounded,
+                        activeQResp['marked'] == true
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
                         size: 14,
                         color: AppColors.saffron,
                       ),
@@ -456,7 +571,9 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: _activeIndex < totalQ - 1
                       ? () {
@@ -475,21 +592,45 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
     );
   }
 
-  Widget _buildCompactStatBadge(String count, String label, Color bg, Color text) {
+  Widget _buildCompactStatBadge(
+    String count,
+    String label,
+    Color bg,
+    Color text,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
         children: [
-          Text(count, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: text)),
+          Text(
+            count,
+            style: AppTypography.eyebrowLarge.copyWith(
+              fontSize: 11,
+              color: text,
+              letterSpacing: 0,
+            ),
+          ),
           const SizedBox(width: 4),
-          Text(label, style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: text.withOpacity(0.8))),
+          Text(
+            label,
+            style: AppTypography.eyebrowSmall.copyWith(
+              color: text.withOpacity(0.8),
+              letterSpacing: 0,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOptionsGrid(StudyPlanQuestion question, Map<String, dynamic> activeResp) {
+  Widget _buildOptionsGrid(
+    StudyPlanQuestion question,
+    Map<String, dynamic> activeResp,
+  ) {
     final options = question.options;
     final selectedKey = activeResp['selectedAnswer']?.toString();
 
@@ -516,7 +657,9 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.civic.withOpacity(0.05) : Colors.white,
+              color: isSelected
+                  ? AppColors.civic.withOpacity(0.05)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected ? AppColors.civic : AppColors.line,
@@ -535,7 +678,11 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                   child: Center(
                     child: Text(
                       key,
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: isSelected ? Colors.white : AppColors.ink),
+                      style: AppTypography.eyebrowLarge.copyWith(
+                        fontSize: 11,
+                        color: isSelected ? Colors.white : AppColors.ink,
+                        letterSpacing: 0,
+                      ),
                     ),
                   ),
                 ),
@@ -543,7 +690,11 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                 Expanded(
                   child: Text(
                     _optionText(option, index),
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink),
+                    style: AppTypography.body.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink,
+                    ),
                   ),
                 ),
               ],
@@ -563,14 +714,21 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
           child: Center(
             child: Text(
               "Questions Palette",
-              style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: AppTypography.title.copyWith(
+                color: Colors.white,
+                fontSize: 18,
+              ),
             ),
           ),
         ),
         Expanded(
           child: GridView.builder(
             padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, mainAxisSpacing: 8, crossAxisSpacing: 8),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+            ),
             itemCount: totalQ,
             itemBuilder: (context, index) {
               final q = _paper!.questions[index];
@@ -605,9 +763,19 @@ class _StudyPlanAttemptEngineScreenState extends State<StudyPlanAttemptEngineScr
                   });
                 },
                 child: Container(
-                  decoration: BoxDecoration(color: bg, border: Border.all(color: border, width: 1.5), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    border: Border.all(color: border, width: 1.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Center(
-                    child: Text((index + 1).toString(), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: text)),
+                    child: Text(
+                      (index + 1).toString(),
+                      style: AppTypography.cardTitle.copyWith(
+                        fontSize: 13,
+                        color: text,
+                      ),
+                    ),
                   ),
                 ),
               );
