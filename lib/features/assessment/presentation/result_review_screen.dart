@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -40,11 +39,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   // Manual evaluation form state
   int? _editingAnswerId;
   final TextEditingController _manualScoreController = TextEditingController();
-  final TextEditingController _manualMaxScoreController = TextEditingController();
-  final TextEditingController _manualFeedbackController = TextEditingController();
-  final TextEditingController _manualCheckedCopyUrlController = TextEditingController();
-  final TextEditingController _manualStrengthsController = TextEditingController();
-  final TextEditingController _manualWeaknessesController = TextEditingController();
+  final TextEditingController _manualMaxScoreController =
+      TextEditingController();
+  final TextEditingController _manualFeedbackController =
+      TextEditingController();
+  final TextEditingController _manualCheckedCopyUrlController =
+      TextEditingController();
+  final TextEditingController _manualStrengthsController =
+      TextEditingController();
+  final TextEditingController _manualWeaknessesController =
+      TextEditingController();
   bool _isSavingManual = false;
   final Set<int> _evaluatingQuestionIds = {};
 
@@ -139,7 +143,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       List<Map<String, dynamic>> nodes = [];
       try {
         if (review.testTemplate.testType == 'mains_test') {
-          nodes = await _service.getMainsTaxonomyNodes(review.testTemplate.examId);
+          nodes = await _service.getMainsTaxonomyNodes(
+            review.testTemplate.examId,
+          );
         } else {
           nodes = await _service.getTaxonomyNodes(review.testTemplate.examId);
         }
@@ -149,7 +155,13 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
       final bookmarksList = await _service.getBookmarks();
       final bookmarkedIds = bookmarksList
-          .map((b) => int.tryParse((b as Map<String, dynamic>)['question_id']?.toString() ?? '') ?? 0)
+          .map(
+            (b) =>
+                int.tryParse(
+                  (b as Map<String, dynamic>)['question_id']?.toString() ?? '',
+                ) ??
+                0,
+          )
           .where((id) => id != 0)
           .toSet();
 
@@ -175,7 +187,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     final userId = user['id'];
 
     return ['admin', 'moderator', 'evaluator', 'mentor'].contains(userRole) ||
-        (userId != null && review.attempt.userId == int.tryParse(userId.toString()));
+        (userId != null &&
+            review.attempt.userId == int.tryParse(userId.toString()));
   }
 
   void _startManualEvaluation(TestQuestionItem question) {
@@ -183,12 +196,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     if (response == null) return;
     setState(() {
       _editingAnswerId = response.id;
-      _manualScoreController.text = response.score != null ? response.score!.toStringAsFixed(1) : "";
-      _manualMaxScoreController.text = response.maxScore != null ? response.maxScore!.toStringAsFixed(0) : question.marks.toStringAsFixed(0);
+      _manualScoreController.text = response.score != null
+          ? response.score!.toStringAsFixed(1)
+          : "";
+      _manualMaxScoreController.text = response.maxScore != null
+          ? response.maxScore!.toStringAsFixed(0)
+          : question.marks.toStringAsFixed(0);
       _manualFeedbackController.text = response.feedback ?? "";
       _manualCheckedCopyUrlController.text = response.checkedCopyUrl ?? "";
-      _manualStrengthsController.text = response.strengths != null ? response.strengths!.join("\n") : "";
-      _manualWeaknessesController.text = response.weaknesses != null ? response.weaknesses!.join("\n") : "";
+      _manualStrengthsController.text = response.strengths != null
+          ? response.strengths!.join("\n")
+          : "";
+      _manualWeaknessesController.text = response.weaknesses != null
+          ? response.weaknesses!.join("\n")
+          : "";
     });
   }
 
@@ -201,17 +222,22 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   Future<void> _handleSaveManualEvaluation() async {
     if (_editingAnswerId == null) return;
     final score = double.tryParse(_manualScoreController.text.trim());
-    final maxScore = double.tryParse(_manualMaxScoreController.text.trim()) ?? 10.0;
+    final maxScore =
+        double.tryParse(_manualMaxScoreController.text.trim()) ?? 10.0;
 
     if (score == null || score < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter a valid non-negative score.")),
+        const SnackBar(
+          content: Text("Please enter a valid non-negative score."),
+        ),
       );
       return;
     }
     if (score > maxScore) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Score cannot exceed maximum marks ($maxScore).")),
+        SnackBar(
+          content: Text("Score cannot exceed maximum marks ($maxScore)."),
+        ),
       );
       return;
     }
@@ -236,8 +262,12 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         mainsAnswerId: _editingAnswerId!,
         score: score,
         maxScore: maxScore,
-        feedback: _manualFeedbackController.text.trim().isNotEmpty ? _manualFeedbackController.text.trim() : null,
-        checkedCopyUrl: _manualCheckedCopyUrlController.text.trim().isNotEmpty ? _manualCheckedCopyUrlController.text.trim() : null,
+        feedback: _manualFeedbackController.text.trim().isNotEmpty
+            ? _manualFeedbackController.text.trim()
+            : null,
+        checkedCopyUrl: _manualCheckedCopyUrlController.text.trim().isNotEmpty
+            ? _manualCheckedCopyUrlController.text.trim()
+            : null,
         strengths: strengths,
         weaknesses: weaknesses,
       );
@@ -247,9 +277,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       });
       await _loadResult();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to save evaluation: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to save evaluation: $e")));
     } finally {
       setState(() {
         _isSavingManual = false;
@@ -259,7 +289,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
   Future<void> _triggerAiEvaluation(int mainsAnswerId, int questionId) async {
     final apiClient = Provider.of<ApiClient>(context, listen: false);
-    final canAiEvaluate = apiClient.hasEntitlement('assessment.ai_evaluation') ||
+    final canAiEvaluate =
+        apiClient.hasEntitlement('assessment.ai_evaluation') ||
         apiClient.hasEntitlement('assessment.premium_tests');
     if (!canAiEvaluate) {
       _showAiEvaluationPaywall();
@@ -277,9 +308,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       if (e is ApiException && e.code == 'ai_evaluation_requires_premium') {
         _showAiEvaluationPaywall();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("AI Evaluation failed: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("AI Evaluation failed: $e")));
       }
     } finally {
       setState(() {
@@ -293,45 +324,56 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
               const Icon(Icons.lock_outline_rounded, color: Colors.indigo),
               const SizedBox(width: 10),
               Text(
                 "Premium Feature",
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+                style: AppTypography.cardTitle.copyWith(fontSize: 16),
               ),
             ],
           ),
           content: Text(
             "AI-based answer evaluation requires an Assessment Premium subscription. Test creation and taking stays free — this only gates AI review of your answers.",
-            style: GoogleFonts.inter(fontSize: 13, height: 1.4),
+            style: AppTypography.body.copyWith(
+              fontSize: 13,
+              color: AppColors.ink,
+              height: 1.4,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
                 "Cancel",
-                style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
+                style: AppTypography.button.copyWith(color: Colors.grey),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               onPressed: () async {
                 Navigator.pop(context);
                 final url = Uri.parse("${ApiConstants.webAppUrl}/pricing");
-                if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                if (!await launchUrl(
+                  url,
+                  mode: LaunchMode.externalApplication,
+                )) {
                   debugPrint("Could not launch $url");
                 }
               },
               child: Text(
                 "View Plans",
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                style: AppTypography.button.copyWith(color: Colors.white),
               ),
             ),
           ],
@@ -342,7 +384,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
   String _optionKey(dynamic option, int index) {
     if (option is Map) {
-      final key = option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
+      final key =
+          option['id'] ?? option['key'] ?? option['value'] ?? option['label'];
       if (key != null) return key.toString();
     }
     return String.fromCharCode(65 + index);
@@ -350,7 +393,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
   String _optionText(dynamic option, int index) {
     if (option is Map) {
-      final text = option['text'] ?? option['label'] ?? option['value'] ?? option['statement'];
+      final text =
+          option['text'] ??
+          option['label'] ??
+          option['value'] ??
+          option['statement'];
       if (text != null) return text.toString();
     }
     if (option != null) return option.toString();
@@ -404,18 +451,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         color: AppColors.civic.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Center(child: Text("🎉", style: TextStyle(fontSize: 26))),
+                      child: const Center(
+                        child: Text("🎉", style: TextStyle(fontSize: 26)),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       "Your result is ready",
-                      style: Theme.of(context).textTheme.displayMedium,
+                      style: AppTypography.title.copyWith(fontSize: 20),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       "Create a free account (takes 10 seconds) to unlock your score, topic-wise breakdown, and full answer review — and save it to your dashboard for good.",
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: AppTypography.body,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
@@ -447,11 +496,18 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.berry,
+                  size: 44,
+                ),
                 const SizedBox(height: 16),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _loadResult, child: const Text("RETRY")),
+                ElevatedButton(
+                  onPressed: _loadResult,
+                  child: const Text("RETRY"),
+                ),
               ],
             ),
           ),
@@ -468,9 +524,12 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           _tourChecked = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) return;
-            if (await AppTourService.shouldShowTour(AppTourService.resultScreenKey)) {
+            if (await AppTourService.shouldShowTour(
+              AppTourService.resultScreenKey,
+            )) {
               await AppTourService.markTourSeen(AppTourService.resultScreenKey);
-              if (mounted) ShowCaseWidget.of(ctx).startShowCase([_tourTabBarKey]);
+              if (mounted)
+                ShowCaseWidget.of(ctx).startShowCase([_tourTabBarKey]);
             }
           });
         }
@@ -479,11 +538,15 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           appBar: AppBar(
             title: Text(
               "Performance Review",
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
+              style: AppTypography.title.copyWith(fontSize: 18),
             ),
             backgroundColor: Colors.white,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: AppColors.ink,
+                size: 18,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -493,7 +556,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               Showcase(
                 key: _tourTabBarKey,
                 title: "Explore Your Results",
-                description: "Switch between Summary, Questions, Topics, and Time Analysis tabs to understand exactly how you performed and where to focus next.",
+                description:
+                    "Switch between Summary, Questions, Topics, and Time Analysis tabs to understand exactly how you performed and where to focus next.",
                 targetBorderRadius: BorderRadius.zero,
                 child: Container(
                   color: Colors.white,
@@ -502,13 +566,29 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildTabChip(_ResultTab.summary, Icons.emoji_events_rounded, "Summary"),
+                        _buildTabChip(
+                          _ResultTab.summary,
+                          Icons.emoji_events_rounded,
+                          "Summary",
+                        ),
                         const SizedBox(width: 8),
-                        _buildTabChip(_ResultTab.questions, Icons.checklist_rounded, "Questions (${review.questions.length})"),
+                        _buildTabChip(
+                          _ResultTab.questions,
+                          Icons.checklist_rounded,
+                          "Questions (${review.questions.length})",
+                        ),
                         const SizedBox(width: 8),
-                        _buildTabChip(_ResultTab.topics, Icons.track_changes_rounded, "Topics"),
+                        _buildTabChip(
+                          _ResultTab.topics,
+                          Icons.track_changes_rounded,
+                          "Topics",
+                        ),
                         const SizedBox(width: 8),
-                        _buildTabChip(_ResultTab.time, Icons.timer_outlined, "Time Analysis"),
+                        _buildTabChip(
+                          _ResultTab.time,
+                          Icons.timer_outlined,
+                          "Time Analysis",
+                        ),
                       ],
                     ),
                   ),
@@ -551,11 +631,15 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         ),
         child: Row(
           children: [
-            Icon(icon, size: 14, color: isActive ? Colors.white : AppColors.muted),
+            Icon(
+              icon,
+              size: 14,
+              color: isActive ? Colors.white : AppColors.muted,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: AppTypography.caption.copyWith(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: isActive ? Colors.white : AppColors.ink,
@@ -582,13 +666,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
   // ─── Tab: Summary ──────────────────
   Widget _buildSummaryTab(ResultReview review, AssessmentResult result) {
-    final pct = result.maxScore > 0 ? (result.score / result.maxScore * 100).clamp(0.0, 100.0) : 0.0;
+    final pct = result.maxScore > 0
+        ? (result.score / result.maxScore * 100).clamp(0.0, 100.0)
+        : 0.0;
     // Rolled up through the full taxonomy tree (same rollup as the Topics tab) so a
     // uniformly weak subject/chapter surfaces here too, not just individually-tagged topics.
-    final weakTopics = _flattenTopicNodes(_buildTopicsTree(review))
-        .where((n) => n.attemptedQuestions > 0 && n.accuracy < 0.6)
-        .toList()
-      ..sort((a, b) => a.accuracy.compareTo(b.accuracy));
+    final weakTopics =
+        _flattenTopicNodes(
+            _buildTopicsTree(review),
+          ).where((n) => n.attemptedQuestions > 0 && n.accuracy < 0.6).toList()
+          ..sort((a, b) => a.accuracy.compareTo(b.accuracy));
 
     final bool mainsPendingEvaluation = review.questions.any(
       (q) =>
@@ -598,9 +685,15 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     );
 
     if (mainsPendingEvaluation) {
-      final mainsAttempted = review.questions.where((q) => q.response != null).toList();
-      final mainsEvaluated = mainsAttempted.where((q) => q.response!.evaluationStatus == 'evaluated').toList();
-      final mainsPending = mainsAttempted.where((q) => q.response!.evaluationStatus != 'evaluated').toList();
+      final mainsAttempted = review.questions
+          .where((q) => q.response != null)
+          .toList();
+      final mainsEvaluated = mainsAttempted
+          .where((q) => q.response!.evaluationStatus == 'evaluated')
+          .toList();
+      final mainsPending = mainsAttempted
+          .where((q) => q.response!.evaluationStatus != 'evaluated')
+          .toList();
       final canEvaluate = _checkCanEvaluate(review);
 
       return Column(
@@ -611,7 +704,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFEEF2FF), Color(0xFFF5F7FF), Color(0xFFEEF2FF)],
+                colors: [
+                  Color(0xFFEEF2FF),
+                  Color(0xFFF5F7FF),
+                  Color(0xFFEEF2FF),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -622,7 +719,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   color: Color(0x06000000),
                   blurRadius: 10,
                   offset: Offset(0, 4),
-                )
+                ),
               ],
             ),
             child: Row(
@@ -643,18 +740,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     children: [
                       Text(
                         "Mains Evaluation Pending",
-                        style: GoogleFonts.plusJakartaSans(
+                        style: AppTypography.cardTitle.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.ink,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "Your subjective answer sheets are successfully registered. You can evaluate them using our AI UPSC Examiner, or submit manual grading scores and upload checked copies.",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.body.copyWith(
                           fontSize: 12,
-                          color: AppColors.muted,
                           height: 1.45,
                         ),
                       ),
@@ -664,15 +759,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         runSpacing: 8,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.civic.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.civic.withOpacity(0.2)),
+                              border: Border.all(
+                                color: AppColors.civic.withOpacity(0.2),
+                              ),
                             ),
                             child: Text(
                               "${mainsEvaluated.length} / ${mainsAttempted.length} Evaluated",
-                              style: GoogleFonts.inter(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.civic,
@@ -680,15 +780,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.saffron.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.saffron.withOpacity(0.2)),
+                              border: Border.all(
+                                color: AppColors.saffron.withOpacity(0.2),
+                              ),
                             ),
                             child: Text(
                               "${mainsPending.length} Awaiting Evaluation",
-                              style: GoogleFonts.inter(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.saffron,
@@ -706,10 +811,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           const SizedBox(height: 24),
           Text(
             "Mains Answer Copies & Grading Checklist",
-            style: GoogleFonts.plusJakartaSans(
+            style: AppTypography.sectionHeader.copyWith(
               fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
               letterSpacing: 0.5,
             ),
           ),
@@ -718,42 +821,63 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: review.questions.length,
-            separatorBuilder: (_, __) => const Divider(color: AppColors.line, height: 24),
+            separatorBuilder: (_, __) =>
+                const Divider(color: AppColors.line, height: 24),
             itemBuilder: (context, idx) {
               final q = review.questions[idx];
               final response = q.response;
               final status = response?.evaluationStatus;
-              final isEvaluating = _evaluatingQuestionIds.contains(q.id) || status == 'ai_evaluating';
+              final isEvaluating =
+                  _evaluatingQuestionIds.contains(q.id) ||
+                  status == 'ai_evaluating';
 
               Widget badge;
               if (response == null) {
                 badge = Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.line,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     "Unattempted",
-                    style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.muted),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 );
               } else if (status == 'evaluated') {
                 badge = Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.emerald.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.emerald.withOpacity(0.3)),
+                    border: Border.all(
+                      color: AppColors.emerald.withOpacity(0.3),
+                    ),
                   ),
                   child: Text(
                     "Score: ${response.score?.toStringAsFixed(1) ?? '?'}/${response.maxScore?.toStringAsFixed(0) ?? q.marks.toStringAsFixed(0)}",
-                    style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.emerald),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.emerald,
+                    ),
                   ),
                 );
               } else if (isEvaluating) {
                 badge = Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.civic.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -761,20 +885,33 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   ),
                   child: Text(
                     "AI Evaluating...",
-                    style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.civic),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.civic,
+                    ),
                   ),
                 );
               } else {
                 badge = Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.saffron.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.saffron.withOpacity(0.3)),
+                    border: Border.all(
+                      color: AppColors.saffron.withOpacity(0.3),
+                    ),
                   ),
                   child: Text(
                     "Pending Evaluation",
-                    style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.saffron),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.saffron,
+                    ),
                   ),
                 );
               }
@@ -786,20 +923,32 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     children: [
                       Text(
                         "Q${idx + 1}",
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted),
+                        style: AppTypography.caption.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       if (q.questionVersion.createdByUserId != null) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.amber.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                            border: Border.all(
+                              color: Colors.amber.withOpacity(0.3),
+                            ),
                           ),
                           child: Text(
                             "Your Question",
-                            style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.amber[800]),
+                            style: AppTypography.caption.copyWith(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.amber[800],
+                            ),
                           ),
                         ),
                       ],
@@ -812,7 +961,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     q.questionVersion.questionStatement,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.body.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppColors.ink,
@@ -827,8 +976,13 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         if (canEvaluate) ...[
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                               side: const BorderSide(color: AppColors.line),
                             ),
                             onPressed: () {
@@ -836,28 +990,51 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               _startManualEvaluation(q);
                             },
                             child: Text(
-                              status == 'evaluated' ? "EDIT MARKS" : "MANUAL MARKS",
-                              style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.ink),
+                              status == 'evaluated'
+                                  ? "EDIT MARKS"
+                                  : "MANUAL MARKS",
+                              style: AppTypography.button.copyWith(
+                                fontSize: 10,
+                                color: AppColors.ink,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
                         ],
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
-                          onPressed: isEvaluating ? null : () => _triggerAiEvaluation(response.id, q.id),
+                          onPressed: isEvaluating
+                              ? null
+                              : () => _triggerAiEvaluation(response.id, q.id),
                           icon: isEvaluating
                               ? const SizedBox(
                                   height: 10,
                                   width: 10,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 1.5),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 1.5,
+                                  ),
                                 )
-                              : const Icon(Icons.auto_awesome_rounded, size: 12),
+                              : const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 12,
+                                ),
                           label: Text(
-                            status == 'evaluated' ? "RE-EVALUATE" : "AI EVALUATE",
-                            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold),
+                            status == 'evaluated'
+                                ? "RE-EVALUATE"
+                                : "AI EVALUATE",
+                            style: AppTypography.button.copyWith(
+                              fontSize: 10,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -885,7 +1062,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 color: Color(0x15000000),
                 offset: Offset(0, 8),
                 blurRadius: 24,
-              )
+              ),
             ],
           ),
           child: Column(
@@ -907,12 +1084,36 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                             runSpacing: 12,
                             alignment: WrapAlignment.center,
                             children: [
-                              _buildStatBox("🎯", "Score", "${result.score.toStringAsFixed(1)}/${result.maxScore.toStringAsFixed(0)}"),
-                              _buildStatBox("📊", "Accuracy", "${(result.accuracy * 100).round()}%"),
-                              _buildStatBox("✅", "Correct", result.correctCount.toString()),
-                              _buildStatBox("❌", "Incorrect", result.incorrectCount.toString()),
-                              _buildStatBox("⬜", "Skipped", result.unattemptedCount.toString()),
-                              _buildStatBox("⚠️", "Negative", "-${result.negativeMarks.toStringAsFixed(2)}"),
+                              _buildStatBox(
+                                "🎯",
+                                "Score",
+                                "${result.score.toStringAsFixed(1)}/${result.maxScore.toStringAsFixed(0)}",
+                              ),
+                              _buildStatBox(
+                                "📊",
+                                "Accuracy",
+                                "${(result.accuracy * 100).round()}%",
+                              ),
+                              _buildStatBox(
+                                "✅",
+                                "Correct",
+                                result.correctCount.toString(),
+                              ),
+                              _buildStatBox(
+                                "❌",
+                                "Incorrect",
+                                result.incorrectCount.toString(),
+                              ),
+                              _buildStatBox(
+                                "⬜",
+                                "Skipped",
+                                result.unattemptedCount.toString(),
+                              ),
+                              _buildStatBox(
+                                "⚠️",
+                                "Negative",
+                                "-${result.negativeMarks.toStringAsFixed(2)}",
+                              ),
                             ],
                           ),
                         ),
@@ -932,12 +1133,36 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                             spacing: 12,
                             runSpacing: 12,
                             children: [
-                              _buildStatBox("🎯", "Score", "${result.score.toStringAsFixed(1)}/${result.maxScore.toStringAsFixed(0)}"),
-                              _buildStatBox("📊", "Accuracy", "${(result.accuracy * 100).round()}%"),
-                              _buildStatBox("✅", "Correct", result.correctCount.toString()),
-                              _buildStatBox("❌", "Incorrect", result.incorrectCount.toString()),
-                              _buildStatBox("⬜", "Skipped", result.unattemptedCount.toString()),
-                              _buildStatBox("⚠️", "Negative", "-${result.negativeMarks.toStringAsFixed(2)}"),
+                              _buildStatBox(
+                                "🎯",
+                                "Score",
+                                "${result.score.toStringAsFixed(1)}/${result.maxScore.toStringAsFixed(0)}",
+                              ),
+                              _buildStatBox(
+                                "📊",
+                                "Accuracy",
+                                "${(result.accuracy * 100).round()}%",
+                              ),
+                              _buildStatBox(
+                                "✅",
+                                "Correct",
+                                result.correctCount.toString(),
+                              ),
+                              _buildStatBox(
+                                "❌",
+                                "Incorrect",
+                                result.incorrectCount.toString(),
+                              ),
+                              _buildStatBox(
+                                "⬜",
+                                "Skipped",
+                                result.unattemptedCount.toString(),
+                              ),
+                              _buildStatBox(
+                                "⚠️",
+                                "Negative",
+                                "-${result.negativeMarks.toStringAsFixed(2)}",
+                              ),
                             ],
                           ),
                         ),
@@ -950,7 +1175,10 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               if (result.cutoffStatus != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: result.cutoffStatus == 'cleared'
                         ? AppColors.emerald.withOpacity(0.2)
@@ -965,11 +1193,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   ),
                   child: Row(
                     children: [
-                      Text(result.cutoffStatus == 'cleared' ? "🎉" : "📈", style: const TextStyle(fontSize: 18)),
+                      Text(
+                        result.cutoffStatus == 'cleared' ? "🎉" : "📈",
+                        style: const TextStyle(fontSize: 18),
+                      ),
                       const SizedBox(width: 12),
                       Text(
-                        result.cutoffStatus == 'cleared' ? "Cutoff Cleared!" : "Just below cutoff",
-                        style: GoogleFonts.inter(
+                        result.cutoffStatus == 'cleared'
+                            ? "Cutoff Cleared!"
+                            : "Just below cutoff",
+                        style: AppTypography.body.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -985,11 +1218,19 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.leaderboard_rounded, size: 14, color: Colors.white70),
+                    const Icon(
+                      Icons.leaderboard_rounded,
+                      size: 14,
+                      color: Colors.white70,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       "Percentile: ${result.percentileSnapshot!.round()}%ile",
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white70),
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
                 ),
@@ -1010,14 +1251,17 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               ),
               child: Text(
                 review.testTemplate.testType.replaceAll('_', ' ').toUpperCase(),
-                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.civic),
+                style: AppTypography.eyebrowLarge.copyWith(
+                  fontSize: 9,
+                  letterSpacing: 0,
+                ),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 review.testTemplate.title,
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.ink),
+                style: AppTypography.cardTitle.copyWith(fontSize: 13),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1028,18 +1272,24 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
         // Weak Topics summary
         if (weakTopics.isNotEmpty) ...[
-          Text("Priority Revision Areas", style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            "Priority Revision Areas",
+            style: AppTypography.sectionHeader.copyWith(fontSize: 16),
+          ),
           const SizedBox(height: 12),
           ...weakTopics.take(4).map((t) => _buildWeakTopicCard(t)),
           const SizedBox(height: 20),
         ],
 
         // Questions Status Grid
-        Text("Questions Status & Bookmarks", style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          "Questions Status & Bookmarks",
+          style: AppTypography.sectionHeader.copyWith(fontSize: 16),
+        ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           "Tap a cell to review, or tap bookmark to toggle.",
-          style: TextStyle(fontSize: 11, color: AppColors.muted),
+          style: AppTypography.caption.copyWith(fontSize: 11),
         ),
         const SizedBox(height: 12),
         GridView.builder(
@@ -1055,7 +1305,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           itemBuilder: (context, idx) {
             final q = review.questions[idx];
             final outcome = q.scoreItem?['outcome'] as String? ?? 'unattempted';
-            final isBookmarked = _bookmarkedQuestionIds.contains(q.questionVersion.questionId);
+            final isBookmarked = _bookmarkedQuestionIds.contains(
+              q.questionVersion.questionId,
+            );
 
             Color cellBg;
             Color borderCol;
@@ -1092,7 +1344,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   children: [
                     Text(
                       "Q${idx + 1}",
-                      style: GoogleFonts.inter(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: textCol,
@@ -1100,10 +1352,17 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     ),
                     const SizedBox(height: 2),
                     GestureDetector(
-                      onTap: () => _toggleBookmark(q.questionVersion.questionId, q.questionVersion.id),
+                      onTap: () => _toggleBookmark(
+                        q.questionVersion.questionId,
+                        q.questionVersion.id,
+                      ),
                       child: Icon(
-                        isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                        color: isBookmarked ? AppColors.saffron : AppColors.muted,
+                        isBookmarked
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        color: isBookmarked
+                            ? AppColors.saffron
+                            : AppColors.muted,
                         size: 14,
                       ),
                     ),
@@ -1122,10 +1381,13 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.line),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                onPressed: () => setState(() => _activeTab = _ResultTab.questions),
+                onPressed: () =>
+                    setState(() => _activeTab = _ResultTab.questions),
                 child: const Text("REVIEW QUESTIONS"),
               ),
             ),
@@ -1133,7 +1395,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: () {
@@ -1168,12 +1432,19 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           const SizedBox(height: 6),
           Text(
             value,
-            style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+            style: AppTypography.statValue.copyWith(
+              fontSize: 15,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white60),
+            style: AppTypography.caption.copyWith(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: Colors.white60,
+            ),
           ),
         ],
       ),
@@ -1200,7 +1471,10 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 Row(
                   children: [
                     Flexible(
-                      child: Text(node.name, style: Theme.of(context).textTheme.titleMedium),
+                      child: Text(
+                        node.name,
+                        style: AppTypography.cardTitle.copyWith(fontSize: 13),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     _buildTopicLevelBadge(_topicNodeTypeLabel(node.nodeType)),
@@ -1209,12 +1483,12 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 const SizedBox(height: 2),
                 Text(
                   "${(node.accuracy * 100).round()}% accuracy · ${node.totalQuestions} question${node.totalQuestions == 1 ? '' : 's'}",
-                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                  style: AppTypography.caption.copyWith(fontSize: 11),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   "Revise this before your next test.",
-                  style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  style: AppTypography.caption.copyWith(fontSize: 11),
                 ),
               ],
             ),
@@ -1258,13 +1532,28 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildFilterChip(_QuestionFilter.all, "All (${review.questions.length})"),
+              _buildFilterChip(
+                _QuestionFilter.all,
+                "All (${review.questions.length})",
+              ),
               const SizedBox(width: 8),
-              _buildFilterChip(_QuestionFilter.correct, "Correct (${result.correctCount})", color: AppColors.emerald),
+              _buildFilterChip(
+                _QuestionFilter.correct,
+                "Correct (${result.correctCount})",
+                color: AppColors.emerald,
+              ),
               const SizedBox(width: 8),
-              _buildFilterChip(_QuestionFilter.incorrect, "Incorrect (${result.incorrectCount})", color: AppColors.berry),
+              _buildFilterChip(
+                _QuestionFilter.incorrect,
+                "Incorrect (${result.incorrectCount})",
+                color: AppColors.berry,
+              ),
               const SizedBox(width: 8),
-              _buildFilterChip(_QuestionFilter.unattempted, "Skipped (${result.unattemptedCount})", color: AppColors.muted),
+              _buildFilterChip(
+                _QuestionFilter.unattempted,
+                "Skipped (${result.unattemptedCount})",
+                color: AppColors.muted,
+              ),
             ],
           ),
         ),
@@ -1277,10 +1566,13 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
 
           // Check if filtered out
           final outcome = q.scoreItem?['outcome'] as String?;
-          final show = _qFilter == _QuestionFilter.all ||
+          final show =
+              _qFilter == _QuestionFilter.all ||
               (_qFilter == _QuestionFilter.correct && outcome == 'correct') ||
-              (_qFilter == _QuestionFilter.incorrect && outcome == 'incorrect') ||
-              (_qFilter == _QuestionFilter.unattempted && (outcome == null || outcome == 'unattempted'));
+              (_qFilter == _QuestionFilter.incorrect &&
+                  outcome == 'incorrect') ||
+              (_qFilter == _QuestionFilter.unattempted &&
+                  (outcome == null || outcome == 'unattempted'));
 
           if (!show) return const SizedBox.shrink();
 
@@ -1290,7 +1582,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     );
   }
 
-  Widget _buildFilterChip(_QuestionFilter filter, String label, {Color color = AppColors.ink}) {
+  Widget _buildFilterChip(
+    _QuestionFilter filter,
+    String label, {
+    Color color = AppColors.ink,
+  }) {
     final isActive = _qFilter == filter;
     return GestureDetector(
       onTap: () => setState(() => _qFilter = filter),
@@ -1300,11 +1596,14 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         decoration: BoxDecoration(
           color: isActive ? color : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? color : AppColors.line, width: 1.5),
+          border: Border.all(
+            color: isActive ? color : AppColors.line,
+            width: 1.5,
+          ),
         ),
         child: Text(
           label,
-          style: GoogleFonts.inter(
+          style: AppTypography.caption.copyWith(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: isActive ? Colors.white : AppColors.ink,
@@ -1317,10 +1616,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   Widget _buildQuestionCard(TestQuestionItem item, int index) {
     final q = item.questionVersion;
     final outcome = item.scoreItem?['outcome'] as String? ?? 'unattempted';
-    final userSelected = _selectedKey(item.scoreItem?['selected_answer'] ?? item.response?.selectedAnswer);
-    final correctAns = _selectedKey(item.scoreItem?['correct_answer'] ?? q.correctAnswer);
-    final timeSpent = (item.scoreItem?['time_spent_seconds'] as num?)?.toInt() ??
-        item.response?.timeSpentSeconds ?? 0;
+    final userSelected = _selectedKey(
+      item.scoreItem?['selected_answer'] ?? item.response?.selectedAnswer,
+    );
+    final correctAns = _selectedKey(
+      item.scoreItem?['correct_answer'] ?? q.correctAnswer,
+    );
+    final timeSpent =
+        (item.scoreItem?['time_spent_seconds'] as num?)?.toInt() ??
+        item.response?.timeSpentSeconds ??
+        0;
     final score = item.scoreItem?['score'];
 
     Color outcomeColor;
@@ -1354,11 +1659,17 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: const BoxDecoration(
                 color: AppColors.paper,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
               child: Text(
                 "PASSAGE-BASED QUESTION",
-                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5),
+                style: AppTypography.eyebrowSmall.copyWith(
+                  fontSize: 9,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
             Container(
@@ -1373,10 +1684,15 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (item.passage!['title'] != null)
-                    Text(item.passage!['title'].toString(), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    Text(
+                      item.passage!['title'].toString(),
+                      style: AppTypography.cardTitle.copyWith(fontSize: 12),
+                    ),
                   Text(
-                    item.passage!['body']?.toString() ?? item.passage!['content']?.toString() ?? '',
-                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, height: 1.5),
+                    item.passage!['body']?.toString() ??
+                        item.passage!['content']?.toString() ??
+                        '',
+                    style: AppTypography.body.copyWith(fontSize: 12),
                   ),
                 ],
               ),
@@ -1390,12 +1706,18 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               color: AppColors.paper,
               borderRadius: item.passage != null
                   ? BorderRadius.zero
-                  : const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                  : const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: outcomeColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -1403,18 +1725,28 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   ),
                   child: Text(
                     outcomeLabel,
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: outcomeColor),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: outcomeColor,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   "Q${index + 1}",
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 if (item.questionVersion.createdByUserId != null) ...[
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
@@ -1422,38 +1754,65 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     ),
                     child: Text(
                       "Your Question",
-                      style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.amber[800]),
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.amber[800],
+                      ),
                     ),
                   ),
                 ],
                 if (timeSpent > 0) ...[
                   const SizedBox(width: 8),
-                  const Icon(Icons.timer_outlined, size: 12, color: AppColors.muted),
+                  const Icon(
+                    Icons.timer_outlined,
+                    size: 12,
+                    color: AppColors.muted,
+                  ),
                   const SizedBox(width: 2),
                   Text(
                     "${timeSpent}s",
-                    style: const TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.bold),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
                 const Spacer(),
                 if (score != null) ...[
                   Text(
                     "${double.tryParse(score.toString())?.toStringAsFixed(2) ?? score} pts",
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.ink),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.ink,
+                    ),
                   ),
                   const SizedBox(width: 12),
                 ],
                 InkWell(
-                  onTap: () => _toggleBookmark(item.questionVersion.questionId, item.questionVersion.id),
+                  onTap: () => _toggleBookmark(
+                    item.questionVersion.questionId,
+                    item.questionVersion.id,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
-                      color: _bookmarkedQuestionIds.contains(item.questionVersion.questionId)
+                      color:
+                          _bookmarkedQuestionIds.contains(
+                            item.questionVersion.questionId,
+                          )
                           ? AppColors.saffron.withOpacity(0.08)
                           : Colors.transparent,
                       border: Border.all(
-                        color: _bookmarkedQuestionIds.contains(item.questionVersion.questionId)
+                        color:
+                            _bookmarkedQuestionIds.contains(
+                              item.questionVersion.questionId,
+                            )
                             ? AppColors.saffron.withOpacity(0.3)
                             : AppColors.line,
                       ),
@@ -1463,23 +1822,33 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          _bookmarkedQuestionIds.contains(item.questionVersion.questionId)
+                          _bookmarkedQuestionIds.contains(
+                                item.questionVersion.questionId,
+                              )
                               ? Icons.bookmark_rounded
                               : Icons.bookmark_border_rounded,
-                          color: _bookmarkedQuestionIds.contains(item.questionVersion.questionId)
+                          color:
+                              _bookmarkedQuestionIds.contains(
+                                item.questionVersion.questionId,
+                              )
                               ? AppColors.saffron
                               : AppColors.muted,
                           size: 13,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _bookmarkedQuestionIds.contains(item.questionVersion.questionId)
+                          _bookmarkedQuestionIds.contains(
+                                item.questionVersion.questionId,
+                              )
                               ? "Marked for Revision"
                               : "Mark for Revision",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: _bookmarkedQuestionIds.contains(item.questionVersion.questionId)
+                            color:
+                                _bookmarkedQuestionIds.contains(
+                                  item.questionVersion.questionId,
+                                )
                                 ? AppColors.saffron
                                 : AppColors.muted,
                           ),
@@ -1501,10 +1870,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 MarkdownBody(
                   data: q.questionStatement,
                   styleSheet: MarkdownStyleSheet(
-                    p: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink, height: 1.45),
+                    p: AppTypography.body.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink,
+                      height: 1.45,
+                    ),
                   ),
                 ),
-                if (q.supplementaryStatement != null && q.supplementaryStatement!.trim().isNotEmpty) ...[
+                if (q.supplementaryStatement != null &&
+                    q.supplementaryStatement!.trim().isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(10),
@@ -1514,19 +1889,29 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     ),
                     child: Text(
                       q.supplementaryStatement!,
-                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontStyle: FontStyle.italic, height: 1.4),
+                      style: AppTypography.body.copyWith(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
-                if (q.questionPrompt != null && q.questionPrompt!.trim().isNotEmpty) ...[
+                if (q.questionPrompt != null &&
+                    q.questionPrompt!.trim().isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
                     q.questionPrompt!,
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink),
+                    style: AppTypography.body.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),
-                if (item.questionFormat.questionFamily != 'mains_subjective') ...[
+                if (item.questionFormat.questionFamily !=
+                    'mains_subjective') ...[
                   // Options
                   ...q.options.asMap().entries.map((optEntry) {
                     final optIdx = optEntry.key;
@@ -1543,16 +1928,27 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     if (isCorrect) {
                       borderCol = AppColors.emerald;
                       bgCol = AppColors.emerald.withOpacity(0.05);
-                      trailingIcon = const Icon(Icons.check_rounded, color: AppColors.emerald, size: 16);
+                      trailingIcon = const Icon(
+                        Icons.check_rounded,
+                        color: AppColors.emerald,
+                        size: 16,
+                      );
                     } else if (isSelected) {
                       borderCol = AppColors.berry;
                       bgCol = AppColors.berry.withOpacity(0.05);
-                      trailingIcon = const Icon(Icons.close_rounded, color: AppColors.berry, size: 16);
+                      trailingIcon = const Icon(
+                        Icons.close_rounded,
+                        color: AppColors.berry,
+                        size: 16,
+                      );
                     }
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: bgCol,
                         border: Border.all(color: borderCol, width: 1.5),
@@ -1568,17 +1964,19 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               color: isCorrect
                                   ? AppColors.emerald
                                   : isSelected
-                                      ? AppColors.berry
-                                      : AppColors.paper,
+                                  ? AppColors.berry
+                                  : AppColors.paper,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Center(
                               child: Text(
                                 key,
-                                style: TextStyle(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: (isCorrect || isSelected) ? Colors.white : AppColors.ink,
+                                  color: (isCorrect || isSelected)
+                                      ? Colors.white
+                                      : AppColors.ink,
                                 ),
                               ),
                             ),
@@ -1590,7 +1988,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               child: MarkdownBody(
                                 data: text,
                                 styleSheet: MarkdownStyleSheet(
-                                  p: GoogleFonts.inter(
+                                  p: AppTypography.body.copyWith(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.ink,
@@ -1611,25 +2009,36 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   }),
 
                   // Explanation
-                  if (q.explanation != null && q.explanation!.trim().isNotEmpty) ...[
+                  if (q.explanation != null &&
+                      q.explanation!.trim().isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: AppColors.civic.withOpacity(0.04),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.civic.withOpacity(0.2)),
+                        border: Border.all(
+                          color: AppColors.civic.withOpacity(0.2),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.lightbulb_outline_rounded, size: 14, color: AppColors.civic),
+                              Icon(
+                                Icons.lightbulb_outline_rounded,
+                                size: 14,
+                                color: AppColors.civic,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 "EXPLANATION",
-                                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.civic, letterSpacing: 0.5),
+                                style: AppTypography.eyebrowSmall.copyWith(
+                                  fontSize: 9,
+                                  color: AppColors.civic,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ],
                           ),
@@ -1637,7 +2046,10 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                           MarkdownBody(
                             data: q.explanation!,
                             styleSheet: MarkdownStyleSheet(
-                              p: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, height: 1.45),
+                              p: AppTypography.body.copyWith(
+                                fontSize: 12,
+                                height: 1.45,
+                              ),
                             ),
                           ),
                         ],
@@ -1649,41 +2061,70 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   _buildSubjectiveSection(item),
 
                   // Model Answer (if any)
-                  if ((q.explanation != null && q.explanation!.trim().isNotEmpty) ||
-                      (q.contentJson['model_answer'] != null && q.contentJson['model_answer'].toString().trim().isNotEmpty) ||
+                  if ((q.explanation != null &&
+                          q.explanation!.trim().isNotEmpty) ||
+                      (q.contentJson['model_answer'] != null &&
+                          q.contentJson['model_answer']
+                              .toString()
+                              .trim()
+                              .isNotEmpty) ||
                       (q.contentJson['mains_details'] != null &&
-                       q.contentJson['mains_details']['model_answer'] != null &&
-                       q.contentJson['mains_details']['model_answer'].toString().trim().isNotEmpty)) ...[
+                          q.contentJson['mains_details']['model_answer'] !=
+                              null &&
+                          q.contentJson['mains_details']['model_answer']
+                              .toString()
+                              .trim()
+                              .isNotEmpty)) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: AppColors.civic.withOpacity(0.04),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.civic.withOpacity(0.2)),
+                        border: Border.all(
+                          color: AppColors.civic.withOpacity(0.2),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.assignment_rounded, size: 14, color: AppColors.civic),
+                              Icon(
+                                Icons.assignment_rounded,
+                                size: 14,
+                                color: AppColors.civic,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 "UPSC REFERENCE MODEL ANSWER",
-                                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.civic, letterSpacing: 0.5),
+                                style: AppTypography.eyebrowSmall.copyWith(
+                                  fontSize: 9,
+                                  color: AppColors.civic,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
                           MarkdownBody(
-                            data: (q.explanation != null && q.explanation!.trim().isNotEmpty)
+                            data:
+                                (q.explanation != null &&
+                                    q.explanation!.trim().isNotEmpty)
                                 ? q.explanation!
-                                : (q.contentJson['model_answer'] != null && q.contentJson['model_answer'].toString().trim().isNotEmpty)
-                                    ? q.contentJson['model_answer'].toString()
-                                    : q.contentJson['mains_details']['model_answer'].toString(),
+                                : (q.contentJson['model_answer'] != null &&
+                                      q.contentJson['model_answer']
+                                          .toString()
+                                          .trim()
+                                          .isNotEmpty)
+                                ? q.contentJson['model_answer'].toString()
+                                : q.contentJson['mains_details']['model_answer']
+                                      .toString(),
                             styleSheet: MarkdownStyleSheet(
-                              p: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, height: 1.45),
+                              p: AppTypography.body.copyWith(
+                                fontSize: 12,
+                                height: 1.45,
+                              ),
                             ),
                           ),
                         ],
@@ -1712,16 +2153,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         ),
         child: Text(
           "No answer response was submitted for this question.",
-          style: GoogleFonts.inter(
+          style: AppTypography.body.copyWith(
             fontSize: 12,
-            color: AppColors.muted,
             fontStyle: FontStyle.italic,
           ),
         ),
       );
     }
 
-    final isEvaluating = _evaluatingQuestionIds.contains(item.questionVersion.questionId) ||
+    final isEvaluating =
+        _evaluatingQuestionIds.contains(item.questionVersion.questionId) ||
         response.evaluationStatus == 'ai_evaluating';
 
     if (_editingAnswerId == response.id) {
@@ -1739,13 +2180,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           children: [
             Row(
               children: [
-                Icon(Icons.rate_review_rounded, size: 16, color: AppColors.brand),
+                Icon(
+                  Icons.rate_review_rounded,
+                  size: 16,
+                  color: AppColors.brand,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   "MANUAL EVALUATION & MARKS",
-                  style: GoogleFonts.inter(
+                  style: AppTypography.eyebrowLarge.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w800,
                     color: AppColors.brand,
                     letterSpacing: 0.5,
                   ),
@@ -1759,22 +2203,50 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Score Obtained", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted)),
+                      Text(
+                        "Score Obtained",
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _manualScoreController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(
                           hintText: "e.g. 6.5",
-                          hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.muted.withOpacity(0.5)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.brand)),
+                          hintStyle: AppTypography.body.copyWith(
+                            fontSize: 13,
+                            color: AppColors.muted.withOpacity(0.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: AppColors.brand,
+                            ),
+                          ),
                           fillColor: Colors.white,
                           filled: true,
                         ),
-                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.ink),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.ink,
+                        ),
                       ),
                     ],
                   ),
@@ -1784,22 +2256,50 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Maximum Marks", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted)),
+                      Text(
+                        "Maximum Marks",
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _manualMaxScoreController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(
                           hintText: "e.g. 10",
-                          hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.muted.withOpacity(0.5)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.brand)),
+                          hintStyle: AppTypography.body.copyWith(
+                            fontSize: 13,
+                            color: AppColors.muted.withOpacity(0.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: AppColors.brand,
+                            ),
+                          ),
                           fillColor: Colors.white,
                           filled: true,
                         ),
-                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.ink),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.ink,
+                        ),
                       ),
                     ],
                   ),
@@ -1807,22 +2307,45 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               ],
             ),
             const SizedBox(height: 12),
-            Text("Manually Checked Copy URL (Optional)", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted)),
+            Text(
+              "Manually Checked Copy URL (Optional)",
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 6),
             TextField(
               controller: _manualCheckedCopyUrlController,
               keyboardType: TextInputType.url,
               decoration: InputDecoration(
                 hintText: "https://example.com/checked-copy.pdf",
-                hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.muted.withOpacity(0.5)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.brand)),
+                hintStyle: AppTypography.body.copyWith(
+                  fontSize: 13,
+                  color: AppColors.muted.withOpacity(0.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.line),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.line),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.brand),
+                ),
                 fillColor: Colors.white,
                 filled: true,
               ),
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+              style: AppTypography.body.copyWith(
+                fontSize: 13,
+                color: AppColors.ink,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -1831,22 +2354,49 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Strengths (one per line)", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.emerald)),
+                      Text(
+                        "Strengths (one per line)",
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.emerald,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _manualStrengthsController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: "e.g. Good introduction\nAddressed core parts",
-                          hintStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.muted.withOpacity(0.5)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.emerald)),
+                          hintText:
+                              "e.g. Good introduction\nAddressed core parts",
+                          hintStyle: AppTypography.body.copyWith(
+                            fontSize: 12,
+                            color: AppColors.muted.withOpacity(0.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: AppColors.emerald,
+                            ),
+                          ),
                           fillColor: Colors.white,
                           filled: true,
                         ),
-                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 12,
+                          color: AppColors.ink,
+                        ),
                       ),
                     ],
                   ),
@@ -1856,22 +2406,49 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Improvement areas", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.berry)),
+                      Text(
+                        "Improvement areas",
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.berry,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _manualWeaknessesController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: "e.g. Improve conclusion\nWord limit exceeded",
-                          hintStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.muted.withOpacity(0.5)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.berry)),
+                          hintText:
+                              "e.g. Improve conclusion\nWord limit exceeded",
+                          hintStyle: AppTypography.body.copyWith(
+                            fontSize: 12,
+                            color: AppColors.muted.withOpacity(0.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: AppColors.berry,
+                            ),
+                          ),
                           fillColor: Colors.white,
                           filled: true,
                         ),
-                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 12,
+                          color: AppColors.ink,
+                        ),
                       ),
                     ],
                   ),
@@ -1879,22 +2456,47 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               ],
             ),
             const SizedBox(height: 12),
-            Text("Detailed Feedback Report (Markdown/HTML supported)", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted)),
+            Text(
+              "Detailed Feedback Report (Markdown/HTML supported)",
+              style: AppTypography.caption.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: AppColors.muted,
+              ),
+            ),
             const SizedBox(height: 6),
             TextField(
               controller: _manualFeedbackController,
               maxLines: 4,
               decoration: InputDecoration(
                 hintText: "Write detailed review, structure analysis, etc...",
-                hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.muted.withOpacity(0.5)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.line)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.brand)),
+                hintStyle: AppTypography.body.copyWith(
+                  fontSize: 13,
+                  color: AppColors.muted.withOpacity(0.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.line),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.line),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.brand),
+                ),
                 fillColor: Colors.white,
                 filled: true,
               ),
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink),
+              style: AppTypography.body.copyWith(
+                fontSize: 13,
+                color: AppColors.ink,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -1903,23 +2505,39 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 OutlinedButton(
                   onPressed: _isSavingManual ? null : _cancelManualEvaluation,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     side: const BorderSide(color: AppColors.line),
                   ),
                   child: Text(
                     "Cancel",
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.muted),
+                    style: AppTypography.button.copyWith(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.muted,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _isSavingManual ? null : _handleSaveManualEvaluation,
+                  onPressed: _isSavingManual
+                      ? null
+                      : _handleSaveManualEvaluation,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.brand,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1928,13 +2546,22 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         const SizedBox(
                           width: 12,
                           height: 12,
-                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
                       Text(
                         "Save Evaluation",
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: AppTypography.button.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -1954,7 +2581,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Submitted Answer Text
-          if (response.studentAnswerText != null && response.studentAnswerText!.trim().isNotEmpty) ...[
+          if (response.studentAnswerText != null &&
+              response.studentAnswerText!.trim().isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -1967,17 +2595,15 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 children: [
                   Text(
                     "SUBMITTED ANSWER TEXT",
-                    style: GoogleFonts.inter(
+                    style: AppTypography.eyebrowSmall.copyWith(
                       fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.muted,
                       letterSpacing: 0.5,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     response.studentAnswerText!,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.body.copyWith(
                       fontSize: 13,
                       color: AppColors.ink,
                       height: 1.45,
@@ -1990,7 +2616,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           ],
 
           // Submitted Answer File URL
-          if (response.answerFileUrl != null && response.answerFileUrl!.trim().isNotEmpty) ...[
+          if (response.answerFileUrl != null &&
+              response.answerFileUrl!.trim().isNotEmpty) ...[
             Align(
               alignment: Alignment.centerLeft,
               child: Material(
@@ -1999,25 +2626,37 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   onTap: () async {
                     final uri = Uri.parse(response.answerFileUrl!);
                     if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
                     }
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.brand.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.brand.withOpacity(0.2)),
+                      border: Border.all(
+                        color: AppColors.brand.withOpacity(0.2),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.open_in_new_rounded, size: 14, color: AppColors.brand),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 14,
+                          color: AppColors.brand,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           "Open Submitted Answer Copy",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: AppColors.brand,
@@ -2033,7 +2672,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           ],
 
           // Evaluation Report (if evaluated or needs_manual_review)
-          if (response.evaluationStatus == 'evaluated' || response.evaluationStatus == 'needs_manual_review') ...[
+          if (response.evaluationStatus == 'evaluated' ||
+              response.evaluationStatus == 'needs_manual_review') ...[
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -2070,9 +2710,8 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                             response.evaluationStatus == 'evaluated'
                                 ? "AI EVALUATION REPORT"
                                 : "PENDING MANUAL REVIEW",
-                            style: GoogleFonts.inter(
+                            style: AppTypography.eyebrowLarge.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
                               color: response.evaluationStatus == 'evaluated'
                                   ? AppColors.ink
                                   : AppColors.saffron,
@@ -2088,7 +2727,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                           children: [
                             Text(
                               response.score!.toStringAsFixed(1),
-                              style: GoogleFonts.plusJakartaSans(
+                              style: AppTypography.statValue.copyWith(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.brand,
@@ -2096,7 +2735,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                             ),
                             Text(
                               "/${response.maxScore != null ? response.maxScore!.toStringAsFixed(0) : item.marks.toStringAsFixed(0)}",
-                              style: GoogleFonts.inter(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.muted,
@@ -2118,7 +2757,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                       ),
                       child: Text(
                         "AI evaluation encountered an issue with this answer. A mentor will review and assign marks manually. You'll be notified once complete.",
-                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink, height: 1.4),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 12,
+                          color: AppColors.ink,
+                          height: 1.4,
+                        ),
                       ),
                     ),
                   ],
@@ -2127,125 +2770,158 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     const SizedBox(height: 12),
 
                     // ── Marking Scheme Breakdown ──────────────────────────
-                    Builder(builder: (context) {
-                      final score = response.score ?? 0;
-                      final maxScore = response.maxScore ?? item.marks;
-                      final pct = maxScore > 0 ? (score / maxScore * 100).clamp(0.0, 100.0) : 0.0;
-                      final grade = pct >= 80
-                          ? ("Outstanding", AppColors.brand)
-                          : pct >= 65
-                              ? ("Good", AppColors.emerald)
-                              : pct >= 50
-                                  ? ("Average", AppColors.saffron)
-                                  : ("Needs Work", AppColors.berry);
+                    Builder(
+                      builder: (context) {
+                        final score = response.score ?? 0;
+                        final maxScore = response.maxScore ?? item.marks;
+                        final pct = maxScore > 0
+                            ? (score / maxScore * 100).clamp(0.0, 100.0)
+                            : 0.0;
+                        final grade = pct >= 80
+                            ? ("Outstanding", AppColors.brand)
+                            : pct >= 65
+                            ? ("Good", AppColors.emerald)
+                            : pct >= 50
+                            ? ("Average", AppColors.saffron)
+                            : ("Needs Work", AppColors.berry);
 
-                      return Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.line),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "MARKING SCHEME",
-                              style: GoogleFonts.inter(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.muted,
-                                letterSpacing: 0.5,
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.line),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "MARKING SCHEME",
+                                style: AppTypography.eyebrowSmall.copyWith(
+                                  fontSize: 9,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            "${score.toStringAsFixed(1)} / ${maxScore.toStringAsFixed(0)} marks",
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w900,
-                                              color: AppColors.ink,
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "${score.toStringAsFixed(1)} / ${maxScore.toStringAsFixed(0)} marks",
+                                              style: AppTypography.statValue
+                                                  .copyWith(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: grade.$2.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              grade.$1,
-                                              style: GoogleFonts.inter(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w800,
-                                                color: grade.$2,
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: grade.$2.withOpacity(
+                                                  0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                grade.$1,
+                                                style: AppTypography.caption
+                                                    .copyWith(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color: grade.$2,
+                                                    ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: LinearProgressIndicator(
-                                          value: pct / 100,
-                                          minHeight: 6,
-                                          backgroundColor: AppColors.line,
-                                          valueColor: AlwaysStoppedAnimation<Color>(grade.$2),
+                                          ],
                                         ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        "${pct.toStringAsFixed(0)}% of total marks secured",
-                                        style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 6),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                          child: LinearProgressIndicator(
+                                            value: pct / 100,
+                                            minHeight: 6,
+                                            backgroundColor: AppColors.line,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  grade.$2,
+                                                ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "${pct.toStringAsFixed(0)}% of total marks secured",
+                                          style: AppTypography.caption.copyWith(
+                                            fontSize: 11,
+                                            color: AppColors.muted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 12),
 
                     // Open checked copy with notes
-                    if (response.checkedCopyUrl != null && response.checkedCopyUrl!.trim().isNotEmpty) ...[
+                    if (response.checkedCopyUrl != null &&
+                        response.checkedCopyUrl!.trim().isNotEmpty) ...[
                       Align(
                         alignment: Alignment.centerLeft,
                         child: InkWell(
                           onTap: () async {
                             final uri = Uri.parse(response.checkedCopyUrl!);
                             if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              await launchUrl(
+                                uri,
+                                mode: LaunchMode.externalApplication,
+                              );
                             }
                           },
                           borderRadius: BorderRadius.circular(10),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.brand.withOpacity(0.2)),
+                              border: Border.all(
+                                color: AppColors.brand.withOpacity(0.2),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.assignment_turned_in_rounded, size: 14, color: AppColors.brand),
+                                Icon(
+                                  Icons.assignment_turned_in_rounded,
+                                  size: 14,
+                                  color: AppColors.brand,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   "Open Checked Copy with Notes",
-                                  style: GoogleFonts.inter(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.brand,
@@ -2269,41 +2945,62 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                             decoration: BoxDecoration(
                               color: AppColors.emerald.withOpacity(0.04),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.emerald.withOpacity(0.1)),
+                              border: Border.all(
+                                color: AppColors.emerald.withOpacity(0.1),
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   "KEY STRENGTHS",
-                                  style: GoogleFonts.inter(
+                                  style: AppTypography.eyebrowSmall.copyWith(
                                     fontSize: 9,
-                                    fontWeight: FontWeight.w800,
                                     color: AppColors.emerald,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                if (response.strengths != null && response.strengths!.isNotEmpty)
-                                  ...response.strengths!.map((s) => Padding(
-                                        padding: const EdgeInsets.only(bottom: 4),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text("• ", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
-                                            Expanded(
-                                              child: Text(
-                                                s,
-                                                style: GoogleFonts.inter(fontSize: 11, color: AppColors.emerald, height: 1.3),
-                                              ),
+                                if (response.strengths != null &&
+                                    response.strengths!.isNotEmpty)
+                                  ...response.strengths!.map(
+                                    (s) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 4),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "• ",
+                                            style: AppTypography.caption
+                                                .copyWith(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.emerald,
+                                                ),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              s,
+                                              style: AppTypography.caption
+                                                  .copyWith(
+                                                    fontSize: 11,
+                                                    color: AppColors.emerald,
+                                                    height: 1.3,
+                                                  ),
                                             ),
-                                          ],
-                                        ),
-                                      ))
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
                                 else
                                   Text(
                                     "Structured layout maintained.",
-                                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.emerald.withOpacity(0.7)),
+                                    style: AppTypography.caption.copyWith(
+                                      fontSize: 11,
+                                      color: AppColors.emerald.withOpacity(0.7),
+                                    ),
                                   ),
                               ],
                             ),
@@ -2316,41 +3013,62 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                             decoration: BoxDecoration(
                               color: AppColors.berry.withOpacity(0.04),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.berry.withOpacity(0.1)),
+                              border: Border.all(
+                                color: AppColors.berry.withOpacity(0.1),
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   "AREAS OF IMPROVEMENT",
-                                  style: GoogleFonts.inter(
+                                  style: AppTypography.eyebrowSmall.copyWith(
                                     fontSize: 9,
-                                    fontWeight: FontWeight.w800,
                                     color: AppColors.berry,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                if (response.weaknesses != null && response.weaknesses!.isNotEmpty)
-                                  ...response.weaknesses!.map((w) => Padding(
-                                        padding: const EdgeInsets.only(bottom: 4),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text("• ", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.berry)),
-                                            Expanded(
-                                              child: Text(
-                                                w,
-                                                style: GoogleFonts.inter(fontSize: 11, color: AppColors.berry, height: 1.3),
-                                              ),
+                                if (response.weaknesses != null &&
+                                    response.weaknesses!.isNotEmpty)
+                                  ...response.weaknesses!.map(
+                                    (w) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 4),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "• ",
+                                            style: AppTypography.caption
+                                                .copyWith(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.berry,
+                                                ),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              w,
+                                              style: AppTypography.caption
+                                                  .copyWith(
+                                                    fontSize: 11,
+                                                    color: AppColors.berry,
+                                                    height: 1.3,
+                                                  ),
                                             ),
-                                          ],
-                                        ),
-                                      ))
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
                                 else
                                   Text(
                                     "Link relevant commissions/case laws.",
-                                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.berry.withOpacity(0.7)),
+                                    style: AppTypography.caption.copyWith(
+                                      fontSize: 11,
+                                      color: AppColors.berry.withOpacity(0.7),
+                                    ),
                                   ),
                               ],
                             ),
@@ -2361,13 +3079,12 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     const SizedBox(height: 12),
 
                     // ── Detailed Feedback Report ──────────────────────────
-                    if (response.feedback != null && response.feedback!.trim().isNotEmpty) ...[
+                    if (response.feedback != null &&
+                        response.feedback!.trim().isNotEmpty) ...[
                       Text(
                         "DETAILED FEEDBACK REPORT",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.eyebrowSmall.copyWith(
                           fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.muted,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -2383,9 +3100,17 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         child: MarkdownBody(
                           data: response.feedback!,
                           styleSheet: MarkdownStyleSheet(
-                            p: GoogleFonts.inter(fontSize: 13, color: AppColors.ink, height: 1.5),
-                            h3: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink),
-                            strong: const TextStyle(fontWeight: FontWeight.w800),
+                            p: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              color: AppColors.ink,
+                              height: 1.5,
+                            ),
+                            h3: AppTypography.sectionHeader.copyWith(
+                              fontSize: 13,
+                            ),
+                            strong: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ),
@@ -2408,7 +3133,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       final int id = int.tryParse(nodeJson['id']?.toString() ?? '') ?? 0;
       final String name = nodeJson['name'] as String? ?? '';
       final String nodeType = nodeJson['node_type'] as String? ?? '';
-      final int? parentId = nodeJson['parent_id'] != null ? int.tryParse(nodeJson['parent_id'].toString()) : null;
+      final int? parentId = nodeJson['parent_id'] != null
+          ? int.tryParse(nodeJson['parent_id'].toString())
+          : null;
       final String? nodeContentType = nodeJson['content_type'] as String?;
 
       if (id != 0) {
@@ -2423,15 +3150,21 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     }
 
     // Populate metrics from result's topic breakdowns
-    for (final TopicBreakdown breakdown in review.topicBreakdowns ?? <TopicBreakdown>[]) {
+    for (final TopicBreakdown breakdown
+        in review.topicBreakdowns ?? <TopicBreakdown>[]) {
       final int? nodeId = breakdown.taxonomyNodeId;
       if (nodeId != null && nodeMap.containsKey(nodeId)) {
         final node = nodeMap[nodeId]!;
         node.ownCorrectCount = node.ownCorrectCount + breakdown.correctCount;
-        node.ownIncorrectCount = node.ownIncorrectCount + breakdown.incorrectCount;
-        node.ownUnattemptedCount = node.ownUnattemptedCount + breakdown.unattemptedCount;
-        node.ownTotalQuestions = node.ownTotalQuestions + breakdown.totalQuestions;
-        node.ownTimeWeightedSeconds = node.ownTimeWeightedSeconds + (breakdown.avgTimeSeconds * breakdown.totalQuestions);
+        node.ownIncorrectCount =
+            node.ownIncorrectCount + breakdown.incorrectCount;
+        node.ownUnattemptedCount =
+            node.ownUnattemptedCount + breakdown.unattemptedCount;
+        node.ownTotalQuestions =
+            node.ownTotalQuestions + breakdown.totalQuestions;
+        node.ownTimeWeightedSeconds =
+            node.ownTimeWeightedSeconds +
+            (breakdown.avgTimeSeconds * breakdown.totalQuestions);
         node.ownAvgTimeSeconds = node.ownTotalQuestions > 0
             ? node.ownTimeWeightedSeconds / node.ownTotalQuestions
             : 0.0;
@@ -2452,7 +3185,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     }
 
     // Filter to only show branches tested in this exam
-    final filteredRoots = rootNodes.where((node) => node.totalQuestions > 0).toList();
+    final filteredRoots = rootNodes
+        .where((node) => node.totalQuestions > 0)
+        .toList();
 
     void filterChildren(_TopicPerformanceTreeNode node) {
       node.children.retainWhere((c) => c.totalQuestions > 0);
@@ -2460,6 +3195,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         filterChildren(child);
       }
     }
+
     for (var root in filteredRoots) {
       filterChildren(root);
     }
@@ -2492,7 +3228,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     return AppColors.berry;
   }
 
-  List<_TopicPerformanceTreeNode> _flattenTopicNodes(List<_TopicPerformanceTreeNode> roots) {
+  List<_TopicPerformanceTreeNode> _flattenTopicNodes(
+    List<_TopicPerformanceTreeNode> roots,
+  ) {
     final nodes = <_TopicPerformanceTreeNode>[];
     void visit(_TopicPerformanceTreeNode node) {
       nodes.add(node);
@@ -2508,15 +3246,30 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   }
 
   Widget _buildTopicSummaryBanner(List<_TopicPerformanceTreeNode> roots) {
-    final nodes = _flattenTopicNodes(roots).where((node) => node.totalQuestions > 0).toList();
-    final totalQuestions = roots.fold<int>(0, (sum, node) => sum + node.totalQuestions);
+    final nodes = _flattenTopicNodes(
+      roots,
+    ).where((node) => node.totalQuestions > 0).toList();
+    final totalQuestions = roots.fold<int>(
+      0,
+      (sum, node) => sum + node.totalQuestions,
+    );
     final correct = roots.fold<int>(0, (sum, node) => sum + node.correctCount);
-    final incorrect = roots.fold<int>(0, (sum, node) => sum + node.incorrectCount);
-    final skipped = roots.fold<int>(0, (sum, node) => sum + node.unattemptedCount);
+    final incorrect = roots.fold<int>(
+      0,
+      (sum, node) => sum + node.incorrectCount,
+    );
+    final skipped = roots.fold<int>(
+      0,
+      (sum, node) => sum + node.unattemptedCount,
+    );
     final answered = correct + incorrect;
     final accuracy = answered > 0 ? correct / answered : 0.0;
-    final weakCount = nodes.where((node) => node.attemptedQuestions > 0 && node.accuracy < 0.5).length;
-    final strongCount = nodes.where((node) => node.attemptedQuestions > 0 && node.accuracy >= 0.7).length;
+    final weakCount = nodes
+        .where((node) => node.attemptedQuestions > 0 && node.accuracy < 0.5)
+        .length;
+    final strongCount = nodes
+        .where((node) => node.attemptedQuestions > 0 && node.accuracy >= 0.7)
+        .length;
 
     return Container(
       width: double.infinity,
@@ -2525,7 +3278,13 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.line),
-        boxShadow: const [BoxShadow(color: Color(0x040F172A), offset: Offset(0, 6), blurRadius: 16)],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x040F172A),
+            offset: Offset(0, 6),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2539,18 +3298,29 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   color: AppColors.civic.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.account_tree_rounded, color: AppColors.civic, size: 20),
+                child: const Icon(
+                  Icons.account_tree_rounded,
+                  color: AppColors.civic,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Topic-wise result map", style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      "Topic-wise result map",
+                      style: AppTypography.sectionHeader,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       "Shows cumulative performance at subject, topic, and subtopic levels.",
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -2562,12 +3332,36 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildTopicStatChip("Accuracy", "${(accuracy * 100).round()}%", _topicAccuracyColor(accuracy, hasData: answered > 0)),
-              _buildTopicStatChip("Questions", totalQuestions.toString(), AppColors.civic),
-              _buildTopicStatChip("Answered", answered.toString(), AppColors.brand),
-              _buildTopicStatChip("Skipped", skipped.toString(), AppColors.saffron),
-              _buildTopicStatChip("Weak", weakCount.toString(), AppColors.berry),
-              _buildTopicStatChip("Strong", strongCount.toString(), AppColors.emerald),
+              _buildTopicStatChip(
+                "Accuracy",
+                "${(accuracy * 100).round()}%",
+                _topicAccuracyColor(accuracy, hasData: answered > 0),
+              ),
+              _buildTopicStatChip(
+                "Questions",
+                totalQuestions.toString(),
+                AppColors.civic,
+              ),
+              _buildTopicStatChip(
+                "Answered",
+                answered.toString(),
+                AppColors.brand,
+              ),
+              _buildTopicStatChip(
+                "Skipped",
+                skipped.toString(),
+                AppColors.saffron,
+              ),
+              _buildTopicStatChip(
+                "Weak",
+                weakCount.toString(),
+                AppColors.berry,
+              ),
+              _buildTopicStatChip(
+                "Strong",
+                strongCount.toString(),
+                AppColors.emerald,
+              ),
             ],
           ),
         ],
@@ -2586,9 +3380,23 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w900, color: color)),
+          Text(
+            value,
+            style: AppTypography.statValue.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
           const SizedBox(width: 5),
-          Text(label, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted)),
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppColors.muted,
+            ),
+          ),
         ],
       ),
     );
@@ -2603,7 +3411,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     final indent = depth * 14.0;
     final icon = node.nodeType == 'subject'
         ? Icons.folder_open_rounded
-        : (node.nodeType == 'topic' ? Icons.bookmark_border_rounded : Icons.radio_button_unchecked_rounded);
+        : (node.nodeType == 'topic'
+              ? Icons.bookmark_border_rounded
+              : Icons.radio_button_unchecked_rounded);
 
     final row = Container(
       margin: EdgeInsets.only(left: depth == 0 ? 0 : 8, top: 5, bottom: 5),
@@ -2611,16 +3421,31 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       decoration: BoxDecoration(
         color: depth == 0 ? Colors.white : AppColors.paper.withOpacity(0.45),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isExpanded ? AppColors.civic.withOpacity(0.28) : AppColors.line, width: isExpanded ? 1.4 : 1),
+        border: Border.all(
+          color: isExpanded
+              ? AppColors.civic.withOpacity(0.28)
+              : AppColors.line,
+          width: isExpanded ? 1.4 : 1,
+        ),
       ),
       child: Row(
         children: [
           if (hasChildren)
-            Icon(isExpanded ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_right_rounded, size: 19, color: AppColors.muted)
+            Icon(
+              isExpanded
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.keyboard_arrow_right_rounded,
+              size: 19,
+              color: AppColors.muted,
+            )
           else
             const SizedBox(width: 19),
           const SizedBox(width: 5),
-          Icon(icon, size: depth == 0 ? 17 : 14, color: depth == 0 ? AppColors.civic : AppColors.muted),
+          Icon(
+            icon,
+            size: depth == 0 ? 17 : 14,
+            color: depth == 0 ? AppColors.civic : AppColors.muted,
+          ),
           const SizedBox(width: 9),
           Expanded(
             child: Column(
@@ -2633,9 +3458,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         node.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
+                        style: AppTypography.caption.copyWith(
                           fontSize: depth == 0 ? 13 : 12,
-                          fontWeight: depth == 0 ? FontWeight.w800 : FontWeight.w700,
+                          fontWeight: depth == 0
+                              ? FontWeight.w800
+                              : FontWeight.w700,
                           color: AppColors.ink,
                         ),
                       ),
@@ -2649,14 +3476,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   "${node.correctCount}/${node.totalQuestions} correct-ready | ${node.unattemptedCount} skipped | Avg ${node.avgTimeSeconds.round()}s/Q",
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted),
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.muted,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: LinearProgressIndicator(
                     minHeight: 5,
-                    value: hasAnsweredData ? node.accuracy.clamp(0.0, 1.0).toDouble() : 0,
+                    value: hasAnsweredData
+                        ? node.accuracy.clamp(0.0, 1.0).toDouble()
+                        : 0,
                     backgroundColor: AppColors.line.withOpacity(0.45),
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                   ),
@@ -2672,12 +3505,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               children: [
                 Text(
                   hasAnsweredData ? "${(node.accuracy * 100).round()}%" : "--",
-                  style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w900, color: color),
+                  style: AppTypography.statValue.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   hasAnsweredData ? "${node.attemptedQuestions} ans" : "",
-                  style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.muted),
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.muted,
+                  ),
                 ),
               ],
             ),
@@ -2707,7 +3548,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         if (hasChildren && isExpanded)
           Padding(
             padding: const EdgeInsets.only(bottom: 3),
-            child: Column(children: node.children.map((child) => _buildResultTopicNode(depth + 1, child)).toList()),
+            child: Column(
+              children: node.children
+                  .map((child) => _buildResultTopicNode(depth + 1, child))
+                  .toList(),
+            ),
           ),
       ],
     );
@@ -2723,7 +3568,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       ),
       child: Text(
         label.toUpperCase(),
-        style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w900, color: AppColors.muted),
+        style: AppTypography.caption.copyWith(
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+          color: AppColors.muted,
+        ),
       ),
     );
   }
@@ -2732,14 +3581,16 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     final bool isExpanded = _expandedTopicNodes.contains(node.id);
     final bool hasChildren = node.children.isNotEmpty;
 
-    final Color accuracyColor = node.accuracy >= 0.7 
-        ? AppColors.emerald 
+    final Color accuracyColor = node.accuracy >= 0.7
+        ? AppColors.emerald
         : (node.accuracy >= 0.4 ? AppColors.saffron : AppColors.berry);
 
     final double indent = depth * 16.0;
-    final IconData nodeIcon = depth == 0 
-        ? Icons.folder_open_rounded 
-        : (depth == 1 ? Icons.bookmark_border_rounded : Icons.radio_button_unchecked_rounded);
+    final IconData nodeIcon = depth == 0
+        ? Icons.folder_open_rounded
+        : (depth == 1
+              ? Icons.bookmark_border_rounded
+              : Icons.radio_button_unchecked_rounded);
 
     Widget nodeContent = Padding(
       padding: EdgeInsets.only(
@@ -2752,7 +3603,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         children: [
           if (hasChildren)
             Icon(
-              isExpanded ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_right_rounded,
+              isExpanded
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.keyboard_arrow_right_rounded,
               size: 18,
               color: AppColors.muted,
             )
@@ -2771,18 +3624,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               children: [
                 Text(
                   node.name,
-                  style: GoogleFonts.inter(
+                  style: AppTypography.caption.copyWith(
                     fontSize: depth == 0 ? 13 : (depth == 1 ? 12 : 11),
-                    fontWeight: depth == 0 ? FontWeight.w700 : (depth == 1 ? FontWeight.w600 : FontWeight.normal),
+                    fontWeight: depth == 0
+                        ? FontWeight.w700
+                        : (depth == 1 ? FontWeight.w600 : FontWeight.normal),
                     color: AppColors.ink,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   "${node.nodeType.toUpperCase()} • ${node.correctCount}/${node.totalQuestions} Correct  ·  Avg ${node.avgTimeSeconds.round()}s/Q",
-                  style: GoogleFonts.inter(
-                    fontSize: 9, 
-                    color: AppColors.muted, 
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 9,
+                    color: AppColors.muted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -2795,7 +3650,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             children: [
               Text(
                 "${(node.accuracy * 100).round()}% Accuracy",
-                style: GoogleFonts.inter(
+                style: AppTypography.caption.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: accuracyColor,
@@ -2834,7 +3689,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isExpanded ? AppColors.civic.withOpacity(0.3) : AppColors.line,
+            color: isExpanded
+                ? AppColors.civic.withOpacity(0.3)
+                : AppColors.line,
             width: isExpanded ? 1.5 : 1,
           ),
           boxShadow: const [
@@ -2842,7 +3699,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               color: Color(0x040F172A),
               offset: Offset(0, 2),
               blurRadius: 6,
-            )
+            ),
           ],
         ),
         child: nodeContent,
@@ -2853,15 +3710,17 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-          onTap: hasChildren ? () {
-            setState(() {
-              if (isExpanded) {
-                _expandedTopicNodes.remove(node.id);
-              } else {
-                _expandedTopicNodes.add(node.id);
-              }
-            });
-          } : null,
+          onTap: hasChildren
+              ? () {
+                  setState(() {
+                    if (isExpanded) {
+                      _expandedTopicNodes.remove(node.id);
+                    } else {
+                      _expandedTopicNodes.add(node.id);
+                    }
+                  });
+                }
+              : null,
           borderRadius: BorderRadius.circular(12),
           child: nodeContent,
         ),
@@ -2869,7 +3728,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: Column(
-              children: node.children.map((child) => _buildTopicNodeWidget(depth + 1, child)).toList(),
+              children: node.children
+                  .map((child) => _buildTopicNodeWidget(depth + 1, child))
+                  .toList(),
             ),
           ),
       ],
@@ -2885,9 +3746,19 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           padding: const EdgeInsets.all(32.0),
           child: Column(
             children: [
-              const Icon(Icons.track_changes_rounded, size: 48, color: AppColors.muted),
+              const Icon(
+                Icons.track_changes_rounded,
+                size: 48,
+                color: AppColors.muted,
+              ),
               const SizedBox(height: 16),
-              Text("No topic breakdowns available.", style: GoogleFonts.inter(color: AppColors.muted, fontWeight: FontWeight.w600)),
+              Text(
+                "No topic breakdowns available.",
+                style: AppTypography.body.copyWith(
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -2965,9 +3836,20 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(height: 10, width: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          height: 10,
+          width: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: AppTypography.caption.copyWith(
+            fontSize: 10,
+            color: AppColors.muted,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -2990,12 +3872,14 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               0),
     );
 
-    final avgTime = questions.isNotEmpty ? totalTimeSpent / questions.length : 0;
+    final avgTime = questions.isNotEmpty
+        ? totalTimeSpent / questions.length
+        : 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Time Analysis", style: Theme.of(context).textTheme.titleLarge),
+        Text("Time Analysis", style: AppTypography.sectionHeader),
         const SizedBox(height: 12),
 
         // Time Summary stats
@@ -3031,11 +3915,15 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         ),
         const SizedBox(height: 20),
 
-        Text("Per-Question Time Breakdown", style: Theme.of(context).textTheme.titleMedium),
+        Text("Per-Question Time Breakdown", style: AppTypography.cardTitle),
         const SizedBox(height: 4),
         Text(
           "Highlighting questions where time exceeded 1.5x average (overtime)",
-          style: const TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.bold),
+          style: AppTypography.caption.copyWith(
+            fontSize: 10,
+            color: AppColors.muted,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 12),
 
@@ -3043,17 +3931,22 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         ...questions.asMap().entries.map((entry) {
           final idx = entry.key;
           final q = entry.value;
-          final timeSpent = (q.scoreItem?['time_spent_seconds'] as num?)?.toInt() ??
+          final timeSpent =
+              (q.scoreItem?['time_spent_seconds'] as num?)?.toInt() ??
               q.response?.timeSpentSeconds ??
               0;
           final outcome = q.scoreItem?['outcome'] as String?;
-          final maxBar = questions.map((qq) {
-            return (qq.scoreItem?['time_spent_seconds'] as num?)?.toInt() ??
-                qq.response?.timeSpentSeconds ??
-                0;
-          }).reduce((a, b) => a > b ? a : b);
+          final maxBar = questions
+              .map((qq) {
+                return (qq.scoreItem?['time_spent_seconds'] as num?)?.toInt() ??
+                    qq.response?.timeSpentSeconds ??
+                    0;
+              })
+              .reduce((a, b) => a > b ? a : b);
 
-          final barPct = maxBar > 0 ? (timeSpent / maxBar).clamp(0.0, 1.0) : 0.0;
+          final barPct = maxBar > 0
+              ? (timeSpent / maxBar).clamp(0.0, 1.0)
+              : 0.0;
           Color barColor = AppColors.muted;
           if (outcome == 'correct') barColor = AppColors.emerald;
           if (outcome == 'incorrect') barColor = AppColors.berry;
@@ -3067,7 +3960,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isOvertime ? AppColors.saffron.withOpacity(0.5) : AppColors.line,
+                color: isOvertime
+                    ? AppColors.saffron.withOpacity(0.5)
+                    : AppColors.line,
                 width: isOvertime ? 1.5 : 1,
               ),
             ),
@@ -3077,7 +3972,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   width: 32,
                   child: Text(
                     "Q${idx + 1}",
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.ink),
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.ink,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -3108,14 +4007,18 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (isOvertime) ...[
-                      const Icon(Icons.warning_amber_rounded, color: AppColors.saffron, size: 14),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.saffron,
+                        size: 14,
+                      ),
                       const SizedBox(width: 4),
                     ],
                     Text(
                       "${timeSpent}s",
-                      style: GoogleFonts.inter(
-                        fontSize: 11, 
-                        fontWeight: FontWeight.bold, 
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
                         color: isOvertime ? AppColors.saffron : AppColors.muted,
                       ),
                     ),
@@ -3140,7 +4043,12 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     );
   }
 
-  Widget _buildTimeStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildTimeStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
       decoration: BoxDecoration(
@@ -3152,7 +4060,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             color: Color(0x020F172A),
             offset: Offset(0, 4),
             blurRadius: 10,
-          )
+          ),
         ],
       ),
       child: Column(
@@ -3166,18 +4074,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             child: Icon(icon, color: color, size: 16),
           ),
           const SizedBox(height: 10),
-          Text(
-            value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
-            ),
-          ),
+          Text(value, style: AppTypography.statValue.copyWith(fontSize: 16)),
           const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
-            style: GoogleFonts.inter(
+            style: AppTypography.caption.copyWith(
               fontSize: 8,
               fontWeight: FontWeight.bold,
               color: AppColors.muted,
@@ -3202,21 +4103,24 @@ class _ScoreGauge extends StatelessWidget {
     final color = percentage >= 70
         ? AppColors.emerald
         : percentage >= 40
-            ? AppColors.saffron
-            : AppColors.berry;
+        ? AppColors.saffron
+        : AppColors.berry;
 
     return SizedBox(
       height: 110,
       width: 110,
       child: CustomPaint(
-        painter: _GaugePainter(percentage: percentage.clamp(0.0, 100.0), color: color),
+        painter: _GaugePainter(
+          percentage: percentage.clamp(0.0, 100.0),
+          color: color,
+        ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "${percentage.round()}%",
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.statValue.copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
@@ -3224,7 +4128,11 @@ class _ScoreGauge extends StatelessWidget {
               ),
               Text(
                 "score",
-                style: const TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.bold),
+                style: AppTypography.caption.copyWith(
+                  fontSize: 10,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -3325,9 +4233,12 @@ class _TopicPerformanceTreeNode {
       incorrectCount = incorrectCount + child.incorrectCount;
       unattemptedCount = unattemptedCount + child.unattemptedCount;
       totalQuestions = totalQuestions + child.totalQuestions;
-      weightedTimeSum = weightedTimeSum + (child.avgTimeSeconds * child.totalQuestions);
+      weightedTimeSum =
+          weightedTimeSum + (child.avgTimeSeconds * child.totalQuestions);
     }
 
-    avgTimeSeconds = totalQuestions > 0 ? weightedTimeSum / totalQuestions : 0.0;
+    avgTimeSeconds = totalQuestions > 0
+        ? weightedTimeSum / totalQuestions
+        : 0.0;
   }
 }
