@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../data/assessment_service.dart';
@@ -47,14 +46,20 @@ class _MyTestsTabState extends State<MyTestsTab> {
       // Resolved server-side against actual question tagging rather than a
       // guessed exam_level_id — a hardcoded id here previously hid custom
       // tests whenever it didn't match the actual row id on the server.
-      final rawTemplates = await _service.getUserCustomTests(contentType: widget.contentType);
+      final rawTemplates = await _service.getUserCustomTests(
+        contentType: widget.contentType,
+      );
 
-      final List<StudentAttemptSummary> attempts = (rawAttempts as dynamic) ?? <StudentAttemptSummary>[];
-      final List<AssessmentTestTemplate> templates = (rawTemplates as dynamic) ?? <AssessmentTestTemplate>[];
+      final List<StudentAttemptSummary> attempts =
+          (rawAttempts as dynamic) ?? <StudentAttemptSummary>[];
+      final List<AssessmentTestTemplate> templates =
+          (rawTemplates as dynamic) ?? <AssessmentTestTemplate>[];
 
       setState(() {
         var filteredAttempts = isMains
-            ? attempts.where((a) => a.testTemplate.testType == 'mains_test').toList()
+            ? attempts
+                  .where((a) => a.testTemplate.testType == 'mains_test')
+                  .toList()
             : attempts;
         if (widget.onlyInProgress) {
           filteredAttempts = filteredAttempts
@@ -77,9 +82,11 @@ class _MyTestsTabState extends State<MyTestsTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.civic));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.civic),
+      );
     }
-    
+
     if (_error != null) {
       return Center(
         child: Padding(
@@ -87,16 +94,20 @@ class _MyTestsTabState extends State<MyTestsTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.berry, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.berry,
+                size: 48,
+              ),
               const SizedBox(height: 16),
               Text(
                 "Could not load your tests",
-                style: Theme.of(context).textTheme.titleLarge,
+                style: AppTypography.sectionHeader.copyWith(fontSize: 16),
               ),
               const SizedBox(height: 8),
               Text(
                 _error!,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTypography.body,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -110,8 +121,10 @@ class _MyTestsTabState extends State<MyTestsTab> {
       );
     }
 
-    final bool isCustomTestsEmpty = (_customTests as dynamic) == null || _customTests.isEmpty;
-    final bool isAttemptsEmpty = (_attempts as dynamic) == null || _attempts.isEmpty;
+    final bool isCustomTestsEmpty =
+        (_customTests as dynamic) == null || _customTests.isEmpty;
+    final bool isAttemptsEmpty =
+        (_attempts as dynamic) == null || _attempts.isEmpty;
     final bool isEmpty = isCustomTestsEmpty && isAttemptsEmpty;
 
     return RefreshIndicator(
@@ -123,7 +136,10 @@ class _MyTestsTabState extends State<MyTestsTab> {
               children: [
                 Container(
                   margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 48,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -131,17 +147,20 @@ class _MyTestsTabState extends State<MyTestsTab> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.quiz_outlined, color: AppColors.muted, size: 48),
+                      const Icon(
+                        Icons.quiz_outlined,
+                        color: AppColors.muted,
+                        size: 48,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         "No tests found",
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.ink),
+                        style: AppTypography.title.copyWith(fontSize: 18),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         "You haven't compiled or started any tests yet.",
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: AppTypography.body,
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -156,16 +175,17 @@ class _MyTestsTabState extends State<MyTestsTab> {
                 if (!isCustomTestsEmpty) ...[
                   Text(
                     "My Custom Tests",
-                    style: GoogleFonts.plusJakartaSans(
+                    style: AppTypography.sectionHeader.copyWith(
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
                       color: AppColors.muted,
                     ),
                   ),
                   const SizedBox(height: 10),
                   ..._customTests.map((test) {
                     final bool hasAttempt = test.latestAttemptStatus != null;
-                    final bool isCompleted = test.latestAttemptStatus == "submitted" || test.latestAttemptStatus == "completed";
+                    final bool isCompleted =
+                        test.latestAttemptStatus == "submitted" ||
+                        test.latestAttemptStatus == "completed";
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -175,7 +195,11 @@ class _MyTestsTabState extends State<MyTestsTab> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.line),
                         boxShadow: const [
-                          BoxShadow(color: Color(0x05000000), blurRadius: 8, offset: Offset(0, 2))
+                          BoxShadow(
+                            color: Color(0x05000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
                         ],
                       ),
                       child: Column(
@@ -193,17 +217,20 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => CustomTestDetailScreen(
-                                              testTemplateId: test.id,
-                                              contentType: widget.contentType,
-                                            ),
+                                            builder: (_) =>
+                                                CustomTestDetailScreen(
+                                                  testTemplateId: test.id,
+                                                  contentType:
+                                                      widget.contentType,
+                                                ),
                                           ),
                                         ).then((_) => _loadAttempts());
                                       },
                                       child: Text(
                                         test.title,
-                                        style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.ink),
+                                        style: AppTypography.cardTitle.copyWith(
+                                          fontSize: 15,
+                                        ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -211,25 +238,37 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                     const SizedBox(height: 4),
                                     Text(
                                       "${test.questionCount ?? 0} Questions • ${test.totalMarks.round()} Marks",
-                                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                                      style: AppTypography.caption,
                                     ),
                                   ],
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isCompleted ? AppColors.emerald.withOpacity(0.1) :
-                                         hasAttempt ? AppColors.saffron.withOpacity(0.1) :
-                                         AppColors.muted.withOpacity(0.1),
+                                  color: isCompleted
+                                      ? AppColors.emerald.withOpacity(0.1)
+                                      : hasAttempt
+                                      ? AppColors.saffron.withOpacity(0.1)
+                                      : AppColors.muted.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  isCompleted ? "COMPLETED" : hasAttempt ? "IN PROGRESS" : "NOT STARTED",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: isCompleted ? AppColors.emerald : hasAttempt ? AppColors.saffron : AppColors.muted,
+                                  isCompleted
+                                      ? "COMPLETED"
+                                      : hasAttempt
+                                      ? "IN PROGRESS"
+                                      : "NOT STARTED",
+                                  style: AppTypography.eyebrowSmall.copyWith(
+                                    color: isCompleted
+                                        ? AppColors.emerald
+                                        : hasAttempt
+                                        ? AppColors.saffron
+                                        : AppColors.muted,
+                                    letterSpacing: 0,
                                   ),
                                 ),
                               ),
@@ -251,10 +290,16 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                     ),
                                   ).then((_) => _loadAttempts());
                                 },
-                                style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                ),
                                 child: Text(
                                   "View Details →",
-                                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.muted),
+                                  style: AppTypography.button.copyWith(
+                                    fontSize: 12,
+                                    color: AppColors.muted,
+                                  ),
                                 ),
                               ),
                               Row(
@@ -267,7 +312,9 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                           MaterialPageRoute(
                                             builder: (context) => Scaffold(
                                               appBar: AppBar(
-                                                title: const Text("Select Category to Add"),
+                                                title: const Text(
+                                                  "Select Category to Add",
+                                                ),
                                                 backgroundColor: Colors.white,
                                                 foregroundColor: AppColors.ink,
                                                 elevation: 0,
@@ -282,7 +329,10 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                       },
                                       child: Text(
                                         "Add Qs",
-                                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.civic),
+                                        style: AppTypography.button.copyWith(
+                                          fontSize: 12,
+                                          color: AppColors.civic,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -291,33 +341,61 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.civic,
                                       foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
                                       elevation: 0,
                                     ),
                                     onPressed: () {
-                                      if (isCompleted && test.latestResultId != null) {
+                                      if (isCompleted &&
+                                          test.latestResultId != null) {
                                         Navigator.push(
                                           context,
-                                          MaterialPageRoute(builder: (_) => ResultReviewScreen(resultId: test.latestResultId!)),
+                                          MaterialPageRoute(
+                                            builder: (_) => ResultReviewScreen(
+                                              resultId: test.latestResultId!,
+                                            ),
+                                          ),
                                         );
-                                      } else if (hasAttempt && test.latestAttemptId != null) {
+                                      } else if (hasAttempt &&
+                                          test.latestAttemptId != null) {
                                         Navigator.push(
                                           context,
-                                          MaterialPageRoute(builder: (_) => AttemptEngineScreen(attemptId: test.latestAttemptId!)),
+                                          MaterialPageRoute(
+                                            builder: (_) => AttemptEngineScreen(
+                                              attemptId: test.latestAttemptId!,
+                                            ),
+                                          ),
                                         ).then((_) => _loadAttempts());
                                       } else {
-                                        _service.startAttempt(test.id).then((attemptId) {
+                                        _service.startAttempt(test.id).then((
+                                          attemptId,
+                                        ) {
                                           Navigator.push(
                                             context,
-                                            MaterialPageRoute(builder: (_) => AttemptEngineScreen(attemptId: attemptId)),
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  AttemptEngineScreen(
+                                                    attemptId: attemptId,
+                                                  ),
+                                            ),
                                           ).then((_) => _loadAttempts());
                                         });
                                       }
                                     },
                                     child: Text(
-                                      isCompleted ? "Result" : hasAttempt ? "Resume" : "Start",
-                                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 11),
+                                      isCompleted
+                                          ? "Result"
+                                          : hasAttempt
+                                          ? "Resume"
+                                          : "Start",
+                                      style: AppTypography.button.copyWith(
+                                        fontSize: 11,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -333,9 +411,8 @@ class _MyTestsTabState extends State<MyTestsTab> {
                 if (!isAttemptsEmpty) ...[
                   Text(
                     "Attempt History",
-                    style: GoogleFonts.plusJakartaSans(
+                    style: AppTypography.sectionHeader.copyWith(
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
                       color: AppColors.muted,
                     ),
                   ),
@@ -353,7 +430,11 @@ class _MyTestsTabState extends State<MyTestsTab> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.line),
                         boxShadow: const [
-                          BoxShadow(color: Color(0x05000000), blurRadius: 8, offset: Offset(0, 2))
+                          BoxShadow(
+                            color: Color(0x05000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
                         ],
                       ),
                       child: Column(
@@ -368,33 +449,42 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                   children: [
                                     Text(
                                       test.title,
-                                      style: GoogleFonts.inter(
-                                          fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.ink),
+                                      style: AppTypography.cardTitle.copyWith(
+                                        fontSize: 15,
+                                      ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
                                       "Attempted on ${attempt.startedAt.split('T')[0]}",
-                                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                                      style: AppTypography.caption,
                                     ),
                                   ],
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: (attempt.status == 'completed' || attempt.status == 'submitted')
+                                  color:
+                                      (attempt.status == 'completed' ||
+                                          attempt.status == 'submitted')
                                       ? AppColors.emerald.withOpacity(0.1)
                                       : AppColors.saffron.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   attempt.status.toUpperCase(),
-                                  style: GoogleFonts.inter(
+                                  style: AppTypography.eyebrowSmall.copyWith(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: (attempt.status == 'completed' || attempt.status == 'submitted')
+                                    letterSpacing: 0,
+                                    color:
+                                        (attempt.status == 'completed' ||
+                                            attempt.status == 'submitted')
                                         ? AppColors.emerald
                                         : AppColors.saffron,
                                   ),
@@ -409,13 +499,19 @@ class _MyTestsTabState extends State<MyTestsTab> {
                               children: [
                                 Text(
                                   "Score: ${result.score.toStringAsFixed(1)}",
-                                  style: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w600, color: AppColors.civic, fontSize: 14),
+                                  style: AppTypography.cardTitle.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.civic,
+                                    fontSize: 14,
+                                  ),
                                 ),
                                 Text(
                                   "Accuracy: ${(result.accuracy * 100).round()}%",
-                                  style: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w600, color: AppColors.brand, fontSize: 14),
+                                  style: AppTypography.cardTitle.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.brand,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ],
                             ),
@@ -425,25 +521,43 @@ class _MyTestsTabState extends State<MyTestsTab> {
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: AppColors.civic),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                               ),
                               onPressed: () {
-                                if (attempt.status == 'completed' || attempt.status == 'submitted') {
+                                if (attempt.status == 'completed' ||
+                                    attempt.status == 'submitted') {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => ResultReviewScreen(resultId: result!.id)),
+                                    MaterialPageRoute(
+                                      builder: (_) => ResultReviewScreen(
+                                        resultId: result!.id,
+                                      ),
+                                    ),
                                   );
                                 } else {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => AttemptEngineScreen(attemptId: attempt.id)),
+                                    MaterialPageRoute(
+                                      builder: (_) => AttemptEngineScreen(
+                                        attemptId: attempt.id,
+                                      ),
+                                    ),
                                   ).then((_) => _loadAttempts());
                                 }
                               },
                               child: Text(
-                                (attempt.status == 'completed' || attempt.status == 'submitted') ? "View Detailed Report" : "Resume Test",
-                                style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.civic),
+                                (attempt.status == 'completed' ||
+                                        attempt.status == 'submitted')
+                                    ? "View Detailed Report"
+                                    : "Resume Test",
+                                style: AppTypography.button.copyWith(
+                                  color: AppColors.civic,
+                                ),
                               ),
                             ),
                           ),

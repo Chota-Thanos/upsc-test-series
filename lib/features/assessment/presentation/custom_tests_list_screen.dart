@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -84,22 +83,31 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
   }
 
   Future<void> _handleDeleteTest(int templateId) async {
-    final bool confirm = await showDialog<bool>(
+    final bool confirm =
+        await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text(
               "Delete Custom Test",
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+              style: AppTypography.cardTitle.copyWith(fontSize: 16),
             ),
-            content: const Text("Are you sure you want to delete this custom test template?"),
+            content: const Text(
+              "Are you sure you want to delete this custom test template?",
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
+                child: Text(
+                  "Cancel",
+                  style: AppTypography.button.copyWith(color: AppColors.muted),
+                ),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text("Delete", style: GoogleFonts.inter(color: AppColors.berry, fontWeight: FontWeight.bold)),
+                child: Text(
+                  "Delete",
+                  style: AppTypography.button.copyWith(color: AppColors.berry),
+                ),
               ),
             ],
           ),
@@ -137,7 +145,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
       builder: (context) => AlertDialog(
         title: Text(
           "Create Custom Test",
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+          style: AppTypography.cardTitle.copyWith(fontSize: 16),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -164,7 +172,10 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: GoogleFonts.inter(color: AppColors.muted)),
+            child: Text(
+              "Cancel",
+              style: AppTypography.button.copyWith(color: AppColors.muted),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -177,7 +188,9 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
               });
 
               try {
-                final testType = widget.contentType == 'mains' ? 'mains_test' : 'sectional_test';
+                final testType = widget.contentType == 'mains'
+                    ? 'mains_test'
+                    : 'sectional_test';
 
                 final templateId = await _service.createUserCustomTest(
                   title: title,
@@ -211,7 +224,10 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                 _fetchCustomTests();
               }
             },
-            child: Text("Create", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.civic)),
+            child: Text(
+              "Create",
+              style: AppTypography.button.copyWith(color: AppColors.civic),
+            ),
           ),
         ],
       ),
@@ -235,7 +251,9 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
       builder: (ctx) {
         if (!_tourChecked) {
           _tourChecked = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoStartTour(ctx));
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _maybeAutoStartTour(ctx),
+          );
         }
         return _buildScaffold(ctx);
       },
@@ -248,11 +266,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
       appBar: AppBar(
         title: Text(
           "My Custom Tests",
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.ink,
-          ),
+          style: AppTypography.title.copyWith(fontSize: 18),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -262,7 +276,11 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.map_outlined, color: AppColors.civic, size: 20),
+            icon: const Icon(
+              Icons.map_outlined,
+              color: AppColors.civic,
+              size: 20,
+            ),
             tooltip: "App Tour",
             onPressed: () => _startTour(ctx),
           ),
@@ -277,20 +295,21 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
               color: AppColors.berry.withOpacity(0.1),
               child: Text(
                 _error!,
-                style: GoogleFonts.inter(
+                style: AppTypography.body.copyWith(
                   color: AppColors.berry,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
               ),
             ),
-          
+
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Showcase(
               key: _tourCreateTileKey,
               title: "Build Custom Tests",
-              description: "Tap here to create a personalised practice test — choose the name, pick topics from the syllabus, and set how many questions to include.",
+              description:
+                  "Tap here to create a personalised practice test — choose the name, pick topics from the syllabus, and set how many questions to include.",
               targetBorderRadius: BorderRadius.circular(16),
               child: Container(
                 width: double.infinity,
@@ -302,21 +321,24 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: AppColors.civic.withOpacity(0.1),
-                    child: const Icon(Icons.add_task_rounded, color: AppColors.civic),
+                    child: const Icon(
+                      Icons.add_task_rounded,
+                      color: AppColors.civic,
+                    ),
                   ),
                   title: Text(
                     "Create custom test template",
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: AppColors.ink,
-                    ),
+                    style: AppTypography.cardTitle.copyWith(fontSize: 14),
                   ),
                   subtitle: Text(
                     "Build a test template with name and description",
-                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                    style: AppTypography.caption.copyWith(fontSize: 11),
                   ),
-                  trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: AppColors.muted,
+                  ),
                   onTap: _showCreateTestDialog,
                 ),
               ),
@@ -325,17 +347,19 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
 
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.civic))
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.civic),
+                  )
                 : ((_tests as dynamic) == null || _tests.isEmpty)
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _tests.length,
-                        itemBuilder: (context, index) {
-                          final test = _tests[index];
-                          return _buildTestCard(test);
-                        },
-                      ),
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _tests.length,
+                    itemBuilder: (context, index) {
+                      final test = _tests[index];
+                      return _buildTestCard(test);
+                    },
+                  ),
           ),
         ],
       ),
@@ -354,20 +378,20 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.assignment_outlined, size: 64, color: AppColors.muted),
+            const Icon(
+              Icons.assignment_outlined,
+              size: 64,
+              color: AppColors.muted,
+            ),
             const SizedBox(height: 16),
             Text(
               "No Custom Tests Created",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.title.copyWith(fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
               "Create a tailored practice exam by combining specific syllabus categories and question counts.",
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+              style: AppTypography.body.copyWith(fontSize: 13),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -376,9 +400,8 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CustomTestCreateScreen(
-                      contentType: widget.contentType,
-                    ),
+                    builder: (context) =>
+                        CustomTestCreateScreen(contentType: widget.contentType),
                   ),
                 );
                 _fetchCustomTests();
@@ -388,8 +411,13 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.civic,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 elevation: 0,
               ),
             ),
@@ -403,24 +431,27 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
     final bool isMains = test.testType == "mains_test";
     final String typeLabel = isMains
         ? "Mains"
-        : test.title.toLowerCase().contains("csat") || test.title.toLowerCase().contains("aptitude")
-            ? "CSAT"
-            : "GS";
+        : test.title.toLowerCase().contains("csat") ||
+              test.title.toLowerCase().contains("aptitude")
+        ? "CSAT"
+        : "GS";
 
     final Color badgeBg = typeLabel == "Mains"
         ? AppColors.berry.withOpacity(0.08)
         : typeLabel == "CSAT"
-            ? AppColors.saffron.withOpacity(0.08)
-            : AppColors.civic.withOpacity(0.08);
+        ? AppColors.saffron.withOpacity(0.08)
+        : AppColors.civic.withOpacity(0.08);
 
     final Color badgeText = typeLabel == "Mains"
         ? AppColors.berry
         : typeLabel == "CSAT"
-            ? AppColors.saffron
-            : AppColors.civic;
+        ? AppColors.saffron
+        : AppColors.civic;
 
     final bool hasAttempt = test.latestAttemptStatus != null;
-    final bool isCompleted = test.latestAttemptStatus == "submitted" || test.latestAttemptStatus == "completed";
+    final bool isCompleted =
+        test.latestAttemptStatus == "submitted" ||
+        test.latestAttemptStatus == "completed";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -458,34 +489,49 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: badgeBg,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       "$typeLabel Test",
-                      style: GoogleFonts.inter(
+                      style: AppTypography.eyebrowSmall.copyWith(
                         fontSize: 10,
-                        fontWeight: FontWeight.bold,
                         color: badgeText,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: isCompleted ? AppColors.emerald.withOpacity(0.1) :
-                             hasAttempt ? AppColors.saffron.withOpacity(0.1) :
-                             AppColors.muted.withOpacity(0.1),
+                      color: isCompleted
+                          ? AppColors.emerald.withOpacity(0.1)
+                          : hasAttempt
+                          ? AppColors.saffron.withOpacity(0.1)
+                          : AppColors.muted.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isCompleted ? "COMPLETED" : hasAttempt ? "IN PROGRESS" : "NOT STARTED",
-                      style: GoogleFonts.inter(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: isCompleted ? AppColors.emerald : hasAttempt ? AppColors.saffron : AppColors.muted,
+                      isCompleted
+                          ? "COMPLETED"
+                          : hasAttempt
+                          ? "IN PROGRESS"
+                          : "NOT STARTED",
+                      style: AppTypography.eyebrowSmall.copyWith(
+                        color: isCompleted
+                            ? AppColors.emerald
+                            : hasAttempt
+                            ? AppColors.saffron
+                            : AppColors.muted,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -494,20 +540,25 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
               const SizedBox(height: 12),
               Text(
                 test.title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.ink,
-                ),
+                style: AppTypography.title.copyWith(fontSize: 15),
               ),
               const SizedBox(height: 14),
               Row(
                 children: [
-                  _buildStatBadge(Icons.layers_outlined, "${test.questionCount ?? 0} Qs"),
+                  _buildStatBadge(
+                    Icons.layers_outlined,
+                    "${test.questionCount ?? 0} Qs",
+                  ),
                   const SizedBox(width: 12),
-                  _buildStatBadge(Icons.timer_outlined, "${test.durationMinutes} Min"),
+                  _buildStatBadge(
+                    Icons.timer_outlined,
+                    "${test.durationMinutes} Min",
+                  ),
                   const SizedBox(width: 12),
-                  _buildStatBadge(Icons.emoji_events_outlined, "${test.totalMarks.round()} Marks"),
+                  _buildStatBadge(
+                    Icons.emoji_events_outlined,
+                    "${test.totalMarks.round()} Marks",
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -542,12 +593,14 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                           icon: const Icon(Icons.add_circle_outline, size: 16),
                           label: Text(
                             "Add Qs",
-                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                            style: AppTypography.button.copyWith(fontSize: 12),
                           ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.civic,
                             side: const BorderSide(color: AppColors.civic),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ),
@@ -561,18 +614,24 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                         onPressed: _startingId == test.id
                             ? null
                             : () {
-                                if (isCompleted && test.latestResultId != null) {
+                                if (isCompleted &&
+                                    test.latestResultId != null) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ResultReviewScreen(resultId: test.latestResultId!),
+                                      builder: (context) => ResultReviewScreen(
+                                        resultId: test.latestResultId!,
+                                      ),
                                     ),
                                   );
-                                } else if (hasAttempt && test.latestAttemptId != null) {
+                                } else if (hasAttempt &&
+                                    test.latestAttemptId != null) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => AttemptEngineScreen(attemptId: test.latestAttemptId!),
+                                      builder: (context) => AttemptEngineScreen(
+                                        attemptId: test.latestAttemptId!,
+                                      ),
                                     ),
                                   ).then((_) => _fetchCustomTests());
                                 } else {
@@ -580,20 +639,36 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                                 }
                               },
                         icon: _startingId == test.id
-                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : Icon(
-                                isCompleted ? Icons.emoji_events_outlined :
-                                hasAttempt ? Icons.play_arrow_rounded : Icons.rocket_launch_outlined,
+                                isCompleted
+                                    ? Icons.emoji_events_outlined
+                                    : hasAttempt
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.rocket_launch_outlined,
                                 size: 16,
                               ),
                         label: Text(
-                          isCompleted ? "Result" : hasAttempt ? "Resume" : "Start",
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                          isCompleted
+                              ? "Result"
+                              : hasAttempt
+                              ? "Resume"
+                              : "Start",
+                          style: AppTypography.button.copyWith(fontSize: 12),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.ink,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           elevation: 0,
                         ),
                       ),
@@ -604,15 +679,26 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                     height: 38,
                     width: 44,
                     child: OutlinedButton(
-                      onPressed: _deletingId == test.id ? null : () => _handleDeleteTest(test.id),
+                      onPressed: _deletingId == test.id
+                          ? null
+                          : () => _handleDeleteTest(test.id),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.berry,
                         side: const BorderSide(color: AppColors.line),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: EdgeInsets.zero,
                       ),
                       child: _deletingId == test.id
-                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.berry))
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.berry,
+                              ),
+                            )
                           : const Icon(Icons.delete_outline_rounded, size: 18),
                     ),
                   ),
@@ -640,7 +726,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
           const SizedBox(width: 4),
           Text(
             text,
-            style: GoogleFonts.inter(
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.bold,
               color: AppColors.ink.withOpacity(0.7),
