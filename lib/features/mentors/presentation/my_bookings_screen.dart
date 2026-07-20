@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../assessment/data/assessment_service.dart';
+import 'mentorship_request_detail_screen.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
@@ -165,28 +166,21 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
-    final status = booking['status']?.toString() ?? 'pending';
+    // Field names below match the real backend response shape from
+    // GET /api/v1/mentorship/requests (see apps/api/src/modules/mentorship/service.ts
+    // listRequests) -- not a hypothetical/aspirational shape.
+    final status = booking['status']?.toString() ?? 'requested';
+    final paymentStatus = booking['payment_status']?.toString() ?? 'pending';
     final createdAt = booking['created_at']?.toString() ?? '';
-    final mentorName =
-        booking['mentor']?['user']?['full_name']?.toString() ??
-        booking['mentor_name']?.toString() ??
-        'Mentor';
-    final mentorAvatar = booking['mentor']?['user']?['avatar_url']?.toString();
-    final sessionType =
-        booking['session_type']?.toString() ??
-        booking['type']?.toString() ??
-        '';
-    final availability =
-        booking['availability_note']?.toString() ??
-        booking['preferred_slot']?.toString() ??
-        '';
-    final adminNotes =
-        booking['admin_notes']?.toString() ??
-        booking['mentor_notes']?.toString();
-    final specialization =
-        booking['mentor']?['specialization']?.toString() ?? '';
+    final mentorName = booking['mentor_name']?.toString() ?? 'Mentor';
+    final mentorAvatar = booking['mentor_headshot']?.toString();
+    final preferredMode = booking['preferred_mode']?.toString() ?? '';
+    final note = booking['note']?.toString() ?? '';
+    final sessionStartsAt = booking['session_starts_at']?.toString();
+    final meta = booking['meta'] as Map?;
     final copyEvalEnabled =
-        booking['copy_evaluation_requested'] as bool? ?? false;
+        booking['mains_answer_attempt_id'] != null ||
+        meta?['student_copy'] != null;
 
     Color statusColor;
     String statusLabel;
@@ -194,15 +188,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     Color statusBg;
 
     switch (status) {
-      case 'approved':
       case 'accepted':
         statusColor = AppColors.emerald;
         statusBg = AppColors.emerald.withOpacity(0.08);
-        statusLabel = "Approved";
+        statusLabel = "Accepted";
         statusIcon = Icons.check_circle_outline_rounded;
         break;
       case 'rejected':
-      case 'declined':
         statusColor = AppColors.berry;
         statusBg = AppColors.berry.withOpacity(0.08);
         statusLabel = "Rejected";
@@ -214,11 +206,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         statusLabel = "Completed";
         statusIcon = Icons.verified_rounded;
         break;
-      case 'scheduled':
-        statusColor = AppColors.civic;
-        statusBg = AppColors.civic.withOpacity(0.08);
-        statusLabel = "Scheduled";
-        statusIcon = Icons.event_available_rounded;
+      case 'cancelled':
+      case 'expired':
+        statusColor = AppColors.muted;
+        statusBg = AppColors.muted.withOpacity(0.08);
+        statusLabel = status == 'expired' ? "Expired" : "Cancelled";
+        statusIcon = Icons.remove_circle_outline_rounded;
         break;
       default:
         statusColor = AppColors.saffron;
@@ -238,7 +231,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       }
     }
 
-    return Container(
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                MentorshipRequestDetailScreen(initialRequest: booking),
+          ),
+        );
+        _loadBookings();
+      },
+      child: Container(
       decoration: AppTheme.cardDecoration,
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -310,16 +313,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            mentorName,
-                            style: AppTypography.title.copyWith(fontSize: 14),
-                          ),
-                          if (specialization.isNotEmpty)
-                            Text(specialization, style: AppTypography.caption),
-                        ],
+                      child: Text(
+                        mentorName,
+                        style: AppTypography.title.copyWith(fontSize: 14),
                       ),
                     ),
                   ],
@@ -330,19 +326,25 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 const SizedBox(height: 12),
 
                 // Request details
-                if (sessionType.isNotEmpty) ...[
+                if (preferredMode.isNotEmpty) ...[
                   _detailRow(
                     Icons.category_outlined,
-                    "Session Type",
-                    sessionType.replaceAll('_', ' '),
+                    "Preferred Mode",
+                    preferredMode.replaceAll('_', ' '),
                   ),
                   const SizedBox(height: 8),
                 ],
-                if (availability.isNotEmpty) ...[
+                _detailRow(
+                  Icons.payments_outlined,
+                  "Payment",
+                  paymentStatus[0].toUpperCase() + paymentStatus.substring(1),
+                ),
+                const SizedBox(height: 8),
+                if (sessionStartsAt != null && sessionStartsAt.isNotEmpty) ...[
                   _detailRow(
                     Icons.schedule_outlined,
-                    "Preferred Slot",
-                    availability,
+                    "Scheduled",
+                    _formatDateTime(sessionStartsAt),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -355,8 +357,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   const SizedBox(height: 8),
                 ],
 
-                // Admin/mentor notes
-                if (adminNotes != null && adminNotes.trim().isNotEmpty) ...[
+                // Student's own note submitted with the request
+                if (note.trim().isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -377,14 +379,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              "RESPONSE NOTE",
+                              "YOUR NOTE",
                               style: AppTypography.eyebrowSmall,
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          adminNotes,
+                          note,
                           style: AppTypography.body.copyWith(
                             color: AppColors.ink,
                             height: 1.4,
@@ -400,7 +402,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           ),
         ],
       ),
+      ),
     );
+  }
+
+  String _formatDateTime(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      return "${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+    } catch (_) {
+      return iso;
+    }
   }
 
   Widget _detailRow(IconData icon, String label, String value) {

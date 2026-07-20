@@ -562,7 +562,7 @@ class AssessmentService extends ChangeNotifier {
   Future<List<Map<String, dynamic>>> getMyBookingRequests() async {
     try {
       final List<dynamic> data = await apiClient.get(
-        '/api/v1/mentors/me/requests?limit=50',
+        '/api/v1/mentorship/requests?mode=user',
       );
       return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (e) {

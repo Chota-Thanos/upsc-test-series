@@ -69,6 +69,96 @@ class MentorProfile {
   }
 }
 
+class MentorshipMessage {
+  final int id;
+  final int requestId;
+  final int senderId;
+  final String body;
+  final String createdAt;
+  final String senderUsername;
+
+  MentorshipMessage({
+    required this.id,
+    required this.requestId,
+    required this.senderId,
+    required this.body,
+    required this.createdAt,
+    required this.senderUsername,
+  });
+
+  factory MentorshipMessage.fromJson(Map<String, dynamic> json) {
+    return MentorshipMessage(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      requestId: int.tryParse(json['request_id']?.toString() ?? '') ?? 0,
+      senderId: int.tryParse(json['sender_id']?.toString() ?? '') ?? 0,
+      body: json['body'] as String? ?? '',
+      createdAt: json['created_at'] as String? ?? '',
+      senderUsername: json['sender_username'] as String? ?? 'User',
+    );
+  }
+}
+
+class MentorshipAgenda {
+  final int id;
+  final int requestId;
+  final String title;
+  final String? description;
+  final String status; // proposed, agreed, solved_proposed, solved
+  final int createdBy;
+  final String creatorUsername;
+  final String createdAt;
+
+  MentorshipAgenda({
+    required this.id,
+    required this.requestId,
+    required this.title,
+    this.description,
+    required this.status,
+    required this.createdBy,
+    required this.creatorUsername,
+    required this.createdAt,
+  });
+
+  factory MentorshipAgenda.fromJson(Map<String, dynamic> json) {
+    return MentorshipAgenda(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      requestId: int.tryParse(json['request_id']?.toString() ?? '') ?? 0,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      status: json['status'] as String? ?? 'proposed',
+      createdBy: int.tryParse(json['created_by']?.toString() ?? '') ?? 0,
+      creatorUsername: json['creator_username'] as String? ?? 'User',
+      createdAt: json['created_at'] as String? ?? '',
+    );
+  }
+}
+
+class MentorshipCallCredentials {
+  final String appId;
+  final String? token;
+  final int uid;
+  final String channelName;
+  final String? meetingLink;
+
+  MentorshipCallCredentials({
+    required this.appId,
+    this.token,
+    required this.uid,
+    required this.channelName,
+    this.meetingLink,
+  });
+
+  factory MentorshipCallCredentials.fromJson(Map<String, dynamic> json) {
+    return MentorshipCallCredentials(
+      appId: json['appId'] as String? ?? '',
+      token: json['token'] as String?,
+      uid: int.tryParse(json['uid']?.toString() ?? '') ?? 0,
+      channelName: json['channelName'] as String? ?? '',
+      meetingLink: json['meetingLink'] as String?,
+    );
+  }
+}
+
 class MainsAttempt {
   final int id;
   final int questionVersionId;

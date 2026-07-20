@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/mentor_models.dart';
@@ -98,6 +97,206 @@ class MentorService extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint("Error submitting mentorship request: $e");
+      rethrow;
+    }
+  }
+
+  // Fetch the student's own mentorship requests (with mentor/session/evaluation details)
+  Future<List<Map<String, dynamic>>> getMyRequests() async {
+    try {
+      final List<dynamic> data = await apiClient.get(
+        '/api/v1/mentorship/requests?mode=user',
+      );
+      return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (e) {
+      debugPrint("Error fetching mentorship requests: $e");
+      rethrow;
+    }
+  }
+
+  // --- Chat ---
+
+  Future<List<MentorshipMessage>> getMessages(int requestId) async {
+    try {
+      final List<dynamic> data = await apiClient.get(
+        '/api/v1/mentorship/requests/$requestId/messages',
+      );
+      return data
+          .map((json) => MentorshipMessage.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint("Error fetching mentorship messages: $e");
+      rethrow;
+    }
+  }
+
+  Future<MentorshipMessage> sendMessage(int requestId, String body) async {
+    try {
+      final data = await apiClient.post(
+        '/api/v1/mentorship/requests/$requestId/messages',
+        {'body': body},
+      );
+      return MentorshipMessage.fromJson(data as Map<String, dynamic>);
+    } catch (e) {
+      debugPrint("Error sending mentorship message: $e");
+      rethrow;
+    }
+  }
+
+  // --- Agendas ---
+
+  Future<List<MentorshipAgenda>> getAgendas(int requestId) async {
+    try {
+      final List<dynamic> data = await apiClient.get(
+        '/api/v1/mentorship/requests/$requestId/agendas',
+      );
+      return data
+          .map((json) => MentorshipAgenda.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint("Error fetching mentorship agendas: $e");
+      rethrow;
+    }
+  }
+
+  Future<MentorshipAgenda> proposeAgenda(
+    int requestId,
+    String title,
+    String? description,
+  ) async {
+    try {
+      final data = await apiClient.post(
+        '/api/v1/mentorship/requests/$requestId/agendas',
+        {
+          'title': title,
+          'description': description?.trim().isNotEmpty == true
+              ? description!.trim()
+              : null,
+        },
+      );
+      return MentorshipAgenda.fromJson(data as Map<String, dynamic>);
+    } catch (e) {
+      debugPrint("Error proposing mentorship agenda: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> agreeToAgenda(int agendaId) async {
+    try {
+      await apiClient.put('/api/v1/mentorship/agendas/$agendaId/agree', {});
+    } catch (e) {
+      debugPrint("Error agreeing to agenda: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> proposeSolveAgenda(int agendaId) async {
+    try {
+      await apiClient.put(
+        '/api/v1/mentorship/agendas/$agendaId/solve-propose',
+        {},
+      );
+    } catch (e) {
+      debugPrint("Error proposing agenda solve: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> confirmSolveAgenda(int agendaId) async {
+    try {
+      await apiClient.put(
+        '/api/v1/mentorship/agendas/$agendaId/solve-confirm',
+        {},
+      );
+    } catch (e) {
+      debugPrint("Error confirming agenda solve: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> deleteAgenda(int agendaId) async {
+    try {
+      await apiClient.delete('/api/v1/mentorship/agendas/$agendaId');
+    } catch (e) {
+      debugPrint("Error deleting agenda: $e");
+      rethrow;
+    }
+  }
+
+  // --- Payment ---
+
+  Future<Map<String, dynamic>> createPaymentOrder(int requestId) async {
+    try {
+      final data = await apiClient.post(
+        '/api/v1/mentorship/requests/$requestId/payment/order',
+        {},
+      );
+      return Map<String, dynamic>.from(data as Map);
+    } catch (e) {
+      debugPrint("Error creating mentorship payment order: $e");
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyPayment({
+    required int requestId,
+    required String orderId,
+    required String paymentId,
+    required String signature,
+  }) async {
+    try {
+      final data = await apiClient.post(
+        '/api/v1/mentorship/requests/$requestId/payment/verify',
+        {
+          'razorpay_order_id': orderId,
+          'razorpay_payment_id': paymentId,
+          'razorpay_signature': signature,
+        },
+      );
+      return Map<String, dynamic>.from(data as Map);
+    } catch (e) {
+      debugPrint("Error verifying mentorship payment: $e");
+      rethrow;
+    }
+  }
+
+  // --- Scheduling ---
+
+  Future<List<Map<String, dynamic>>> getMentorSlots(int mentorId) async {
+    try {
+      final List<dynamic> data = await apiClient.get(
+        '/api/v1/mentorship/slots?mentor_id=$mentorId&active_only=true',
+      );
+      return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (e) {
+      debugPrint("Error fetching mentor slots: $e");
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> bookSlot(int requestId, int slotId) async {
+    try {
+      final data = await apiClient.post(
+        '/api/v1/mentorship/requests/$requestId/book-slot',
+        {'slot_id': slotId},
+      );
+      return Map<String, dynamic>.from(data as Map);
+    } catch (e) {
+      debugPrint("Error booking slot: $e");
+      rethrow;
+    }
+  }
+
+  // --- Video call ---
+
+  Future<MentorshipCallCredentials> getAgoraToken(int sessionId) async {
+    try {
+      final data = await apiClient.get(
+        '/api/v1/mentorship/sessions/$sessionId/agora-token',
+      );
+      return MentorshipCallCredentials.fromJson(data as Map<String, dynamic>);
+    } catch (e) {
+      debugPrint("Error fetching mentorship Agora token: $e");
       rethrow;
     }
   }

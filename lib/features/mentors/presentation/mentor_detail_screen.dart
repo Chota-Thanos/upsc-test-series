@@ -1,9 +1,8 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/utils/constants.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../data/mentor_service.dart';
 import '../models/mentor_models.dart';
 
@@ -92,21 +91,36 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
     }
   }
 
+  bool _uploadingCopy = false;
+
   Future<void> _pickAndUploadCopy() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final fileName = result.files.first.name;
+    setState(() {
+      _uploadingCopy = true;
+    });
     try {
-      final copyData = await _service.uploadStudentCopyMetadata(
-        "mains_answer_sheet.pdf",
-      );
+      final copyData = await _service.uploadStudentCopyMetadata(fileName);
       setState(() {
         _uploadedCopyData = copyData;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mock answer sheet copy uploaded.")),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Upload error: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Upload error: $e")));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _uploadingCopy = false;
+        });
+      }
     }
   }
 
@@ -191,13 +205,12 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
     }
   }
 
-  Future<void> _launchWebBooking() async {
-    if (_mentor == null) return;
-    final url = Uri.parse(
-      "${ApiConstants.webAppUrl}/mentors/${widget.mentorUserId}",
-    );
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      debugPrint("Could not launch $url");
+  void _onToggleAttachCopy(bool value) {
+    setState(() {
+      _attachCopy = value;
+    });
+    if (value && _copySource == 'platform' && _mainsAttempts.isEmpty) {
+      _fetchAttempts();
     }
   }
 
@@ -453,7 +466,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
-                        Icons.laptop_chromebook_rounded,
+                        Icons.event_available_rounded,
                         color: AppColors.civic,
                         size: 28,
                       ),
@@ -461,19 +474,35 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Book Consultation Session",
+                    "Request Mentorship",
                     style: AppTypography.title.copyWith(fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Mentorship bookings and secure one-time payments are managed on our web platform. Review coach availability and book your slot on your dashboard.",
-                    style: AppTypography.body.copyWith(height: 1.4),
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.civic.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        m.mentorType == 'only_mentorship'
+                            ? "ONLY MENTORSHIP"
+                            : "EVALUATION + MENTORSHIP",
+                        style: AppTypography.eyebrowSmall.copyWith(
+                          color: AppColors.civic,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   const Divider(color: AppColors.line),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -490,7 +519,263 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+
+                  // Preferred mode
+                  Text(
+                    "PREFERRED MODE",
+                    style: AppTypography.eyebrowSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _modeChip(
+                          label: "Agora Video",
+                          icon: Icons.videocam_rounded,
+                          selected: _preferredMode == "video",
+                          onTap: () => setState(() => _preferredMode = "video"),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _modeChip(
+                          label: "Chat Triage",
+                          icon: Icons.chat_bubble_outline_rounded,
+                          selected: _preferredMode == "chat_only",
+                          onTap: () =>
+                              setState(() => _preferredMode = "chat_only"),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Copy evaluation section -- only offered by mentors who evaluate
+                  if (m.mentorType == 'only_mentorship')
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.paper,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            size: 16,
+                            color: AppColors.muted,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "This mentor offers guidance-only mentorship and does not evaluate answer copies.",
+                              style: AppTypography.caption.copyWith(
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.civic.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.civic.withOpacity(0.15),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Link Copy Evaluation",
+                                  style: AppTypography.cardTitle.copyWith(
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              Switch(
+                                value: _attachCopy,
+                                activeColor: AppColors.civic,
+                                onChanged: _onToggleAttachCopy,
+                              ),
+                            ],
+                          ),
+                          if (_attachCopy) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _sourceChip(
+                                    label: "Upload Copy",
+                                    selected: _copySource == 'upload',
+                                    onTap: () =>
+                                        setState(() => _copySource = 'upload'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _sourceChip(
+                                    label: "Mains Attempt",
+                                    selected: _copySource == 'platform',
+                                    onTap: () {
+                                      setState(() => _copySource = 'platform');
+                                      if (_mainsAttempts.isEmpty) {
+                                        _fetchAttempts();
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            if (_copySource == 'upload')
+                              _uploadedCopyData != null
+                                  ? Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(
+                                          10,
+                                        ),
+                                        border: Border.all(
+                                          color: AppColors.line,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.description_outlined,
+                                            size: 16,
+                                            color: AppColors.civic,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              _uploadedCopyData!['file_name'] ??
+                                                  '',
+                                              style: AppTypography.caption
+                                                  .copyWith(fontSize: 11),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.close_rounded,
+                                              size: 16,
+                                              color: AppColors.berry,
+                                            ),
+                                            onPressed: () => setState(
+                                              () => _uploadedCopyData = null,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : OutlinedButton.icon(
+                                      onPressed: _uploadingCopy
+                                          ? null
+                                          : _pickAndUploadCopy,
+                                      icon: const Icon(
+                                        Icons.upload_file_rounded,
+                                        size: 16,
+                                      ),
+                                      label: Text(
+                                        _uploadingCopy
+                                            ? "Uploading..."
+                                            : "Select Answer Copy (PDF/Image)",
+                                        style: AppTypography.caption.copyWith(
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    )
+                            else if (_loadingAttempts)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Center(
+                                  child: SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.civic,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else if (_mainsAttempts.isEmpty)
+                              Text(
+                                "No Mains attempts found. Submit an attempt in the Mains module first.",
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 11,
+                                  color: AppColors.berry,
+                                ),
+                              )
+                            else
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: AppColors.line),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int>(
+                                    isExpanded: true,
+                                    value: _selectedAttemptId,
+                                    items: _mainsAttempts
+                                        .map(
+                                          (att) => DropdownMenuItem(
+                                            value: att.id,
+                                            child: Text(
+                                              "#${att.id} - ${att.paperName ?? 'Mains Attempt'}",
+                                              style: AppTypography.caption
+                                                  .copyWith(fontSize: 11),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (val) =>
+                                        setState(() => _selectedAttemptId = val),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 18),
+
+                  Text("NOTE / PREPARATION FOCUS", style: AppTypography.eyebrowSmall),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _noteController,
+                    maxLines: 3,
+                    style: AppTypography.body,
+                    decoration: InputDecoration(
+                      hintText:
+                          "Tell the mentor what goals you have for this session...",
+                      hintStyle: AppTypography.caption,
+                      filled: true,
+                      fillColor: AppColors.paper,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
+
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -499,19 +784,96 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                       ),
                       backgroundColor: AppColors.civic,
                     ),
-                    onPressed: _launchWebBooking,
+                    onPressed: _submitting ? null : _submitRequest,
                     child: Text(
-                      "BOOK SESSION ON WEB",
+                      _submitting ? "SENDING..." : "REQUEST MENTORSHIP",
                       style: AppTypography.button.copyWith(
                         fontSize: 13,
                         color: Colors.white,
                       ),
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Sending a request starts a private chat with the mentor. Payment is requested after the mentor reviews and accepts your request.",
+                    style: AppTypography.caption.copyWith(fontSize: 10),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modeChip({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.civic.withOpacity(0.1) : AppColors.paper,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.civic : AppColors.line,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? AppColors.civic : AppColors.muted,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: AppTypography.caption.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: selected ? AppColors.civic : AppColors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sourceChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.civic.withOpacity(0.12) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? AppColors.civic : AppColors.line,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.caption.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: selected ? AppColors.civic : AppColors.muted,
+          ),
         ),
       ),
     );
