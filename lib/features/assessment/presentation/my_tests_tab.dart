@@ -141,13 +141,13 @@ class _MyTestsTabState extends State<MyTestsTab> {
                     horizontal: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: AppColors.line),
                   ),
                   child: Column(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.quiz_outlined,
                         color: AppColors.muted,
                         size: 48,
@@ -191,7 +191,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.line),
                         boxShadow: const [
@@ -315,7 +315,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                                                 title: const Text(
                                                   "Select Category to Add",
                                                 ),
-                                                backgroundColor: Colors.white,
+                                                backgroundColor: AppColors.surface,
                                                 foregroundColor: AppColors.ink,
                                                 elevation: 0,
                                               ),
@@ -426,7 +426,7 @@ class _MyTestsTabState extends State<MyTestsTab> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.line),
                         boxShadow: const [

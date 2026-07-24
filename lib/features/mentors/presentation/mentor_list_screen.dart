@@ -225,7 +225,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
                     // My Bookings button
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -403,7 +403,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.people_outline_rounded,
                       color: AppColors.muted,
                       size: 40,
@@ -443,7 +443,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.line, width: 1.5),
       ),
@@ -582,7 +582,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
           // Exams / Experience spec
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.history_toggle_off_rounded,
                 color: AppColors.muted,
                 size: 14,
@@ -597,7 +597,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
               ),
               if (mentor.exams.isNotEmpty) ...[
                 const SizedBox(width: 16),
-                const Icon(
+                Icon(
                   Icons.menu_book_rounded,
                   color: AppColors.muted,
                   size: 14,
@@ -618,7 +618,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          const Divider(color: AppColors.line),
+          Divider(color: AppColors.line),
           const SizedBox(height: 10),
 
           // Pricing + Details buttons

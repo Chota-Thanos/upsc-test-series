@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/constants.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -64,7 +65,16 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
+      // serverClientId (the Web OAuth client ID) makes the native SDK return an
+      // ID token whose audience the backend accepts. Falls back to plain sign-in
+      // if it isn't configured, which still works once native OAuth clients are
+      // set up (e.g. via GoogleService-Info.plist on iOS).
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: const ['email'],
+        serverClientId: ApiConstants.googleServerClientId.isNotEmpty
+            ? ApiConstants.googleServerClientId
+            : null,
+      );
 
       final GoogleSignInAccount? account = await googleSignIn.signIn();
       if (account == null) {
@@ -104,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.paper,
           gradient: RadialGradient(
             center: Alignment(0, -0.6),

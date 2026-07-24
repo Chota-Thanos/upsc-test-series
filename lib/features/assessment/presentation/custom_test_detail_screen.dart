@@ -134,10 +134,10 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         title: Text("Test Detailed View", style: AppTypography.title.copyWith(fontSize: 18)),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.ink),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -151,7 +151,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppColors.line),
               ),
@@ -188,7 +188,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.line),
                 ),
@@ -201,7 +201,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
             else
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.line),
                 ),
@@ -209,7 +209,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: categoryBreakdown.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.line),
+                  separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.line),
                   itemBuilder: (context, idx) {
                     final key = categoryBreakdown.keys.elementAt(idx);
                     final val = categoryBreakdown[key];
@@ -255,13 +255,13 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.line),
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.help_outline, color: AppColors.muted, size: 36),
+                    Icon(Icons.help_outline, color: AppColors.muted, size: 36),
                     const SizedBox(height: 12),
                     Text(
                       "This test template is empty.",
@@ -292,7 +292,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                   return Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.line),
                     ),
@@ -338,8 +338,8 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
       bottomSheet: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: const Border(top: BorderSide(color: AppColors.line)),
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.line)),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, -4))
           ],
@@ -361,7 +361,7 @@ class _CustomTestDetailScreenState extends State<CustomTestDetailScreen> {
                           builder: (context) => Scaffold(
                             appBar: AppBar(
                               title: const Text("Select Category to Add"),
-                              backgroundColor: Colors.white,
+                              backgroundColor: AppColors.surface,
                               foregroundColor: AppColors.ink,
                               elevation: 0,
                             ),

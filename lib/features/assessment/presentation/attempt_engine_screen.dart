@@ -496,7 +496,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             "Test",
             style: AppTypography.sectionHeader.copyWith(fontSize: 14),
           ),
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surface,
           elevation: 0,
         ),
         body: Center(
@@ -546,7 +546,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             paper.testTemplate.title,
             style: AppTypography.sectionHeader.copyWith(fontSize: 14),
           ),
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surface,
           elevation: 0,
         ),
         body: Center(
@@ -628,7 +628,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 1.5,
         title: Text(
@@ -645,7 +645,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.timer_outlined,
                   color: AppColors.paper,
                   size: 16,
@@ -702,7 +702,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                 "See how many questions you've answered, marked for review, or skipped. Tap 'Grid' to jump to any question.",
             targetBorderRadius: BorderRadius.zero,
             child: Container(
-              color: Colors.white,
+              color: AppColors.surface,
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -840,7 +840,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Divider(color: AppColors.line),
+                    Divider(color: AppColors.line),
                     const SizedBox(height: 12),
 
                     // Question statement rendered via markdown (since it supports HTML tags inside)
@@ -920,7 +920,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
 
           // Bottom Action Bar
           Container(
-            color: Colors.white,
+            color: AppColors.surface,
             padding: const EdgeInsets.all(12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -934,7 +934,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                       ),
                       onPressed: _activeIndex > 0
                           ? () {
@@ -944,7 +944,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                               _syncSubjectiveInputs();
                             }
                           : null,
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 14,
                         color: AppColors.ink,
@@ -958,7 +958,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
                         if (isSubjective) {
@@ -994,7 +994,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
                         final currentMarked =
@@ -1274,7 +1274,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: AppColors.line, width: 1.5),
+                  side: BorderSide(color: AppColors.line, width: 1.5),
                 ),
                 onPressed: _submittingSubjective ? null : _pickAndUploadCopy,
                 child: const Icon(
@@ -1351,7 +1351,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DrawerHeader(
-          decoration: const BoxDecoration(color: AppColors.ink),
+          decoration: BoxDecoration(color: AppColors.ink),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1448,7 +1448,7 @@ class _AttemptEngineScreenState extends State<AttemptEngineScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Divider(color: AppColors.line),
+              Divider(color: AppColors.line),
               const SizedBox(height: 10),
               Text(
                 "LEGEND STATUS",

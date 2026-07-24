@@ -261,7 +261,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                         foregroundColor: AppColors.ink,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         textStyle: AppTypography.button.copyWith(fontSize: 13),

@@ -268,10 +268,10 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
           "My Custom Tests",
           style: AppTypography.title.copyWith(fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.ink),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -314,7 +314,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.line),
                 ),
@@ -334,7 +334,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                     "Build a test template with name and description",
                     style: AppTypography.caption.copyWith(fontSize: 11),
                   ),
-                  trailing: const Icon(
+                  trailing: Icon(
                     Icons.chevron_right,
                     size: 18,
                     color: AppColors.muted,
@@ -378,7 +378,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.assignment_outlined,
               size: 64,
               color: AppColors.muted,
@@ -456,7 +456,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
         boxShadow: const [
@@ -562,7 +562,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              const Divider(color: AppColors.line, height: 1),
+              Divider(color: AppColors.line, height: 1),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -578,7 +578,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                                 builder: (context) => Scaffold(
                                   appBar: AppBar(
                                     title: const Text("Select Category to Add"),
-                                    backgroundColor: Colors.white,
+                                    backgroundColor: AppColors.surface,
                                     foregroundColor: AppColors.ink,
                                     elevation: 0,
                                   ),
@@ -684,7 +684,7 @@ class _CustomTestsListScreenState extends State<CustomTestsListScreen> {
                           : () => _handleDeleteTest(test.id),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.berry,
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

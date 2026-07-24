@@ -125,7 +125,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
   void _showAddQuestionsSheet(_TreeNode node) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -166,7 +166,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                     color: AppColors.paper,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit_rounded,
                     color: AppColors.ink,
                     size: 18,
@@ -234,7 +234,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
           IconButton(
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.remove, size: 14, color: AppColors.ink),
+            icon: Icon(Icons.remove, size: 14, color: AppColors.ink),
             onPressed: currentVal > 1
                 ? () => setState(
                     () => widget.setQuantity(node.id, currentVal - 1),
@@ -251,7 +251,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
           IconButton(
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.add, size: 14, color: AppColors.ink),
+            icon: Icon(Icons.add, size: 14, color: AppColors.ink),
             onPressed: currentVal < available
                 ? () => setState(
                     () => widget.setQuantity(node.id, currentVal + 1),
@@ -271,7 +271,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
       onTap: () => _openChild(node),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: AppColors.line)),
         ),
         child: Row(
@@ -332,7 +332,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.muted,
               size: 20,
@@ -347,7 +347,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
     final available = widget.getAvailableCount(node.id);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.line)),
       ),
       child: Column(
@@ -452,7 +452,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
             ),
           ],
           const SizedBox(height: 10),
-          const Divider(height: 1, color: AppColors.line),
+          Divider(height: 1, color: AppColors.line),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
@@ -461,7 +461,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.add_rounded,
                     size: 13,
                     color: AppColors.muted,
@@ -489,7 +489,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         title: Text(
           widget.breadcrumb.last,
@@ -551,7 +551,7 @@ class _CategoryDrillDownScreenState extends State<_CategoryDrillDownScreen> {
                       Container(
                         margin: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: AppColors.line),
                         ),

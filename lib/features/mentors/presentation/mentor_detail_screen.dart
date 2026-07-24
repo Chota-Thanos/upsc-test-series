@@ -259,7 +259,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
           "Mentor Profile",
           style: AppTypography.title.copyWith(fontSize: 16),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         bottom: PreferredSize(
@@ -267,7 +267,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
           child: Container(color: AppColors.line, height: 1),
         ),
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.ink,
             size: 18,
@@ -356,7 +356,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Divider(color: AppColors.line),
+                  Divider(color: AppColors.line),
                   const SizedBox(height: 12),
 
                   Text(
@@ -500,7 +500,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Divider(color: AppColors.line),
+                  Divider(color: AppColors.line),
                   const SizedBox(height: 16),
 
                   Row(
@@ -561,7 +561,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.info_outline_rounded,
                             size: 16,
                             color: AppColors.muted,
@@ -641,7 +641,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                                   ? Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(
                                           10,
                                         ),
@@ -724,7 +724,7 @@ class _MentorDetailScreenState extends State<MentorDetailScreen> {
                                   horizontal: 10,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(color: AppColors.line),
                                 ),

@@ -614,8 +614,8 @@ class _LiveClassScreenState extends State<LiveClassScreen> {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
               shape: BoxShape.circle,
             ),
           ),

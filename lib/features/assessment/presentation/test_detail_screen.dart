@@ -122,9 +122,9 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
           "Exam Overview",
           style: AppTypography.title.copyWith(fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.ink,
             size: 18,
@@ -172,7 +172,7 @@ class _TestDetailScreenState extends State<TestDetailScreen> {
                     Text(test.description!, style: AppTypography.body),
                   ],
                   const SizedBox(height: 20),
-                  const Divider(color: AppColors.line),
+                  Divider(color: AppColors.line),
                   const SizedBox(height: 14),
 
                   // Metadata Row

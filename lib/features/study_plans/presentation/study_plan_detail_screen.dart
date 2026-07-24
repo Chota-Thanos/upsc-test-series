@@ -330,7 +330,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           "Study Schedule",
           style: AppTypography.title.copyWith(fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         bottom: PreferredSize(
@@ -338,7 +338,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           child: Container(color: AppColors.line, height: 1),
         ),
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.ink,
             size: 18,
@@ -555,8 +555,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: const Border(top: BorderSide(color: AppColors.line)),
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.line)),
           boxShadow: [
             BoxShadow(
               color: AppColors.ink.withOpacity(0.06),
@@ -792,8 +792,8 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
           child: Container(
             width: 8,
             height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
               shape: BoxShape.circle,
             ),
           ),
@@ -809,7 +809,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
         border: Border.all(color: AppColors.line, width: 2),
       ),
       child: locked
-          ? const Icon(
+          ? Icon(
               Icons.lock_outline_rounded,
               size: 11,
               color: AppColors.muted,
@@ -832,7 +832,7 @@ class _StudyPlanDetailScreenState extends State<StudyPlanDetailScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           border: Border.all(
             color: isFreeSample ? AppColors.civic : AppColors.line,
             width: isFreeSample ? 1.5 : 1,

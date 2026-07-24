@@ -628,7 +628,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.bookmark_border_rounded,
                 size: 48,
                 color: AppColors.muted,
@@ -1170,7 +1170,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
@@ -1377,7 +1377,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           IconButton(
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.remove, size: 14, color: AppColors.ink),
+            icon: Icon(Icons.remove, size: 14, color: AppColors.ink),
             onPressed: currentVal > 1
                 ? () {
                     setState(() {
@@ -1396,7 +1396,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
           IconButton(
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.add, size: 14, color: AppColors.ink),
+            icon: Icon(Icons.add, size: 14, color: AppColors.ink),
             onPressed: currentVal < available
                 ? () {
                     setState(() {
@@ -1802,7 +1802,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -2171,7 +2171,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -2746,7 +2746,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
         else
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.line),
             ),
@@ -2872,7 +2872,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
       decoration: BoxDecoration(
         border: isLast
             ? null
-            : const Border(bottom: BorderSide(color: AppColors.line)),
+            : Border(bottom: BorderSide(color: AppColors.line)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2922,7 +2922,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                   ),
                 ),
                 if (hasChildren)
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
                     color: AppColors.muted,
                     size: 20,
@@ -2997,7 +2997,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.add_rounded,
                     size: 13,
                     color: AppColors.muted,
@@ -3030,7 +3030,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
   void _showAddQuestionsSheet(_TreeNode node) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -3071,7 +3071,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     color: AppColors.paper,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit_rounded,
                     color: AppColors.ink,
                     size: 18,
@@ -3289,7 +3289,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line.withOpacity(0.8)),
         boxShadow: const [
@@ -3380,7 +3380,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
           // Selection Bar (only if available > 0)
           if (available > 0) ...[
-            const Divider(color: AppColors.line, height: 1),
+            Divider(color: AppColors.line, height: 1),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -3440,7 +3440,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
 
           // Children list nested inside the card!
           if (childrenWidget != null) ...[
-            const Divider(color: AppColors.line, height: 1),
+            Divider(color: AppColors.line, height: 1),
             Container(
               decoration: BoxDecoration(
                 color: AppColors.paper.withOpacity(0.3),
@@ -4041,7 +4041,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                     return [
                       SliverToBoxAdapter(
                         child: Container(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           padding: const EdgeInsets.only(
                             left: 16,
                             right: 16,
@@ -4090,7 +4090,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                   Expanded(
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                         border: Border.all(
                                           color: AppColors.line,
                                         ),
@@ -4111,14 +4111,14 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w500,
                                               ),
-                                          prefixIcon: const Icon(
+                                          prefixIcon: Icon(
                                             Icons.search_rounded,
                                             color: AppColors.muted,
                                             size: 18,
                                           ),
                                           suffixIcon: _searchQuery.isNotEmpty
                                               ? IconButton(
-                                                  icon: const Icon(
+                                                  icon: Icon(
                                                     Icons.clear_rounded,
                                                     size: 18,
                                                     color: AppColors.muted,
@@ -4223,7 +4223,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                                           ],
                                         ),
                                       ),
-                                      const Icon(
+                                      Icon(
                                         Icons.chevron_right_rounded,
                                         color: AppColors.muted,
                                       ),
@@ -4258,7 +4258,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
               curve: Curves.easeInOut,
               height: _isCartExpanded ? 480.0 : 76.0,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
@@ -4351,7 +4351,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                       ),
                     ),
                   ),
-                  const Divider(color: AppColors.line, height: 1),
+                  Divider(color: AppColors.line, height: 1),
 
                   if (_isCartExpanded)
                     Expanded(
@@ -4410,7 +4410,7 @@ class _SelfTestBuilderTabState extends State<SelfTestBuilderTab> {
                             Expanded(
                               child: ListView.separated(
                                 itemCount: _compiledItems.length,
-                                separatorBuilder: (_, __) => const Divider(
+                                separatorBuilder: (_, __) => Divider(
                                   color: AppColors.line,
                                   height: 1,
                                 ),

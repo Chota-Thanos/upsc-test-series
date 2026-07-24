@@ -504,10 +504,10 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           "AI Test Parser",
           style: AppTypography.title.copyWith(fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.ink),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -585,7 +585,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       top: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.05),
@@ -593,7 +593,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                           blurRadius: 10,
                         ),
                       ],
-                      border: const Border(
+                      border: Border(
                         top: BorderSide(color: AppColors.line),
                       ),
                     ),
@@ -616,7 +616,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
       ),
@@ -693,7 +693,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.line),
             ),
@@ -736,7 +736,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.line),
               ),
@@ -778,7 +778,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.line),
             ),
@@ -828,7 +828,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.line),
               ),
@@ -920,7 +920,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.line),
                 ),
@@ -971,7 +971,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       color: AppColors.muted,
                       fontSize: 13,
                     ),
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surface,
                     filled: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -979,11 +979,11 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.line),
+                      borderSide: BorderSide(color: AppColors.line),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.line),
+                      borderSide: BorderSide(color: AppColors.line),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -1044,7 +1044,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
       ),
@@ -1203,7 +1203,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.photo_library_outlined,
                             size: 36,
                             color: AppColors.muted,
@@ -1239,7 +1239,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _selectedImages.length,
                       separatorBuilder: (_, __) =>
-                          const Divider(height: 12, color: AppColors.line),
+                          Divider(height: 12, color: AppColors.line),
                       itemBuilder: (context, index) {
                         final file = _selectedImages[index];
                         return Row(
@@ -1269,7 +1269,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                                               fit: BoxFit.cover,
                                             ),
                                           )
-                                        : const Icon(
+                                        : Icon(
                                             Icons.image,
                                             color: AppColors.muted,
                                           )),
@@ -1366,11 +1366,11 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                   color: AppColors.muted,
                   fontSize: 13,
                 ),
-                fillColor: Colors.white,
+                fillColor: AppColors.surface,
                 filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.line),
+                  borderSide: BorderSide(color: AppColors.line),
                 ),
               ),
               style: AppTypography.body.copyWith(
@@ -1397,11 +1397,11 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
                 color: AppColors.muted,
                 fontSize: 13,
               ),
-              fillColor: Colors.white,
+              fillColor: AppColors.surface,
               filled: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.line),
+                borderSide: BorderSide(color: AppColors.line),
               ),
             ),
             style: AppTypography.body.copyWith(
@@ -1522,7 +1522,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppColors.line),
               ),
@@ -1745,7 +1745,7 @@ class _AiBasedParsingScreenState extends State<AiBasedParsingScreen> {
       height: 44,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.line),
+          side: BorderSide(color: AppColors.line),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

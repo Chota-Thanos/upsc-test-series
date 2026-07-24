@@ -104,7 +104,7 @@ class _TestsHubScreenState extends State<TestsHubScreen>
         return Column(
           children: [
             Container(
-              color: Colors.white,
+              color: AppColors.surface,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Showcase(
                 key: _tourTabBarKey,
@@ -120,7 +120,7 @@ class _TestsHubScreenState extends State<TestsHubScreen>
                   child: TabBar(
                     controller: _tabController,
                     indicator: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: const [
                         BoxShadow(

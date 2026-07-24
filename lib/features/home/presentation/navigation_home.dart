@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/theme_controller.dart';
+import '../../../../core/tour/app_tour_service.dart';
 import '../../assessment/presentation/tests_hub_screen.dart';
 import '../../assessment/presentation/assessment_dashboard_screen.dart';
 import '../../assessment/presentation/test_detail_screen.dart';
@@ -9,6 +11,7 @@ import '../../assessment/presentation/custom_test_create_screen.dart';
 import '../../study_plans/presentation/study_plan_list_screen.dart';
 import '../../mentors/presentation/mentor_list_screen.dart';
 import '../../mentors/presentation/my_bookings_screen.dart';
+import '../../onboarding/presentation/become_mentor_screen.dart';
 import '../../auth/presentation/login_screen.dart';
 import '../../auth/presentation/register_screen.dart';
 import 'home_screen.dart';
@@ -70,6 +73,61 @@ class _NavigationHomeState extends State<NavigationHome> {
         _testsSubSubIndex = subSubIndex;
       }
     });
+  }
+
+  void _showThemeChooser(BuildContext context) {
+    final controller = Provider.of<ThemeController>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+      ),
+      builder: (sheetContext) {
+        Widget option(String label, IconData icon, ThemeMode mode, String subtitle) {
+          final selected = controller.mode == mode;
+          return ListTile(
+            leading: Icon(icon, color: selected ? AppColors.civic : AppColors.muted),
+            title: Text(
+              label,
+              style: AppTypography.cardTitle.copyWith(
+                color: selected ? AppColors.civic : AppColors.ink,
+              ),
+            ),
+            subtitle: Text(subtitle, style: AppTypography.caption),
+            trailing: selected
+                ? const Icon(Icons.check_rounded, color: AppColors.civic)
+                : null,
+            onTap: () {
+              controller.setMode(mode);
+              Navigator.pop(sheetContext);
+            },
+          );
+        }
+
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Appearance", style: AppTypography.sectionHeader),
+                ),
+              ),
+              option("System default", Icons.brightness_auto_outlined,
+                  ThemeMode.system, "Match your device's light/dark setting"),
+              option("Light", Icons.light_mode_outlined, ThemeMode.light,
+                  "Always use the light theme"),
+              option("Dark", Icons.dark_mode_outlined, ThemeMode.dark,
+                  "Always use the dark theme"),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showLogoutDialog(BuildContext context, ApiClient apiClient) {
@@ -138,7 +196,7 @@ class _NavigationHomeState extends State<NavigationHome> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 1,
         title: Row(
@@ -258,6 +316,29 @@ class _NavigationHomeState extends State<NavigationHome> {
                           builder: (context) => const MyBookingsScreen(),
                         ),
                       );
+                    } else if (value == 'guided_tour') {
+                      // Arms the tour for this session, then drops the user on
+                      // the Tests tab where the first showcase step lives.
+                      AppTourService.startGuidedTour().then((_) {
+                        if (!context.mounted) return;
+                        _onTabSelected(2);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Guided tour started — follow the highlights",
+                            ),
+                          ),
+                        );
+                      });
+                    } else if (value == 'become_mentor') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BecomeMentorScreen(),
+                        ),
+                      );
+                    } else if (value == 'appearance') {
+                      _showThemeChooser(context);
                     } else if (value == 'logout') {
                       _showLogoutDialog(context, apiClient);
                     }
@@ -292,6 +373,69 @@ class _NavigationHomeState extends State<NavigationHome> {
                           const SizedBox(width: 10),
                           Text(
                             "My Mentor Bookings",
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'guided_tour',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.explore_outlined,
+                            color: AppColors.civic,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Take a Guided Tour",
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'become_mentor',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.workspace_premium_outlined,
+                            color: AppColors.civic,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Become a Mentor",
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'appearance',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.brightness_6_outlined,
+                            color: AppColors.civic,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Appearance",
                             style: AppTypography.body.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -383,7 +527,7 @@ class _NavigationHomeState extends State<NavigationHome> {
                                     ),
                                   ],
                                   const SizedBox(width: 2),
-                                  const Icon(
+                                  Icon(
                                     Icons.arrow_drop_down,
                                     size: 14,
                                     color: AppColors.muted,
@@ -422,7 +566,7 @@ class _NavigationHomeState extends State<NavigationHome> {
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surface,
           indicatorColor: AppColors.civic.withOpacity(0.08),
           height: 65,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,

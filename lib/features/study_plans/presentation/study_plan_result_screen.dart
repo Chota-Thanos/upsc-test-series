@@ -131,9 +131,9 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
           "Study Plan Result",
           style: AppTypography.title.copyWith(fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.ink,
             size: 18,
@@ -145,7 +145,7 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         children: [
           // Tab Bar
           Container(
-            color: Colors.white,
+            color: AppColors.surface,
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -203,7 +203,7 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.ink : Colors.white,
+          color: isActive ? AppColors.ink : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive ? AppColors.ink : AppColors.line,
@@ -439,7 +439,7 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
             Expanded(
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.line),
+                  side: BorderSide(color: AppColors.line),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -581,8 +581,9 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
   Widget _filterChip(
     _SPQuestionFilter filter,
     String label, {
-    Color color = AppColors.ink,
+    Color? color,
   }) {
+    final chipColor = color ?? AppColors.ink;
     final isActive = _qFilter == filter;
     return GestureDetector(
       onTap: () => setState(() => _qFilter = filter),
@@ -590,10 +591,10 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? color : Colors.white,
+          color: isActive ? chipColor :Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isActive ? color : AppColors.line,
+            color: isActive ? chipColor :AppColors.line,
             width: 1.5,
           ),
         ),
@@ -652,7 +653,7 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
           // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.paper,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
@@ -690,7 +691,7 @@ class _StudyPlanResultScreenState extends State<StudyPlanResultScreen> {
                 ),
                 if (timeSpent > 0) ...[
                   const SizedBox(width: 8),
-                  const Icon(
+                  Icon(
                     Icons.timer_outlined,
                     size: 12,
                     color: AppColors.muted,

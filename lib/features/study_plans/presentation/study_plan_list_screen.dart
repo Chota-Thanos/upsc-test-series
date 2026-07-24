@@ -117,7 +117,7 @@ class _StudyPlanListScreenState extends State<StudyPlanListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_month_outlined,
                     color: AppColors.muted,
                     size: 44,

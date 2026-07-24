@@ -32,7 +32,7 @@ class _SelfTestDashboardScreenState extends State<SelfTestDashboardScreen>
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         toolbarHeight: 0,
         bottom: TabBar(

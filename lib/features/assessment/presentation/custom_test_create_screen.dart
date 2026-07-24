@@ -510,10 +510,10 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.ink),
           onPressed: () => setState(() => _step = 'name'),
         ),
         actions: [
@@ -649,7 +649,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: AppColors.line),
                             ),
@@ -693,7 +693,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                                     ),
                                   );
                                 }),
-                                const Divider(color: AppColors.line),
+                                Divider(color: AppColors.line),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -800,7 +800,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: AppColors.line),
                             ),
@@ -877,7 +877,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Column(
@@ -912,11 +912,11 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -1066,7 +1066,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
     return Container(
       margin: EdgeInsets.only(left: depth * 16.0, bottom: 8.0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.line),
       ),
@@ -1150,7 +1150,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                             minHeight: 28,
                           ),
                           padding: EdgeInsets.zero,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.remove,
                             size: 14,
                             color: AppColors.ink,
@@ -1177,7 +1177,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                             minHeight: 28,
                           ),
                           padding: EdgeInsets.zero,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.add,
                             size: 14,
                             color: AppColors.ink,
@@ -1198,7 +1198,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                       backgroundColor: isAdded
                           ? AppColors.line
                           : AppColors.civic,
-                      foregroundColor: isAdded ? AppColors.ink : Colors.white,
+                      foregroundColor: isAdded ? AppColors.ink : AppColors.surface,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 8,
@@ -1212,7 +1212,7 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
                       isAdded ? "Add More" : "Add Qs",
                       style: AppTypography.button.copyWith(
                         fontSize: 11,
-                        color: isAdded ? AppColors.ink : Colors.white,
+                        color: isAdded ? AppColors.ink : AppColors.surface,
                       ),
                     ),
                   ),
@@ -1231,8 +1231,8 @@ class _CustomTestCreateScreenState extends State<CustomTestCreateScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x0C000000),

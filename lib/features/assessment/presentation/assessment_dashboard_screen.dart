@@ -249,7 +249,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                 ),
               ),
               actions: const [],
-              bottom: const TabBar(
+              bottom: TabBar(
                 labelColor: AppColors.civic,
                 unselectedLabelColor: AppColors.muted,
                 indicatorColor: AppColors.civic,
@@ -292,7 +292,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       child: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: AppColors.surface,
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: TabBar(
               labelColor: AppColors.civic,
@@ -1253,7 +1253,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         decoration: AppTheme.cardDecoration,
         child: Column(
           children: [
-            const Icon(Icons.quiz_outlined, color: AppColors.muted, size: 36),
+            Icon(Icons.quiz_outlined, color: AppColors.muted, size: 36),
             const SizedBox(height: 8),
             Text(
               "You haven't attempted any tests yet.",
@@ -1358,7 +1358,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                   width: double.infinity,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.line, width: 1.5),
+                      side: BorderSide(color: AppColors.line, width: 1.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1400,7 +1400,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line, width: 1),
         boxShadow: const [
@@ -1967,7 +1967,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                       padding: const EdgeInsets.only(top: 6.0),
                       child: Text(
                         dateStr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: AppColors.muted,
@@ -1987,7 +1987,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                 getTitlesWidget: (val, meta) {
                   return Text(
                     val.toInt().toString(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
                       color: AppColors.muted,
@@ -2113,7 +2113,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: accent.withOpacity(0.22), width: 1.2),
           boxShadow: const [
@@ -2381,7 +2381,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.line, width: 1.5),
           ),
@@ -2397,14 +2397,14 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
                 color: AppColors.muted.withOpacity(0.6),
                 fontSize: 13,
               ),
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.search_rounded,
                 color: AppColors.muted,
                 size: 18,
               ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.clear_rounded,
                         color: AppColors.muted,
                         size: 16,
@@ -2507,7 +2507,7 @@ class _AssessmentDashboardScreenState extends State<AssessmentDashboardScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(13),
             border: Border.all(color: AppColors.line),
           ),

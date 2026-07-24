@@ -31,7 +31,7 @@ class PremiumLockOverlay extends StatelessWidget {
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.indigo.shade50),
           boxShadow: [

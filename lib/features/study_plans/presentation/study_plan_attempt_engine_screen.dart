@@ -294,7 +294,7 @@ class _StudyPlanAttemptEngineScreenState
           paper.testTemplate.title,
           style: AppTypography.sectionHeader.copyWith(fontSize: 14),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 12),
@@ -339,7 +339,7 @@ class _StudyPlanAttemptEngineScreenState
 
           // Overview Stats Panel
           Container(
-            color: Colors.white,
+            color: AppColors.surface,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -417,7 +417,7 @@ class _StudyPlanAttemptEngineScreenState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Divider(color: AppColors.line),
+                    Divider(color: AppColors.line),
                     const SizedBox(height: 12),
 
                     MarkdownBody(
@@ -489,7 +489,7 @@ class _StudyPlanAttemptEngineScreenState
 
           // Actions
           Container(
-            color: Colors.white,
+            color: AppColors.surface,
             padding: const EdgeInsets.all(12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -502,7 +502,7 @@ class _StudyPlanAttemptEngineScreenState
                           borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                       ),
                       onPressed: _activeIndex > 0
                           ? () {
@@ -511,7 +511,7 @@ class _StudyPlanAttemptEngineScreenState
                               });
                             }
                           : null,
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 14,
                         color: AppColors.ink,
@@ -523,7 +523,7 @@ class _StudyPlanAttemptEngineScreenState
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
                         _saveResponse(
@@ -547,7 +547,7 @@ class _StudyPlanAttemptEngineScreenState
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                       ),
                       onPressed: () {
                         final currentMarked =
@@ -710,7 +710,7 @@ class _StudyPlanAttemptEngineScreenState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DrawerHeader(
-          decoration: const BoxDecoration(color: AppColors.ink),
+          decoration: BoxDecoration(color: AppColors.ink),
           child: Center(
             child: Text(
               "Questions Palette",

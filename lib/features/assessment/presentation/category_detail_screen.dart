@@ -49,14 +49,14 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 1,
         title: Text(
           widget.nodeName,
           style: AppTypography.title.copyWith(fontSize: 17),
         ),
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: AppColors.ink),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.civic,

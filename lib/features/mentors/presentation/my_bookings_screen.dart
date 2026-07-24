@@ -54,7 +54,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           "My Mentorship Requests",
           style: AppTypography.title.copyWith(fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         bottom: PreferredSize(
@@ -62,7 +62,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           child: Container(color: AppColors.line, height: 1),
         ),
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.ink,
             size: 18,
@@ -322,7 +322,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 ),
 
                 const SizedBox(height: 14),
-                const Divider(color: AppColors.line),
+                Divider(color: AppColors.line),
                 const SizedBox(height: 12),
 
                 // Request details
@@ -372,7 +372,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.chat_bubble_outline_rounded,
                               size: 13,
                               color: AppColors.muted,

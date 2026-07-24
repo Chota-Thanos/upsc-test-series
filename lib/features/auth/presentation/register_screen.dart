@@ -70,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.ink,
             size: 20,
@@ -80,7 +80,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.paper,
           gradient: RadialGradient(
             center: Alignment(0, -0.6),

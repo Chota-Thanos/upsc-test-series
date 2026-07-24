@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/tour/app_tour_service.dart';
 import '../../../../core/utils/constants.dart';
 import '../../assessment/data/assessment_service.dart';
 import '../../assessment/models/assessment_models.dart';
@@ -201,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: Colors.white,
+                              backgroundColor: AppColors.surface,
                               radius: 20,
                               child: Text(
                                 username.isNotEmpty
@@ -282,69 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // TEMP — dev-only button to replay the guided tour for testing.
-                  // Remove once the tour has been verified.
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.06),
-                        border: Border.all(
-                          color: Colors.orange.withOpacity(0.4),
-                          style: BorderStyle.solid,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.bug_report_outlined,
-                            color: Colors.orange,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              "DEV: Replay guided tour",
-                              style: AppTypography.body.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.orange.shade800,
-                              ),
-                            ),
-                          ),
-                          OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.orange.shade400),
-                              foregroundColor: Colors.orange.shade800,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            onPressed: () async {
-                              await AppTourService.resetAllTours();
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Tours reset — switching to Tests tab",
-                                  ),
-                                ),
-                              );
-                              widget.onTabSelected(2);
-                            },
-                            child: const Text("Reset & Go"),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -483,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               border: Border.all(
                                 color: const Color(0xFFE5E7EB),
                               ),
@@ -517,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ],
                                     ),
-                                    const Icon(
+                                    Icon(
                                       Icons.chevron_right_rounded,
                                       color: AppColors.muted,
                                       size: 20,
@@ -662,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   ),
                                                 ],
                                               ),
-                                              const Padding(
+                                              Padding(
                                                 padding: EdgeInsets.symmetric(
                                                   vertical: 16.0,
                                                 ),
@@ -1125,7 +1061,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           border: Border.all(color: const Color(0xFFE5E7EB)),
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
@@ -1188,7 +1124,7 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 240,
         margin: const EdgeInsets.only(right: 12.0, bottom: 4.0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE5E7EB)),
           boxShadow: const [
@@ -1313,7 +1249,7 @@ class _HomeScreenState extends State<HomeScreen> {
         margin: const EdgeInsets.only(right: 12.0, bottom: 4.0),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE5E7EB)),
           boxShadow: const [
@@ -1407,7 +1343,7 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),

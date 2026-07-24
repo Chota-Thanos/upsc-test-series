@@ -202,10 +202,10 @@ class _CategoryPerformanceDetailScreenState
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 1,
-        surfaceTintColor: Colors.white,
+        surfaceTintColor: AppColors.surface,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -1061,7 +1061,7 @@ class _CategoryPerformanceDetailScreenState
         onSelected: (_) => setState(() => _filter = value),
         label: Text(label),
         selectedColor: color.withOpacity(0.14),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         labelStyle: AppTypography.caption.copyWith(
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -1080,7 +1080,7 @@ class _CategoryPerformanceDetailScreenState
       decoration: AppTheme.cardDecoration,
       child: Column(
         children: [
-          const Icon(Icons.inbox_rounded, color: AppColors.muted, size: 34),
+          Icon(Icons.inbox_rounded, color: AppColors.muted, size: 34),
           const SizedBox(height: 10),
           Text(
             "No questions match this filter.",
@@ -1106,7 +1106,7 @@ class _CategoryPerformanceDetailScreenState
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
         boxShadow: const [

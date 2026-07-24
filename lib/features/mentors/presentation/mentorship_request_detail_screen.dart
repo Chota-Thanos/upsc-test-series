@@ -296,7 +296,7 @@ class _MentorshipRequestDetailScreenState
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         title: Text(mentorName, style: AppTypography.title.copyWith(fontSize: 16)),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         bottom: PreferredSize(
@@ -715,7 +715,7 @@ class _MentorshipRequestDetailScreenState
           ..._agendas.map(_buildAgendaTile),
           if (!_isClosed) ...[
             const SizedBox(height: 12),
-            const Divider(color: AppColors.line),
+            Divider(color: AppColors.line),
             const SizedBox(height: 8),
             TextField(
               controller: _agendaTitleController,

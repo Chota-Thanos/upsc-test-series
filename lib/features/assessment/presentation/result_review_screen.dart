@@ -540,9 +540,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
               "Performance Review",
               style: AppTypography.title.copyWith(fontSize: 18),
             ),
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.surface,
             leading: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 color: AppColors.ink,
                 size: 18,
@@ -560,7 +560,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     "Switch between Summary, Questions, Topics, and Time Analysis tabs to understand exactly how you performed and where to focus next.",
                 targetBorderRadius: BorderRadius.zero,
                 child: Container(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -622,7 +622,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.ink : Colors.white,
+          color: isActive ? AppColors.ink : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive ? AppColors.ink : AppColors.line,
@@ -822,7 +822,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             physics: const NeverScrollableScrollPhysics(),
             itemCount: review.questions.length,
             separatorBuilder: (_, __) =>
-                const Divider(color: AppColors.line, height: 24),
+                Divider(color: AppColors.line, height: 24),
             itemBuilder: (context, idx) {
               final q = review.questions[idx];
               final response = q.response;
@@ -983,7 +983,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                                 horizontal: 12,
                                 vertical: 8,
                               ),
-                              side: const BorderSide(color: AppColors.line),
+                              side: BorderSide(color: AppColors.line),
                             ),
                             onPressed: () {
                               _jumpToQuestion(idx);
@@ -1380,7 +1380,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             Expanded(
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.line),
+                  side: BorderSide(color: AppColors.line),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1585,8 +1585,9 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
   Widget _buildFilterChip(
     _QuestionFilter filter,
     String label, {
-    Color color = AppColors.ink,
+    Color? color,
   }) {
+    final chipColor = color ?? AppColors.ink;
     final isActive = _qFilter == filter;
     return GestureDetector(
       onTap: () => setState(() => _qFilter = filter),
@@ -1594,10 +1595,10 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? color : Colors.white,
+          color: isActive ? chipColor :Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isActive ? color : AppColors.line,
+            color: isActive ? chipColor :AppColors.line,
             width: 1.5,
           ),
         ),
@@ -1657,7 +1658,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           if (item.passage != null) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.paper,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20),
@@ -1764,7 +1765,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 ],
                 if (timeSpent > 0) ...[
                   const SizedBox(width: 8),
-                  const Icon(
+                  Icon(
                     Icons.timer_outlined,
                     size: 12,
                     color: AppColors.muted,
@@ -2227,11 +2228,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -2239,7 +2240,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               color: AppColors.brand,
                             ),
                           ),
-                          fillColor: Colors.white,
+                          fillColor: AppColors.surface,
                           filled: true,
                         ),
                         style: AppTypography.body.copyWith(
@@ -2280,11 +2281,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -2292,7 +2293,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               color: AppColors.brand,
                             ),
                           ),
-                          fillColor: Colors.white,
+                          fillColor: AppColors.surface,
                           filled: true,
                         ),
                         style: AppTypography.body.copyWith(
@@ -2329,17 +2330,17 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.line),
+                  borderSide: BorderSide(color: AppColors.line),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.line),
+                  borderSide: BorderSide(color: AppColors.line),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: AppColors.brand),
                 ),
-                fillColor: Colors.white,
+                fillColor: AppColors.surface,
                 filled: true,
               ),
               style: AppTypography.body.copyWith(
@@ -2378,11 +2379,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -2390,7 +2391,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               color: AppColors.emerald,
                             ),
                           ),
-                          fillColor: Colors.white,
+                          fillColor: AppColors.surface,
                           filled: true,
                         ),
                         style: AppTypography.body.copyWith(
@@ -2430,11 +2431,11 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(color: AppColors.line),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -2442,7 +2443,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               color: AppColors.berry,
                             ),
                           ),
-                          fillColor: Colors.white,
+                          fillColor: AppColors.surface,
                           filled: true,
                         ),
                         style: AppTypography.body.copyWith(
@@ -2480,17 +2481,17 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.line),
+                  borderSide: BorderSide(color: AppColors.line),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.line),
+                  borderSide: BorderSide(color: AppColors.line),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: AppColors.brand),
                 ),
-                fillColor: Colors.white,
+                fillColor: AppColors.surface,
                 filled: true,
               ),
               style: AppTypography.body.copyWith(
@@ -2512,7 +2513,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    side: const BorderSide(color: AppColors.line),
+                    side: BorderSide(color: AppColors.line),
                   ),
                   child: Text(
                     "Cancel",
@@ -2586,7 +2587,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.line),
               ),
@@ -2788,7 +2789,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                         return Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.surface,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.line),
                           ),
@@ -2904,7 +2905,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: AppColors.brand.withOpacity(0.2),
@@ -3092,7 +3093,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppColors.line),
                         ),
@@ -3275,7 +3276,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.line),
         boxShadow: const [
@@ -3686,7 +3687,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
       nodeContent = Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isExpanded
@@ -3746,7 +3747,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
           padding: const EdgeInsets.all(32.0),
           child: Column(
             children: [
-              const Icon(
+              Icon(
                 Icons.track_changes_rounded,
                 size: 48,
                 color: AppColors.muted,
@@ -3957,7 +3958,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isOvertime
@@ -4052,7 +4053,7 @@ class _ResultReviewScreenState extends State<ResultReviewScreen>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line, width: 1),
         boxShadow: const [

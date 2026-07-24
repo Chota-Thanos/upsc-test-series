@@ -55,7 +55,7 @@ class _ContentTypeScreenState extends State<ContentTypeScreen>
     return Column(
       children: [
         Container(
-          color: Colors.white,
+          color: AppColors.surface,
           child: TabBar(
             controller: _tabController,
             labelColor: AppColors.civic,

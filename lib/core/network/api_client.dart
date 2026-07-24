@@ -26,6 +26,8 @@ class ApiClient extends ChangeNotifier {
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
+  String get role => _user?['role']?.toString() ?? 'user';
+  bool get isMentor => role == 'mentor';
   bool get isInitialized => _isInitialized;
   bool get isAuthenticated => _token != null;
   bool get isGuestMode => _isGuestMode && _token == null;
@@ -370,10 +372,10 @@ class ApiClient extends ChangeNotifier {
     }, withToken: false);
 
     if (result != null && result['access_token'] != null && result['user'] != null) {
-      // Check if user is a student/user.
+      // Mentors are supported natively; only admins are web-dashboard-only.
       final userRole = result['user']['role'] ?? '';
-      if (userRole == 'admin' || userRole == 'mentor') {
-        throw Exception("Admins and Mentors must use the web dashboard.");
+      if (userRole == 'admin') {
+        throw Exception("Admins must use the web dashboard.");
       }
 
       _token = result['access_token'];
@@ -400,8 +402,8 @@ class ApiClient extends ChangeNotifier {
 
     if (result != null && result['access_token'] != null && result['user'] != null) {
       final userRole = result['user']['role'] ?? '';
-      if (userRole == 'admin' || userRole == 'mentor') {
-        throw Exception("Admins and Mentors must use the web dashboard.");
+      if (userRole == 'admin') {
+        throw Exception("Admins must use the web dashboard.");
       }
 
       _token = result['access_token'];
